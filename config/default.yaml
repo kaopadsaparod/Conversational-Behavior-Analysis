@@ -1,0 +1,80 @@
+# Discourse Consistency Engine (dce) Default Configuration
+# Target hardware profile: Intel Core i5-14400F + NVIDIA GeForce RTX 5060 (8GB VRAM) + 24GB RAM
+
+mode: "offline"
+
+clock:
+  av_offset_ns: 0
+
+queues:
+  offline_policy: "block"
+  live_vision_policy: "drop_oldest"
+  live_audio_policy: "never_drop"
+  max_size: 128
+
+hardware:
+  asr_device: "cpu"
+  llm_provider: "ollama"
+  ollama_model: "qwen2.5:7b-instruct-q4_K_M"
+  ollama_fallback_model: "qwen2.5:3b-instruct-q4_K_M"
+  ollama_num_ctx: 4096
+  gemini_model: "gemini-2.5-flash-lite"
+
+vad:
+  sample_rate: 16000
+  speech_prob_on: 0.55
+  speech_prob_off: 0.35
+  min_speech_ms: 160.0
+  min_micro_pause_ms: 200.0
+  soft_pause_ms: 400.0
+  hard_eot_ms: 800.0
+  min_speculative_ms: 600.0
+  max_turn_ms: 25000.0
+  overlap_ratio_threshold: 0.15
+
+prosody:
+  creak_trim_min_speech_ms: 600.0
+  creak_trim_tail_ms: 200.0
+  min_voiced_segment_ms: 75.0
+  boundary_trim_ms: 15.0
+  min_glottal_periods: 20
+  default_pitch_floor_hz: 75.0
+  pitch_floor_min_hz: 60.0
+  pitch_floor_max_hz: 140.0
+
+baseline:
+  rolling_window_turns: 40
+  shrinkage_k: 6.0
+  anchor_lock_turns: 8
+  gate_full_z: 3.0
+  gate_reduced_z: 5.0
+  gate_reduced_weight: 0.2
+
+mahalanobis:
+  reg_lambda: 0.30
+  eig_floor: 1.0e-6
+  cond_limit: 1.0e+12
+  tail_score_threshold: 0.05
+  tension_z_threshold: 1.5
+  hnr_tension_z_threshold: -1.5
+  calm_z_threshold: -1.5
+
+av_sync:
+  grid_hz: 50.0
+  min_overlap_sec: 0.5
+  max_lag_ms: 200.0
+  min_std: 1.0e-6
+
+speaker_registry:
+  sim_high: 0.65
+  sim_low: 0.45
+  face_sim_floor: 0.35
+  min_confirm_sec: 2.0
+  provisional_ttl_sec: 60.0
+  max_speakers: 4
+  max_provisional_buffers: 6
+  min_embedding_norm: 1.0e-8
+
+reasoning:
+  anomaly_guided_search: false
+  max_llm_retries: 1

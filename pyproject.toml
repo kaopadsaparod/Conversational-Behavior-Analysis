@@ -1,0 +1,65 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dce"
+version = "0.1.0"
+description = "Discourse Consistency Engine: Neuro-symbolic conversational cognitive load analysis and consistency verification"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Apache-2.0" }
+authors = [
+    { name = "Discourse Consistency Engine Team" }
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "numpy>=1.26",
+    "scipy>=1.11",
+    "pydantic>=2.5",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+]
+audio = [
+    "faster-whisper",
+    "praat-parselmouth",
+    "onnxruntime",
+]
+vision = [
+    "mediapipe",
+    "opencv-python-headless",
+]
+llm = [
+    "httpx",
+    "ollama",
+    "google-genai",
+]
+ui = [
+    "streamlit",
+    "plotly",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["dce*"]
+
+[tool.setuptools.package-data]
+dce = ["py.typed"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

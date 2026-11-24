@@ -1,0 +1,192 @@
+"""Discourse Consistency Engine - Script to Compute Voice Priors from RAVDESS Dataset.
+
+Parses WAV audio files, extracts acoustic prosody features using Praat,
+computes empirical median and sigma for vocal features, and saves a PriorsData JSON.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import logging
+from pathlib import Path
+from typing import Dict, List
+
+import numpy as np
+
+from dce.extractors.audio_dsp import extract_prosody
+from dce.schemas import PriorParameter, PriorsData
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("build_priors")
+
+
+def process_dataset(audio_dir: Path) -> PriorsData:
+    """Analyze all WAV files in dataset directory and compute feature prior parameters."""
+    f0_sds: List[float] = []
+    jitters: List[float] = []
+    shimmers: List[float] = []
+    hnrs: List[float] = []
+
+    wav_files = list(audio_dir.glob("**/*.wav"))
+    logger.info("Found %d audio files in %s", len(wav_files), audio_dir)
+
+    for wav_path in wav_files:
+        try:
+            # Read PCM samples (lazy import scipy.io.wavfile)
+            from scipy.io import wavfile
+
+            sr, data = wavfile.read(str(wav_path))
+            if data.dtype == np.int16:
+                pcm = data.astype(np.float64) / 32768.0
+            else:
+                pcm = data.astype(np.float64)
+
+            if pcm.ndim > 1:
+                pcm = np.mean(pcm, axis=1)
+
+            features = extract_prosody(pcm, sample_rate=sr)
+            if features.quality_flag == "ok":
+                if features.f0_semitone_sd is not None:
+                    f0_sds.append(features.f0_semitone_sd)
+                if features.jitter_local_pct is not None:
+                    jitters.append(features.jitter_local_pct)
+                if features.shimmer_local_pct is not None:
+                    shimmers.append(features.shimmer_local_pct)
+                if features.hnr_db is not None:
+                    hnrs.append(features.hnr_db)
+        except Exception as exc:
+            logger.debug("Skipping %s due to error: %s", wav_path.name, exc)
+
+    logger.info("Extracted %d valid speech samples.", len(f0_sds))
+
+    # Compute empirical median and robust sigma (1.4826 * MAD)
+    def calc_stats(vals: List[float], def_med: float, def_sig: float) -> tuple[float, float]:
+        if not vals:
+            return def_med, def_sig
+        arr = np.array(vals)
+        med = float(np.median(arr))
+        mad = float(np.median(np.abs(arr - med)))
+        sig = max(1.4826 * mad, 0.05)
+        return med, sig
+
+    med_f0, sig_f0 = calc_stats(f0_sds, 2.60, 0.85)
+    med_jit, sig_jit = calc_stats(jitters, 1.10, 0.45)
+    med_shim, sig_shim = calc_stats(shimmers, 4.80, 1.60)
+    med_hnr, sig_hnr = calc_stats(hnrs, 15.50, 3.20)
+
+    features_dict = {
+        "response_latency_open": PriorParameter(
+            feature_name="response_latency_open",
+            pop_median=-0.20,
+            pop_sigma=0.55,
+            sigma_floor=0.15,
+            max_anchor_drift=0.85,
+            log_transform=True,
+            log_offset=0.05,
+            stress_polarity=1,
+        ),
+        "response_latency_closed": PriorParameter(
+            feature_name="response_latency_closed",
+            pop_median=-0.80,
+            pop_sigma=0.45,
+            sigma_floor=0.15,
+            max_anchor_drift=0.70,
+            log_transform=True,
+            log_offset=0.05,
+            stress_polarity=1,
+        ),
+        "articulation_rate": PriorParameter(
+            feature_name="articulation_rate",
+            pop_median=4.40,
+            pop_sigma=0.75,
+            sigma_floor=0.20,
+            max_anchor_drift=1.15,
+            log_transform=False,
+            log_offset=0.0,
+            stress_polarity=0,
+        ),
+        "f0_semitone_sd": PriorParameter(
+            feature_name="f0_semitone_sd",
+            pop_median=med_f0,
+            pop_sigma=sig_f0,
+            sigma_floor=0.25,
+            max_anchor_drift=1.25,
+            log_transform=False,
+            log_offset=0.0,
+            stress_polarity=0,
+        ),
+        "jitter_local_pct": PriorParameter(
+            feature_name="jitter_local_pct",
+            pop_median=med_jit,
+            pop_sigma=sig_jit,
+            sigma_floor=0.12,
+            max_anchor_drift=0.65,
+            log_transform=False,
+            log_offset=0.0,
+            stress_polarity=1,
+        ),
+        "shimmer_local_pct": PriorParameter(
+            feature_name="shimmer_local_pct",
+            pop_median=med_shim,
+            pop_sigma=sig_shim,
+            sigma_floor=0.40,
+            max_anchor_drift=2.40,
+            log_transform=False,
+            log_offset=0.0,
+            stress_polarity=1,
+        ),
+        "hnr_db": PriorParameter(
+            feature_name="hnr_db",
+            pop_median=med_hnr,
+            pop_sigma=sig_hnr,
+            sigma_floor=0.80,
+            max_anchor_drift=4.80,
+            log_transform=False,
+            log_offset=0.0,
+            stress_polarity=-1,
+        ),
+        "blink_rate_per_min": PriorParameter(
+            feature_name="blink_rate_per_min",
+            pop_median=18.00,
+            pop_sigma=7.50,
+            sigma_floor=2.00,
+            max_anchor_drift=11.25,
+            log_transform=False,
+            log_offset=0.0,
+            stress_polarity=0,
+        ),
+    }
+
+    feature_order = list(features_dict.keys())
+    corr_matrix = np.eye(len(feature_order), dtype=np.float64).tolist()
+
+    return PriorsData(
+        calibrated=len(f0_sds) > 50,
+        source="ravdess_empirical_calibration" if len(f0_sds) > 50 else "literature_initial_estimates",
+        features=features_dict,
+        correlation_matrix=corr_matrix,
+        feature_order=feature_order,
+    )
+
+
+def main() -> None:
+    """CLI entry point for building priors."""
+    parser = argparse.ArgumentParser(description="Build empirical acoustic priors.")
+    parser.add_argument("--data-dir", type=str, default="data/ravdess", help="Directory of audio WAV files")
+    parser.add_argument("--out", type=str, default="data/priors_en.json", help="Output path for priors JSON")
+    args = parser.parse_args()
+
+    audio_dir = Path(args.data_dir)
+    out_path = Path(args.out)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+
+    priors_data = process_dataset(audio_dir)
+    with out_path.open("w", encoding="utf-8") as f:
+        json.dump(priors_data.model_dump(), f, indent=2)
+
+    logger.info("Saved prior distribution to %s", out_path)
+
+
+if __name__ == "__main__":
+    main()
