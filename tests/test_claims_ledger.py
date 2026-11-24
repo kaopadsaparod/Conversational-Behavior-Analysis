@@ -397,3 +397,107 @@ def test_verify_consistency_valid_turn_reference_accepted() -> None:
     verdict_resp = ledger.verify_consistency(current_claim)
     assert verdict_resp.verdict == VerdictStatus.DIRECT_CONTRADICTION
     assert verdict_resp.prior_turn_id == 1
+
+
+# ============================================================================
+# 5. ClaimsLedger Speaker Merging and LLM Adapter Retry Tests
+# ============================================================================
+
+
+def test_claims_ledger_merge_speaker_id() -> None:
+    """Verify merge_speaker_id idempotently reassigns claims to new speaker ID."""
+    ledger = ClaimsLedger()
+
+    c1 = ClaimItem(
+        claim_id="CLM_01",
+        turn_id=1,
+        speaker_id="PROV_01",
+        raw_subject="Alice",
+        canonical_entity="alice",
+        predicate="arrived",
+        object_value="home",
+        time_ref_raw="noon",
+    )
+    c2 = ClaimItem(
+        claim_id="CLM_02",
+        turn_id=2,
+        speaker_id="PROV_01",
+        raw_subject="Bob",
+        canonical_entity="bob",
+        predicate="left",
+        object_value="office",
+        time_ref_raw="1pm",
+    )
+    ledger.add_claim(c1)
+    ledger.add_claim(c2)
+
+    assert len(ledger.claims_by_speaker.get("PROV_01", [])) == 2
+
+    # Execute merge
+    ledger.merge_speaker_id("PROV_01", "SPEAKER_00")
+
+    assert len(ledger.claims_by_speaker.get("PROV_01", [])) == 0
+    merged_claims = ledger.claims_by_speaker.get("SPEAKER_00", [])
+    assert len(merged_claims) == 2
+    assert all(c.speaker_id == "SPEAKER_00" for c in merged_claims)
+
+    # Idempotent second call
+    ledger.merge_speaker_id("PROV_01", "SPEAKER_00")
+    assert len(ledger.claims_by_speaker.get("SPEAKER_00", [])) == 2
+
+
+def test_verify_consistency_backend_exception_fallback() -> None:
+    """Verify LLM exception during verify_consistency falls back to UNVERIFIABLE."""
+    mock_llm = MagicMock(spec=LLMAdapter)
+    mock_llm.generate_structured.side_effect = RuntimeError("Connection timeout")
+
+    ledger = ClaimsLedger(llm_adapter=mock_llm)
+    c1 = ClaimItem(
+        claim_id="CLM_ERR_01",
+        turn_id=1,
+        speaker_id="SPEAKER_00",
+        raw_subject="Alice",
+        canonical_entity="alice",
+        predicate="arrived",
+        object_value="home",
+        time_ref_raw="noon",
+    )
+    ledger.add_claim(c1)
+
+    c2 = ClaimItem(
+        claim_id="CLM_ERR_02",
+        turn_id=2,
+        speaker_id="SPEAKER_00",
+        raw_subject="Alice",
+        canonical_entity="alice",
+        predicate="departed",
+        object_value="home",
+        time_ref_raw="noon",
+    )
+
+    res = ledger.verify_consistency(c2)
+    assert res.verdict == VerdictStatus.UNVERIFIABLE
+    assert res.confidence == 0.0
+    assert "Connection timeout" in res.explanation
+
+
+def test_llm_adapter_retry_on_transient_failure() -> None:
+    """Verify LLMAdapter retries on transient error and succeeds."""
+    adapter = LLMAdapter()
+    calls = []
+
+    def mock_generate(prompt, model, sys):
+        calls.append(1)
+        if len(calls) == 1:
+            raise RuntimeError("Transient network blip")
+        return ClaimExtractionResponse(claims=[])
+
+    adapter._generate_ollama = mock_generate  # type: ignore
+
+    res = adapter.generate_structured(
+        prompt="Extract claims",
+        response_model=ClaimExtractionResponse,
+    )
+    assert isinstance(res, ClaimExtractionResponse)
+    assert len(calls) == 2  # 1 failure + 1 retry
+

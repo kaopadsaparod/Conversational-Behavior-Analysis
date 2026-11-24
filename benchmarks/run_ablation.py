@@ -54,10 +54,7 @@ def evaluate_loso(records: Sequence[RecorderTurnRecord]) -> Dict[str, AblationMe
     for r in records:
         is_math_anomaly = False
         if r.mahalanobis is not None:
-            if r.mahalanobis.direction_label in (
-                DirectionLabel.COGNITIVE_LOAD_ANOMALY,
-                DirectionLabel.CALM_DEVIATION,
-            ):
+            if r.mahalanobis.direction_label == DirectionLabel.COGNITIVE_LOAD_ANOMALY:
                 is_math_anomaly = True
                 math_anomalies += 1
 

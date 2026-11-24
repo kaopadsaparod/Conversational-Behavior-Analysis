@@ -199,3 +199,70 @@ def test_idempotent_merge_speaker_id() -> None:
     assert list(store._history[new_id][feat]) == history_snapshot
     assert store._ok_counts[new_id][feat] == ok_count_snapshot
     assert store._anchors[new_id][feat] == anchor_snapshot
+
+
+# ============================================================================
+# 5. score_and_update_turn and reset_anchor Tests
+# ============================================================================
+
+
+def test_score_and_update_turn_convenience() -> None:
+    """Verify score_and_update_turn computes scores for all valid features and updates baseline."""
+    from dce.schemas import ProsodyFeatures, TimingFeatures, TurnFeatures, VisionFeatures
+
+    store = BaselineStore()
+    speaker_id = "SPEAKER_BATCH"
+
+    turn_features = TurnFeatures(
+        turn_id=1,
+        speaker_id=speaker_id,
+        start_ns=0,
+        end_ns=1_000_000_000,
+        timing=TimingFeatures(
+            response_latency_open=0.45,
+            response_latency_closed=0.20,
+        ),
+        prosody=ProsodyFeatures(
+            f0_semitone_sd=2.8,
+            articulation_rate=4.5,
+            quality_flag="ok",
+        ),
+        vision=VisionFeatures(
+            blink_rate_per_min=19.0,
+            quality_flag="ok",
+        ),
+    )
+
+    scores = store.score_and_update_turn(speaker_id, turn_features)
+    assert len(scores) >= 4
+    assert "response_latency_open" in scores
+    assert "f0_semitone_sd" in scores
+    assert "articulation_rate" in scores
+    assert "blink_rate_per_min" in scores
+
+    # Features should now be recorded in history
+    assert speaker_id in store._history
+    assert len(store._history[speaker_id]["articulation_rate"]) == 1
+
+
+def test_reset_anchor_single_and_all() -> None:
+    """Verify reset_anchor clears locks and medians for specific feature and all features."""
+    store = BaselineStore()
+    speaker_id = "SPK_RESET"
+
+    # Pre-populate anchor state
+    store._anchors[speaker_id] = {"f0_semitone_sd": 2.5, "articulation_rate": 4.2}
+    store._anchor_locked[speaker_id] = {"f0_semitone_sd": True, "articulation_rate": True}
+    store._ok_counts[speaker_id] = {"f0_semitone_sd": 10, "articulation_rate": 10}
+
+    # Reset single feature
+    store.reset_anchor(speaker_id, "f0_semitone_sd")
+    assert "f0_semitone_sd" not in store._anchors[speaker_id]
+    assert "f0_semitone_sd" not in store._anchor_locked[speaker_id]
+    assert "articulation_rate" in store._anchors[speaker_id]
+
+    # Reset all features
+    store.reset_anchor(speaker_id, None)
+    assert speaker_id not in store._anchors
+    assert speaker_id not in store._anchor_locked
+
