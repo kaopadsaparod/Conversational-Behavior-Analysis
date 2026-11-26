@@ -155,10 +155,21 @@ def test_pipeline_provisional_promotion_synchronization() -> None:
         pipeline.process_chunk(pcm_speech, vad_prob=0.85, pts_ns=pts_ns)
         pts_ns += 20_000_000
 
+    sample_vision = VisionFeatures(
+        blink_rate_per_min=18.0,
+        mean_lip_aperture=0.25,
+        face_detected=True,
+        quality_flag="ok",
+    )
+
     rec1 = None
     for _ in range(45):
         _, r = pipeline.process_chunk(
-            pcm_silence, vad_prob=0.10, pts_ns=pts_ns, voice_embedding=spk_emb
+            pcm_silence,
+            vad_prob=0.10,
+            pts_ns=pts_ns,
+            voice_embedding=spk_emb,
+            vision_features=sample_vision,
         )
         if r is not None:
             rec1 = r
@@ -177,7 +188,11 @@ def test_pipeline_provisional_promotion_synchronization() -> None:
     rec2 = None
     for _ in range(45):
         _, r = pipeline.process_chunk(
-            pcm_silence, vad_prob=0.10, pts_ns=pts_ns, voice_embedding=spk_emb
+            pcm_silence,
+            vad_prob=0.10,
+            pts_ns=pts_ns,
+            voice_embedding=spk_emb,
+            vision_features=sample_vision,
         )
         if r is not None:
             rec2 = r
@@ -193,4 +208,122 @@ def test_pipeline_provisional_promotion_synchronization() -> None:
     assert prov_id not in pipeline.baseline_store._history
     assert perm_id in pipeline.baseline_store._history
 
+    pipeline.close()
+
+
+def _run_turn(
+    pipeline: DiscourseConsistencyPipeline,
+    start_ns: int,
+    speech_chunks: int = 20,
+    silence_chunks: int = 45,
+    transcript_text: str = "Hello.",
+    vision_features: VisionFeatures | None = None,
+):
+    """Helper to feed one full turn of speech + hard EOT silence and return (record, next_pts_ns)."""
+    pcm_speech = _generate_pcm_chunk(320, amplitude=0.08)
+    pcm_silence = _generate_pcm_chunk(320, amplitude=0.0)
+    pts_ns = start_ns
+    for _ in range(speech_chunks):
+        pipeline.process_chunk(pcm_speech, vad_prob=0.85, pts_ns=pts_ns)
+        pts_ns += 20_000_000
+
+    committed = None
+    for _ in range(silence_chunks):
+        _, rec = pipeline.process_chunk(
+            pcm_silence,
+            vad_prob=0.10,
+            pts_ns=pts_ns,
+            transcript_text=transcript_text,
+            vision_features=vision_features,
+        )
+        if rec is not None:
+            committed = rec
+        pts_ns += 20_000_000
+    return committed, pts_ns
+
+
+def test_pipeline_metamorphic_response_latency_and_question_classification() -> None:
+    """Verify open/closed latency classification from prior turn and metamorphic gap sensitivity."""
+    from unittest.mock import MagicMock
+    from dce.reasoning.claims_ledger import ClaimsLedger
+    from dce.reasoning.llm_adapter import LLMAdapter
+    from dce.schemas import ClaimExtractionResponse
+
+    cfg = AppConfig(
+        mode=ClockMode.OFFLINE,
+        vad=VadConfig(
+            speech_prob_on=0.55,
+            speech_prob_off=0.35,
+            min_speech_ms=160.0,
+            soft_pause_ms=400.0,
+            hard_eot_ms=800.0,
+            min_speculative_ms=600.0,
+        ),
+    )
+    pipeline = DiscourseConsistencyPipeline(config=cfg)
+    mock_llm = MagicMock(spec=LLMAdapter)
+    mock_llm.generate_structured.return_value = ClaimExtractionResponse(claims=[])
+    pipeline._claims_ledger = ClaimsLedger(llm_adapter=mock_llm)
+
+    # Turn 1: Open wh-question
+    r1, pts = _run_turn(pipeline, start_ns=0, transcript_text="Where did you go yesterday?")
+    assert r1 is not None
+    assert r1.features.timing.response_latency_open is None
+    assert r1.features.timing.response_latency_closed is None
+
+    # Turn 2: Answer after 500ms gap -> response_latency_open ~ 0.5s
+    r2, pts = _run_turn(
+        pipeline,
+        start_ns=r1.features.end_ns + 500_000_000,
+        transcript_text="Did you check the server room?",
+    )
+    assert r2 is not None
+    assert r2.features.timing.response_latency_open is not None
+    assert math.isclose(r2.features.timing.response_latency_open, 0.5, abs_tol=0.05)
+    assert r2.features.timing.response_latency_closed is None
+
+    # Turn 3: Answer to closed aux/modal question after 1500ms gap -> response_latency_closed ~ 1.5s
+    r3, pts = _run_turn(
+        pipeline,
+        start_ns=r2.features.end_ns + 1_500_000_000,
+        transcript_text="Yes, I checked it.",
+    )
+    assert r3 is not None
+    assert r3.features.timing.response_latency_closed is not None
+    assert math.isclose(r3.features.timing.response_latency_closed, 1.5, abs_tol=0.05)
+    assert r3.features.timing.response_latency_open is None
+
+    # Turn 4: Prior turn was NOT a question -> both latencies must be None
+    r4, _ = _run_turn(
+        pipeline,
+        start_ns=r3.features.end_ns + 600_000_000,
+        transcript_text="Okay.",
+    )
+    assert r4 is not None
+    assert r4.features.timing.response_latency_open is None
+    assert r4.features.timing.response_latency_closed is None
+
+    pipeline.close()
+
+
+def test_pipeline_metamorphic_vision_disabled_and_blink_transcript() -> None:
+    """Verify disabling vision sets blink_rate_per_min=None and 'blink' in transcript does not crash."""
+    from unittest.mock import MagicMock
+    from dce.reasoning.claims_ledger import ClaimsLedger
+    from dce.reasoning.llm_adapter import LLMAdapter
+    from dce.schemas import ClaimExtractionResponse
+
+    pipeline = DiscourseConsistencyPipeline()
+    mock_llm = MagicMock(spec=LLMAdapter)
+    mock_llm.generate_structured.return_value = ClaimExtractionResponse(claims=[])
+    pipeline._claims_ledger = ClaimsLedger(llm_adapter=mock_llm)
+    rec, _ = _run_turn(
+        pipeline,
+        start_ns=0,
+        transcript_text="I did not blink when the light flashed.",
+        vision_features=None,
+    )
+    assert rec is not None
+    assert rec.features.vision.blink_rate_per_min is None
+    assert rec.features.vision.face_detected is False
     pipeline.close()

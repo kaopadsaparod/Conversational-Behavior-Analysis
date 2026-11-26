@@ -92,16 +92,15 @@ def test_compute_mahalanobis_indefinite_nonfinite_and_overflow_guards() -> None:
     assert res_indef.eigen_fallback_used is True
     assert math.isfinite(res_indef.d_sq) and res_indef.d_sq >= 0.0
 
-    # Non-finite correlation matrix
+    # Non-finite correlation matrix raises ValueError
     nan_corr = np.array([[1.0, float("nan")], [float("inf"), 1.0]], dtype=np.float64)
-    res_nan = compute_mahalanobis(
-        feature_scores={"jitter_local_pct": 2.0, "shimmer_local_pct": 1.0},
-        correlation_matrix=nan_corr,
-        feature_order=order,
-        priors=priors,
-    )
-    assert math.isfinite(res_nan.d_sq)
-    assert math.isfinite(res_nan.chi2_tail_score)
+    with pytest.raises(ValueError):
+        compute_mahalanobis(
+            feature_scores={"jitter_local_pct": 2.0, "shimmer_local_pct": 1.0},
+            correlation_matrix=nan_corr,
+            feature_order=order,
+            priors=priors,
+        )
 
     # Overflow guard on huge z-scores
     res_huge = compute_mahalanobis(
@@ -217,7 +216,7 @@ def test_verify_consistency_hardened_reference_validation() -> None:
         prior_claim_id="CLM_0001_01",
         explanation="Wrong source turn.",
     )
-    assert ledger.verify_consistency(c2).verdict == VerdictStatus.REJECTED_INVALID_REF
+    assert ledger.verify_consistency(c2).response.verdict == VerdictStatus.REJECTED_INVALID_REF
 
     # 2. prior_turn_id >= current_claim.turn_id
     mock_llm.generate_structured.return_value = ConsistencyVerificationResponse(
@@ -228,7 +227,7 @@ def test_verify_consistency_hardened_reference_validation() -> None:
         prior_claim_id="CLM_0002_01",
         explanation="Self-reference.",
     )
-    assert ledger.verify_consistency(c2).verdict == VerdictStatus.REJECTED_INVALID_REF
+    assert ledger.verify_consistency(c2).response.verdict == VerdictStatus.REJECTED_INVALID_REF
 
     # 3. Missing prior_turn_id on DIRECT_CONTRADICTION
     mock_llm.generate_structured.return_value = ConsistencyVerificationResponse(
@@ -239,7 +238,7 @@ def test_verify_consistency_hardened_reference_validation() -> None:
         prior_claim_id=None,
         explanation="Missing prior ref.",
     )
-    assert ledger.verify_consistency(c2).verdict == VerdictStatus.REJECTED_INVALID_REF
+    assert ledger.verify_consistency(c2).response.verdict == VerdictStatus.REJECTED_INVALID_REF
 
     # 4. Unknown prior_claim_id
     mock_llm.generate_structured.return_value = ConsistencyVerificationResponse(
@@ -250,7 +249,7 @@ def test_verify_consistency_hardened_reference_validation() -> None:
         prior_claim_id="CLM_FAKE_99",
         explanation="Fake claim id.",
     )
-    assert ledger.verify_consistency(c2).verdict == VerdictStatus.REJECTED_INVALID_REF
+    assert ledger.verify_consistency(c2).response.verdict == VerdictStatus.REJECTED_INVALID_REF
 
 
 # ============================================================================
@@ -347,12 +346,12 @@ def test_claims_ledger_alias_time_matching_and_skip_edge_cases() -> None:
     )
     ledger.add_claim(c2)
     res = ledger.verify_consistency(c2)
-    assert res.verdict == VerdictStatus.CONSISTENT
+    assert res.response.verdict == VerdictStatus.CONSISTENT
 
     # should_skip_extraction edge cases
     assert should_skip_extraction(TurnTranscript(turn_id=1, speaker_id="S", text="London.", start_ns=0, end_ns=1)) is False
-    assert should_skip_extraction(TurnTranscript(turn_id=2, speaker_id="S", text="Yeah I'm", start_ns=0, end_ns=1)) is True
-    assert should_skip_extraction(TurnTranscript(turn_id=3, speaker_id="S", text="I'm", start_ns=0, end_ns=1)) is True
+    assert should_skip_extraction(TurnTranscript(turn_id=2, speaker_id="S", text="Yeah.", start_ns=0, end_ns=1)) is True
+    assert should_skip_extraction(TurnTranscript(turn_id=3, speaker_id="S", text="Got it.", start_ns=0, end_ns=1)) is True
 
 
 def test_llm_adapter_inline_defs_preserves_siblings_and_fallback_model() -> None:
@@ -555,7 +554,7 @@ def test_step_b_allows_spoken_firewall_words_and_pipeline_priors_from_other_cwd(
     ledger.add_claim(c1)
     ledger.add_claim(c2)
     res = ledger.verify_consistency(c2)
-    assert res.verdict == VerdictStatus.DIRECT_CONTRADICTION
+    assert res.response.verdict == VerdictStatus.DIRECT_CONTRADICTION
 
     # Pipeline loads data/priors_en.json even when CWD is tmp_path
     monkeypatch.chdir(tmp_path)
@@ -592,3 +591,124 @@ def test_step_b_allows_spoken_firewall_words_and_pipeline_priors_from_other_cwd(
     metrics_multi = evaluate_loso([rec_multi])
     assert metrics_multi["llm_only"].contradictions_flagged == 1
     assert metrics_multi["llm_only"].positive_rate == 1.0
+
+
+def test_apply_promotion_calls_merge_on_both_stores() -> None:
+    """Verify apply_promotion delegates merge_speaker_id to baseline and ledger."""
+    from dce.pipeline import apply_promotion
+
+    calls = []
+
+    class FakeStore:
+        def __init__(self, name: str) -> None:
+            self.name = name
+
+        def merge_speaker_id(self, old_id: str, new_id: str) -> None:
+            calls.append((self.name, old_id, new_id))
+
+    fake_ledger = FakeStore("ledger")
+    fake_baseline = FakeStore("baseline")
+
+    assign_none = SpeakerAssignment(speaker_id="SPEAKER_00", similarity=0.9, promoted_from=None)
+    apply_promotion(assign_none, fake_ledger, fake_baseline)  # type: ignore[arg-type]
+    assert calls == []
+
+    assign_prom = SpeakerAssignment(
+        speaker_id="SPEAKER_00",
+        similarity=0.9,
+        promoted_from="PROV_00",
+    )
+    apply_promotion(assign_prom, fake_ledger, fake_baseline)  # type: ignore[arg-type]
+    assert ("baseline", "PROV_00", "SPEAKER_00") in calls
+    assert ("ledger", "PROV_00", "SPEAKER_00") in calls
+
+
+def test_no_fake_constants_in_extractors_and_workers(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Verify extractors and workers return None + quality_flag instead of fake constants."""
+    from dce.extractors.audio_dsp import extract_prosody
+    from dce.extractors.vision_face import extract_vision_frame
+
+    monkeypatch.setitem(sys.modules, "parselmouth", None)
+    prosody = extract_prosody([0.1] * 3200, sample_rate=16000)
+    assert prosody.quality_flag == "no_audio_backend"
+    assert prosody.f0_median_hz is None
+    assert prosody.f0_semitone_sd is None
+    assert prosody.glottal_periods_count == 0
+
+    monkeypatch.setitem(sys.modules, "mediapipe", None)
+    vision = extract_vision_frame(np.zeros((64, 64, 3), dtype=np.uint8))
+    assert vision.quality_flag == "no_vision_backend"
+    assert vision.blink_rate_per_min is None
+    assert vision.face_id_hint is None
+
+
+def test_recorder_thai_utf8_and_ablation_verification_result(tmp_path: Path) -> None:
+    """Verify FeatureRecorder/ReplayLoader preserve Thai UTF-8 and evaluate_loso handles VerificationResult."""
+    from dce.recorder import FeatureRecorder, ReplayLoader
+    from dce.schemas import VerificationResult
+
+    thai_text = "สวัสดีครับ ทดสอบภาษาไทย เมื่อวานตอนบ่ายสามโมง"
+    rec = RecorderTurnRecord(
+        turn_id=1,
+        speaker_assignment=SpeakerAssignment(speaker_id="SPEAKER_00", similarity=0.95),
+        transcript=TurnTranscript(
+            turn_id=1,
+            speaker_id="SPEAKER_00",
+            text=thai_text,
+            start_ns=0,
+            end_ns=1_000_000_000,
+        ),
+        features=TurnFeatures(turn_id=1, speaker_id="SPEAKER_00", start_ns=0, end_ns=1_000_000_000),
+    )
+    out_path = tmp_path / "thai_session.jsonl"
+    with FeatureRecorder(out_path) as recorder:
+        recorder.write_record(rec)
+
+    loaded = ReplayLoader(out_path).load_all()
+    assert len(loaded) == 1
+    assert loaded[0].transcript is not None
+    assert loaded[0].transcript.text == thai_text
+
+    # evaluate_loso accepts VerificationResult instances as well as ConsistencyVerificationResponse
+    vr = VerificationResult(
+        response=ConsistencyVerificationResponse(
+            verdict=VerdictStatus.DIRECT_CONTRADICTION,
+            source_turn_id=1,
+            prior_turn_id=0,
+            explanation="Contradiction",
+        ),
+        conflict_scope="self",
+    )
+    assert vr.response.verdict == VerdictStatus.DIRECT_CONTRADICTION
+    rec_vr = RecorderTurnRecord(
+        turn_id=2,
+        speaker_assignment=SpeakerAssignment(speaker_id="SPEAKER_00", similarity=0.95),
+        features=TurnFeatures(turn_id=2, speaker_id="SPEAKER_00", start_ns=0, end_ns=1_000_000_000),
+        verifications=[vr.response],
+        verification=vr.response,
+    )
+    ablation = evaluate_loso([rec_vr])
+    assert ablation["llm_only"].contradictions_flagged == 1
+
+
+def test_is_speculative_result_valid_reconciliation() -> None:
+    """Verify pipeline reconciles stale speculative triggers via is_speculative_result_valid."""
+    from dce.schemas import HardTurnCommitEvent, SpeculativeTriggerEvent
+    from dce.vad_endpointing import is_speculative_result_valid
+
+    commit = HardTurnCommitEvent(
+        turn_id=1,
+        valid_epoch_id=2,
+        start_ns=0,
+        end_ns=1_000_000_000,
+    )
+    assert is_speculative_result_valid(1, 1, commit) is False
+    assert is_speculative_result_valid(1, 2, commit) is True
+
+    pipeline = DiscourseConsistencyPipeline()
+    stale_spec = SpeculativeTriggerEvent(turn_id=1, epoch_id=1, start_ns=0, last_voiced_ns=500_000_000)
+    pipeline._mailbox.put_latest(stale_spec)
+    pipeline._handle_turn_commit(commit, transcript_text="")
+    assert pipeline._mailbox.peek() is None
+    pipeline.close()
+

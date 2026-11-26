@@ -120,6 +120,14 @@ def test_weighted_median_edge_cases() -> None:
     assert math.isclose(weighted_median([42.0], [1.0]), 42.0, abs_tol=1e-12)
 
 
+def test_weighted_median_tiny_weights_e13() -> None:
+    """Verify rel_tol=1e-12, abs_tol=0.0 avoids false ties for weights ~1e-13."""
+    # Non-tie: 0.4e-13 < 0.5 * 1.0e-13, must return 20.0 (not 15.0)
+    assert weighted_median([10.0, 20.0], [0.4e-13, 0.6e-13]) == 20.0
+    # Exact tie: 0.5e-13 == 0.5 * 1.0e-13, must interpolate to 15.0
+    assert math.isclose(weighted_median([10.0, 20.0], [0.5e-13, 0.5e-13]), 15.0, abs_tol=1e-12)
+
+
 def test_weighted_mad_hand_calculated() -> None:
     """Verify weighted MAD using the same weighted median function.
 
@@ -238,6 +246,129 @@ def test_compute_mahalanobis_singular_fallback() -> None:
     assert 0.0 <= res.chi2_tail_score <= 1.0
     assert hasattr(res, "chi2_tail_score")
     assert not hasattr(res, "p_value")
+
+
+def test_compute_mahalanobis_invalid_correlation_matrix_raises() -> None:
+    """Shape mismatch or non-finite values in correlation_matrix must raise ValueError."""
+    priors = get_default_priors()
+    feature_order = ["jitter_local_pct", "shimmer_local_pct"]
+
+    with pytest.raises(ValueError):
+        compute_mahalanobis(
+            feature_scores={"jitter_local_pct": 1.0, "shimmer_local_pct": 1.0},
+            correlation_matrix=np.eye(3),
+            feature_order=feature_order,
+            priors=priors,
+        )
+
+    nan_corr = np.array([[1.0, float("nan")], [float("nan"), 1.0]], dtype=np.float64)
+    with pytest.raises(ValueError):
+        compute_mahalanobis(
+            feature_scores={"jitter_local_pct": 1.0, "shimmer_local_pct": 1.0},
+            correlation_matrix=nan_corr,
+            feature_order=feature_order,
+            priors=priors,
+        )
+
+    inf_corr = np.array([[1.0, float("inf")], [float("inf"), 1.0]], dtype=np.float64)
+    with pytest.raises(ValueError):
+        compute_mahalanobis(
+            feature_scores={"jitter_local_pct": 1.0, "shimmer_local_pct": 1.0},
+            correlation_matrix=inf_corr,
+            feature_order=feature_order,
+            priors=priors,
+        )
+
+
+def test_compute_mahalanobis_non_pd_3x3_eigen_fallback() -> None:
+    """Non-PD 3x3 voice submatrix triggers Cholesky failure -> eigen-clamp fallback."""
+    priors = get_default_priors()
+    order = ["jitter_local_pct", "shimmer_local_pct", "hnr_db"]
+    # (jitter,shimmer)=0.9, (jitter,hnr)=0.9, (shimmer,hnr)=-0.9 -> smallest eig < 0
+    non_pd = np.array(
+        [
+            [1.0, 0.9, 0.9],
+            [0.9, 1.0, -0.9],
+            [0.9, -0.9, 1.0],
+        ],
+        dtype=np.float64,
+    )
+    res = compute_mahalanobis(
+        feature_scores={"jitter_local_pct": 1.5, "shimmer_local_pct": -0.5, "hnr_db": 1.0},
+        correlation_matrix=non_pd,
+        feature_order=order,
+        priors=priors,
+        reg_lambda=0.0,
+    )
+    assert res.eigen_fallback_used is True
+    assert math.isfinite(res.d_sq) and res.d_sq >= 0.0
+
+
+def test_compute_mahalanobis_z_clip_prevents_overflow() -> None:
+    """Huge z=1e200 is clipped by z_clip (default 50.0) so d_sq is finite and bounded."""
+    priors = get_default_priors()
+    order = ["jitter_local_pct", "shimmer_local_pct"]
+    res = compute_mahalanobis(
+        feature_scores={"jitter_local_pct": 1e200, "shimmer_local_pct": -1e200},
+        correlation_matrix=np.eye(2),
+        feature_order=order,
+        priors=priors,
+        z_clip=50.0,
+    )
+    assert math.isfinite(res.d_sq)
+    assert math.isclose(res.d_sq, 50.0**2 + 50.0**2, rel_tol=1e-12)
+    assert math.isfinite(res.mahalanobis_distance)
+
+
+def test_compute_mahalanobis_closed_form_identity_df2() -> None:
+    """Closed-form identity check: d_sq = sum(z^2) and df=2 -> chi2_tail_score = exp(-d_sq/2) within 1e-12."""
+    priors = get_default_priors()
+    order = ["f0_semitone_sd", "jitter_local_pct"]
+    z1, z2 = 1.8, -0.9
+    res = compute_mahalanobis(
+        feature_scores={"f0_semitone_sd": z1, "jitter_local_pct": z2},
+        correlation_matrix=np.eye(2),
+        feature_order=order,
+        priors=priors,
+    )
+    expected_d_sq = z1**2 + z2**2
+    expected_tail = math.exp(-expected_d_sq / 2.0)
+    assert math.isclose(res.d_sq, expected_d_sq, abs_tol=1e-12)
+    assert math.isclose(res.chi2_tail_score, expected_tail, abs_tol=1e-12)
+
+
+def test_classify_direction_uses_positive_calm_and_stress_thresholds() -> None:
+    """Verify stress_z_threshold and calm_z_threshold (positive magnitude) are respected."""
+    priors = get_default_priors()
+    # Positive calm_z_threshold=1.5: stress_z=-1.6 <= -1.5 -> CALM_DEVIATION
+    _, lbl_calm = classify_direction(
+        chi2_tail_score=0.01,
+        evaluated_features=["jitter_local_pct"],
+        feature_z_scores={"jitter_local_pct": -1.6},
+        priors=priors,
+        calm_z_threshold=1.5,
+    )
+    assert lbl_calm == DirectionLabel.CALM_DEVIATION
+
+    # Positive calm_z_threshold=2.0: stress_z=-1.6 > -2.0 -> MIXED_SUBTHRESHOLD_DEVIATION
+    _, lbl_mixed = classify_direction(
+        chi2_tail_score=0.01,
+        evaluated_features=["jitter_local_pct"],
+        feature_z_scores={"jitter_local_pct": -1.6},
+        priors=priors,
+        calm_z_threshold=2.0,
+    )
+    assert lbl_mixed == DirectionLabel.MIXED_SUBTHRESHOLD_DEVIATION
+
+    # stress_z_threshold=2.0: z=1.6 < 2.0 -> MIXED_SUBTHRESHOLD_DEVIATION (not anomaly)
+    _, lbl_stress = classify_direction(
+        chi2_tail_score=0.01,
+        evaluated_features=["jitter_local_pct"],
+        feature_z_scores={"jitter_local_pct": 1.6},
+        priors=priors,
+        stress_z_threshold=2.0,
+    )
+    assert lbl_stress == DirectionLabel.MIXED_SUBTHRESHOLD_DEVIATION
 
 
 # ============================================================================
@@ -385,3 +516,35 @@ def test_normalized_av_xcorr_exact_overlap_per_lag() -> None:
     assert lag is not None
     assert math.isclose(corr, 1.0, abs_tol=1e-4)
     assert math.isclose(lag, 0.0, abs_tol=1e-4)
+
+
+def test_normalized_av_xcorr_moving_average_lags() -> None:
+    """Verify rho(tau) = corr(v[n], e[n+tau]) with +100ms, -100ms, and 0ms lags at 50 Hz."""
+    rng = np.random.default_rng(0)
+    raw = rng.standard_normal(500)
+    v = np.convolve(raw, np.ones(5, dtype=np.float64) / 5.0, mode="valid")
+    t = np.arange(len(v), dtype=np.float64) / 50.0
+
+    # Audio lags video by 100ms (5 samples at 50 Hz)
+    e_lag = np.empty_like(v)
+    e_lag[5:] = v[:-5]
+    e_lag[:5] = v[:5]
+    corr_pos, lag_pos = normalized_av_xcorr(t, v, t, e_lag, grid_hz=50.0, max_lag_ms=200.0)
+    assert corr_pos is not None and lag_pos is not None
+    assert math.isclose(corr_pos, 1.0, abs_tol=1e-9)
+    assert math.isclose(lag_pos, 100.0, abs_tol=1e-9)
+
+    # Video lags audio by 100ms (audio leads by 100ms)
+    e_lead = np.empty_like(v)
+    e_lead[:-5] = v[5:]
+    e_lead[-5:] = v[-5:]
+    corr_neg, lag_neg = normalized_av_xcorr(t, v, t, e_lead, grid_hz=50.0, max_lag_ms=200.0)
+    assert corr_neg is not None and lag_neg is not None
+    assert math.isclose(corr_neg, 1.0, abs_tol=1e-9)
+    assert math.isclose(lag_neg, -100.0, abs_tol=1e-9)
+
+    # Identical signal
+    corr_id, lag_id = normalized_av_xcorr(t, v, t, v, grid_hz=50.0, max_lag_ms=200.0)
+    assert corr_id is not None and lag_id is not None
+    assert math.isclose(corr_id, 1.0, abs_tol=1e-9)
+    assert math.isclose(lag_id, 0.0, abs_tol=1e-9)

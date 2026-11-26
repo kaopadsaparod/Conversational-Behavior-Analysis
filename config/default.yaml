@@ -57,7 +57,9 @@ mahalanobis:
   tail_score_threshold: 0.05
   tension_z_threshold: 1.5
   hnr_tension_z_threshold: -1.5
-  calm_z_threshold: -1.5
+  stress_z_threshold: 1.5
+  calm_z_threshold: 1.5
+  z_clip: 50.0
 
 av_sync:
   grid_hz: 50.0
@@ -78,3 +80,4 @@ speaker_registry:
 reasoning:
   anomaly_guided_search: false
   max_llm_retries: 1
+  retrieval_top_k: 12

@@ -19,7 +19,7 @@ from typing import Dict, List, Optional, Sequence
 import numpy as np
 
 from dce.recorder import ReplayLoader
-from dce.schemas import DirectionLabel, RecorderTurnRecord, VerdictStatus
+from dce.schemas import DirectionLabel, RecorderTurnRecord, VerdictStatus, VerificationResult
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("ablation")
@@ -66,7 +66,8 @@ def evaluate_loso(records: Sequence[RecorderTurnRecord]) -> Dict[str, AblationMe
             else ([r.verification] if r.verification is not None else [])
         )
         if any(
-            v.verdict in (VerdictStatus.DIRECT_CONTRADICTION, VerdictStatus.TIMELINE_SHIFT)
+            (v.response.verdict if isinstance(v, VerificationResult) else v.verdict)
+            in (VerdictStatus.DIRECT_CONTRADICTION, VerdictStatus.TIMELINE_SHIFT)
             for v in verifications_to_check
         ):
             is_llm_contradiction = True

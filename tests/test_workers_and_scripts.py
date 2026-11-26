@@ -38,7 +38,10 @@ def test_windows_spawn_vision_worker_ipc() -> None:
         assert res is not None
         assert res.get("status") == "OK"
         assert res.get("pts_ns") == pts_test
-        assert res.get("face_detected") is True
+        assert res.get("face_detected") is False
+        assert res.get("mean_lip_aperture") is None
+        assert res.get("blink_rate_per_min") is None
+        assert res.get("quality_flag") in ("no_vision_backend", "no_face", "extraction_error")
 
         # Send STOP
         in_q.put("STOP")
@@ -76,7 +79,8 @@ def test_windows_spawn_reasoning_worker_ipc() -> None:
         assert res is not None
         assert res.get("status") == "OK"
         assert res.get("turn_id") == 42
-        assert res.get("verdict") == "CONSISTENT"
+        assert res.get("verdict") is None
+        assert res.get("quality_flag") == "no_llm_backend"
 
         # Send STOP
         in_q.put("STOP")

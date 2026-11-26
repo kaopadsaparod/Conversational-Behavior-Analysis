@@ -90,7 +90,7 @@ def test_default_config_loading() -> None:
     assert cfg.mahalanobis.tail_score_threshold == 0.05
     assert cfg.mahalanobis.tension_z_threshold == 1.5
     assert cfg.mahalanobis.hnr_tension_z_threshold == -1.5
-    assert cfg.mahalanobis.calm_z_threshold == -1.5
+    assert cfg.mahalanobis.calm_z_threshold == 1.5
 
     assert cfg.av_sync.grid_hz == 50.0
     assert cfg.av_sync.min_overlap_sec == 0.5
@@ -262,6 +262,7 @@ def test_schemas_enums_and_contracts() -> None:
 
     commit = HardTurnCommitEvent(
         turn_id=1,
+        valid_epoch_id=1,
         start_ns=100,
         end_ns=900,
         voiced_chunks=10,

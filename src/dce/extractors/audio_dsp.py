@@ -73,13 +73,15 @@ def extract_prosody(
         import parselmouth
         from parselmouth.praat import call
     except ImportError:
-        logger.warning("parselmouth not installed; returning fallback prosody features.")
-        # Fallback simple energy-based computation when praat-parselmouth is unavailable
-        rms = float(np.sqrt(np.mean(audio_arr**2))) if len(audio_arr) > 0 else 0.0
+        logger.warning("parselmouth not installed; returning unavailable prosody features.")
         return ProsodyFeatures(
-            f0_median_hz=speaker_median_f0,
-            f0_semitone_sd=1.0 if rms > 0.01 else 0.0,
-            glottal_periods_count=30 if rms > 0.01 else 0,
+            f0_median_hz=None,
+            f0_semitone_sd=None,
+            jitter_local_pct=None,
+            shimmer_local_pct=None,
+            hnr_db=None,
+            articulation_rate=None,
+            glottal_periods_count=0,
             quality_flag="no_audio_backend",
         )
 

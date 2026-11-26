@@ -266,3 +266,93 @@ def test_reset_anchor_single_and_all() -> None:
     assert speaker_id not in store._anchors
     assert speaker_id not in store._anchor_locked
 
+
+# ============================================================================
+# 6. Quality Gate and Priors Path Resolution Tests
+# ============================================================================
+
+
+def test_quality_gate_excludes_insufficient_data_from_mahalanobis() -> None:
+    """Verify quality_flag='insufficient_data' returns z_score=None, stress_z=None and is excluded."""
+    import numpy as np
+    from dce.math_core import compute_mahalanobis
+    from dce.schemas import ProsodyFeatures, TimingFeatures, TurnFeatures, VisionFeatures
+
+    store = BaselineStore()
+
+    gated = store.score_feature(
+        "SPK_QG", "jitter_local_pct", raw_value=2.0, quality_flag="insufficient_data"
+    )
+    assert gated.z_score is None
+    assert gated.stress_z is None
+    assert gated.confidence_weight == 0.0
+
+    tf = TurnFeatures(
+        turn_id=1,
+        speaker_id="SPK_QG",
+        start_ns=0,
+        end_ns=1_000_000_000,
+        timing=TimingFeatures(response_latency_open=0.5),
+        prosody=ProsodyFeatures(jitter_local_pct=2.0, quality_flag="insufficient_data"),
+        vision=VisionFeatures(quality_flag="no_vision_backend"),
+    )
+    scores = store.score_and_update_turn("SPK_QG", tf)
+    assert scores["jitter_local_pct"].z_score is None
+    assert scores["jitter_local_pct"].stress_z is None
+
+    m_res = compute_mahalanobis(
+        feature_scores=scores,
+        correlation_matrix=np.eye(8),
+        feature_order=list(store.priors.keys()),
+        priors=store.priors,
+    )
+    assert "jitter_local_pct" not in m_res.evaluated_features
+    assert m_res.evaluated_features == ["response_latency_open"]
+
+
+def test_priors_resolution_independent_of_cwd(tmp_path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Verify BaselineStore resolves <repo_root>/data/priors_en.json even when CWD is tmp_path."""
+    monkeypatch.delenv("DCE_PRIORS_PATH", raising=False)
+    monkeypatch.chdir(tmp_path)
+
+    store = BaselineStore()
+    assert "response_latency_open" in store.priors
+    assert math.isclose(store.priors["response_latency_open"].max_anchor_drift, 0.60, abs_tol=1e-9)
+
+
+def test_priors_resolution_env_and_missing_file(tmp_path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Verify DCE_PRIORS_PATH env override, FileNotFoundError on missing file, and allow_builtin_priors."""
+    import json
+
+    custom_priors_path = tmp_path / "custom_priors.json"
+    default_priors = get_default_priors()
+    # Modify a field to verify custom file was loaded
+    custom_dict = {
+        "calibrated": True,
+        "source": "custom_test",
+        "feature_order": list(default_priors.keys()),
+        "features": {k: v.model_dump() for k, v in default_priors.items()},
+        "correlation_matrix": [],
+    }
+    custom_dict["features"]["articulation_rate"]["pop_median"] = 5.25
+    custom_priors_path.write_text(json.dumps(custom_dict), encoding="utf-8")
+
+    # 1. Env var DCE_PRIORS_PATH takes precedence over repo default
+    monkeypatch.setenv("DCE_PRIORS_PATH", str(custom_priors_path))
+    store_env = BaselineStore()
+    assert math.isclose(store_env.priors["articulation_rate"].pop_median, 5.25, abs_tol=1e-9)
+
+    # 2. Explicit priors argument takes precedence over DCE_PRIORS_PATH
+    store_explicit = BaselineStore(priors=default_priors)
+    assert math.isclose(store_explicit.priors["articulation_rate"].pop_median, 4.40, abs_tol=1e-9)
+
+    # 3. Missing file raises FileNotFoundError unless allow_builtin_priors=True
+    missing_path = tmp_path / "does_not_exist.json"
+    monkeypatch.setenv("DCE_PRIORS_PATH", str(missing_path))
+    with pytest.raises(FileNotFoundError):
+        BaselineStore()
+
+    store_builtin = BaselineStore(allow_builtin_priors=True)
+    assert math.isclose(store_builtin.priors["articulation_rate"].pop_median, 4.40, abs_tol=1e-9)
+
+

@@ -3,11 +3,11 @@
 > **CRITICAL SCIENTIFIC & ETHICAL DISCLAIMER**  
 > **THIS SYSTEM IS NOT A LIE DETECTOR.**  
 >
-> Automated analysis of acoustic prosody, speech latency, facial kinematics, and autonomic physiological markers **CANNOT** determine truthfulness, deception, or honesty. Peer-reviewed scientific consensus (National Research Council, 2003; American Psychological Association; Vrij et al., 2019) conclusively demonstrates that somatic and vocal stress signals account for at most **15% to 20%** of the variance in human communication behavior.
+> Automated analysis of acoustic prosody, speech latency, facial kinematics, and autonomic physiological markers **CANNOT** determine truthfulness, deception, or honesty. Peer-reviewed scientific consensus (National Research Council, 2003; American Psychological Association; Vrij et al., 2019) demonstrates that somatic and vocal stress signals account for only a small fraction of the variance in human communication behavior and lack diagnostic specificity.
 >
 > Elevated vocal tension, speech latency, fundamental frequency fluctuations, or altered blink rates reflect **cognitive workload, affective arousal, situational anxiety, neurodiversity, or conversational hesitation**—phenomena frequently exhibited by completely truthful individuals under social pressure or investigative scrutiny.
 >
-> Under the **European Union Artificial Intelligence Act (EU AI Act, Articles 5 & 14)** and foundational jurisprudence (e.g., US *Employee Polygraph Protection Act*, 29 U.S.C. § 2001), using biometric or emotion recognition systems to infer truthfulness, culpability, or deceit in law enforcement, employment, educational, or judicial contexts is strictly prohibited or categorized as unacceptable/high risk.
+> Several jurisdictions restrict or prohibit biometric emotion-recognition and deception-inference systems in law enforcement, employment, educational, or judicial contexts (see, e.g., the [European Union Artificial Intelligence Act](https://eur-lex.europa.eu/eli/reg/2024/1689/oj) and the US *Employee Polygraph Protection Act*, 29 U.S.C. § 2001).
 >
 > The Discourse Consistency Engine (`dce`) is designed strictly as a **neuro-symbolic research instrument** for studying discourse coherence, conversational turn-taking dynamics, and communicative cognitive load. It must **NEVER** be deployed as an autonomous or semi-autonomous truth verification tool or used to make adverse decisions against any human being.
 
@@ -220,7 +220,7 @@ $$z_{\text{stress}, i} = \text{polarity}_i \cdot z_i, \qquad z_{\text{neutral}, 
 
 ### 2.6 Audio-Visual Cross-Correlation Synchronization
 
-Audio-visual temporal coherence validates whether speech acoustics correspond directly to visible articulatory kinematics (lip aperture), detecting synthetic voice substitution or transmission desynchronization.
+Audio-visual temporal coherence validates whether speech acoustics correspond temporally to visible articulatory kinematics (lip aperture) to detect transmission desynchronization.
 
 Given visual timestamps $t_{\text{vis}}$ with lip aperture $A(t)$ and audio timestamps $t_{\text{aud}}$ with RMS energy envelope $E(t)$:
 1. Verify monotonic ascending timestamps and finite values.
@@ -237,19 +237,9 @@ Given visual timestamps $t_{\text{vis}}$ with lip aperture $A(t)$ and audio time
 
 ---
 
-## 3. The 20% Variance Ceiling & Cognitive Load Ambiguity
+## 3. Physiological Signal Ambiguity & Cognitive Load
 
-A fundamental principle of conversational neuroscience is the **physiological signal ceiling**:
-
-```
-+-------------------------------------------------------------------------+
-|                  TOTAL VARIANCE IN CONVERSATIONAL BEHAVIOR              |
-+-------------------------------------------------------------------------+
-| [ Autonomic / Vocal Stress ] | [ Context, Demographics, Personality,   ] |
-| [     MAXIMUM 15% - 20%    ] | [ Syntax, Epistemics, Language, Memory  ] |
-|                              | [               80% - 85%              ] |
-+-------------------------------------------------------------------------+
-```
+A fundamental principle of conversational neuroscience is that **autonomic and vocal stress markers represent only a minor fraction of total communicative variance**, while the majority is driven by context, demographics, personality, syntax, epistemics, language, and memory.
 
 ### 3.1 Why Physiological Cues Cannot Prove Deception
 1. **Identical Autonomic Arousal Pathways**: Sympathetic nervous system activation (elevated heart rate, vocal cord micro-tremors, dry mouth, irregular breathing) is activated by:
@@ -335,8 +325,8 @@ discourse-consistency-engine/
 ### Installation
 ```bash
 # Clone the repository
-git clone https://github.com/example/discourse-consistency-engine.git
-cd discourse-consistency-engine
+git clone https://github.com/kaopadsaparod/Conversational-Behavior-Analysis.git
+cd Conversational-Behavior-Analysis
 
 # Install lightweight core and development dependencies
 pip install -e ".[dev]"

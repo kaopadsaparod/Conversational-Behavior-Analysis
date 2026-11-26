@@ -182,7 +182,7 @@ def extract_vision_frame(
                         blink_rate_per_min=None,
                         mean_lip_aperture=None,
                         face_detected=True,
-                        face_id_hint="FACE_0",
+                        face_id_hint=None,
                         quality_flag="extreme_head_pose",
                     )
 
@@ -211,10 +211,10 @@ def extract_vision_frame(
             is_blink = mean_ear < ear_blink_threshold
 
             return VisionFeatures(
-                blink_rate_per_min=20.0 if not is_blink else 40.0,
+                blink_rate_per_min=None,
                 mean_lip_aperture=norm_lip_aperture,
                 face_detected=True,
-                face_id_hint="FACE_0",
+                face_id_hint=None,
                 quality_flag="ok",
             )
 

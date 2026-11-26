@@ -11,6 +11,7 @@ import collections
 import json
 import logging
 import math
+import os
 from pathlib import Path
 from typing import Deque, Dict, List, Optional, Tuple, Union
 
@@ -34,7 +35,7 @@ def get_default_priors() -> Dict[str, PriorParameter]:
             pop_median=-0.20,
             pop_sigma=0.55,
             sigma_floor=0.15,
-            max_anchor_drift=0.85,
+            max_anchor_drift=0.60,
             log_transform=True,
             log_offset=0.05,
             stress_polarity=1,
@@ -44,7 +45,7 @@ def get_default_priors() -> Dict[str, PriorParameter]:
             pop_median=-0.80,
             pop_sigma=0.45,
             sigma_floor=0.15,
-            max_anchor_drift=0.70,
+            max_anchor_drift=0.50,
             log_transform=True,
             log_offset=0.05,
             stress_polarity=1,
@@ -54,7 +55,7 @@ def get_default_priors() -> Dict[str, PriorParameter]:
             pop_median=4.40,
             pop_sigma=0.75,
             sigma_floor=0.20,
-            max_anchor_drift=1.15,
+            max_anchor_drift=0.80,
             log_transform=False,
             log_offset=0.0,
             stress_polarity=0,
@@ -64,17 +65,17 @@ def get_default_priors() -> Dict[str, PriorParameter]:
             pop_median=2.60,
             pop_sigma=0.85,
             sigma_floor=0.25,
-            max_anchor_drift=1.25,
+            max_anchor_drift=0.90,
             log_transform=False,
             log_offset=0.0,
-            stress_polarity=0,
+            stress_polarity=1,
         ),
         "jitter_local_pct": PriorParameter(
             feature_name="jitter_local_pct",
             pop_median=1.10,
             pop_sigma=0.45,
             sigma_floor=0.12,
-            max_anchor_drift=0.65,
+            max_anchor_drift=0.45,
             log_transform=False,
             log_offset=0.0,
             stress_polarity=1,
@@ -84,7 +85,7 @@ def get_default_priors() -> Dict[str, PriorParameter]:
             pop_median=4.80,
             pop_sigma=1.60,
             sigma_floor=0.40,
-            max_anchor_drift=2.40,
+            max_anchor_drift=1.60,
             log_transform=False,
             log_offset=0.0,
             stress_polarity=1,
@@ -94,7 +95,7 @@ def get_default_priors() -> Dict[str, PriorParameter]:
             pop_median=15.50,
             pop_sigma=3.20,
             sigma_floor=0.80,
-            max_anchor_drift=4.80,
+            max_anchor_drift=3.00,
             log_transform=False,
             log_offset=0.0,
             stress_polarity=-1,
@@ -104,10 +105,10 @@ def get_default_priors() -> Dict[str, PriorParameter]:
             pop_median=18.00,
             pop_sigma=7.50,
             sigma_floor=2.00,
-            max_anchor_drift=11.25,
+            max_anchor_drift=8.00,
             log_transform=False,
             log_offset=0.0,
-            stress_polarity=0,
+            stress_polarity=1,
         ),
     }
 
@@ -119,15 +120,20 @@ class BaselineStore:
         self,
         config: Optional[BaselineConfig] = None,
         priors: Optional[Union[Dict[str, PriorParameter], PriorsData, Path, str]] = None,
+        allow_builtin_priors: bool = False,
     ) -> None:
         """Initialize BaselineStore.
 
         Args:
             config: Baseline configuration parameters.
             priors: Priors dictionary, PriorsData model, or path to priors_en.json.
+            allow_builtin_priors: If True, fall back to get_default_priors() when no
+                priors file is found on disk.
         """
         self._config: BaselineConfig = config if config is not None else BaselineConfig()
-        self._priors: Dict[str, PriorParameter] = self._resolve_priors(priors)
+        self._priors: Dict[str, PriorParameter] = self._resolve_priors(
+            priors, allow_builtin_priors=allow_builtin_priors
+        )
 
         # Structure: _history[speaker_id][feature_name] -> Deque[Tuple[float, float]] (val, weight)
         self._history: Dict[str, Dict[str, Deque[Tuple[float, float]]]] = {}
@@ -151,35 +157,45 @@ class BaselineStore:
     def _resolve_priors(
         self,
         priors: Optional[Union[Dict[str, PriorParameter], PriorsData, Path, str]],
+        allow_builtin_priors: bool = False,
     ) -> Dict[str, PriorParameter]:
-        """Resolve priors from various input formats or default literature priors."""
-        if priors is None:
-            # Try to load data/priors_en.json if it exists
-            default_path = Path("data/priors_en.json")
-            if default_path.is_file():
-                try:
-                    with default_path.open("r", encoding="utf-8") as f:
-                        data = json.load(f)
-                    priors_data = PriorsData.model_validate(data)
-                    return priors_data.features
-                except Exception as exc:
-                    logger.warning("Could not load default priors from %s: %s", default_path, exc)
+        """Resolve priors via explicit argument -> DCE_PRIORS_PATH -> repo data/priors_en.json."""
+        if priors is not None:
+            if isinstance(priors, PriorsData):
+                return priors.features
+
+            if isinstance(priors, (str, Path)):
+                path = Path(priors)
+                if not path.is_file():
+                    raise FileNotFoundError(f"Priors file not found: {path}")
+                with path.open("r", encoding="utf-8") as f:
+                    data = json.load(f)
+                return PriorsData.model_validate(data).features
+
+            if isinstance(priors, dict):
+                return priors
+
+            raise TypeError(f"Unsupported priors type: {type(priors).__name__}")
+
+        env_priors = os.environ.get("DCE_PRIORS_PATH")
+        if env_priors:
+            candidate_path = Path(env_priors)
+        else:
+            candidate_path = Path(__file__).resolve().parents[2] / "data" / "priors_en.json"
+
+        if candidate_path.is_file():
+            with candidate_path.open("r", encoding="utf-8") as f:
+                data = json.load(f)
+            return PriorsData.model_validate(data).features
+
+        if allow_builtin_priors:
+            logger.warning(
+                "Priors file not found at %s; falling back to built-in literature priors",
+                candidate_path,
+            )
             return get_default_priors()
 
-        if isinstance(priors, PriorsData):
-            return priors.features
-
-        if isinstance(priors, (str, Path)):
-            path = Path(priors)
-            with path.open("r", encoding="utf-8") as f:
-                data = json.load(f)
-            priors_data = PriorsData.model_validate(data)
-            return priors_data.features
-
-        if isinstance(priors, dict):
-            return priors
-
-        return get_default_priors()
+        raise FileNotFoundError(f"Priors file not found: {candidate_path}")
 
     def transform_value(self, feature_name: str, raw_value: float) -> float:
         """Apply feature-specific log-offset transformation if configured.

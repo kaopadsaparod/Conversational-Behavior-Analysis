@@ -12,14 +12,17 @@ import collections
 import json
 import logging
 import multiprocessing
+import os
+import re
 from pathlib import Path
-from typing import Any, Deque, Dict, List, Optional, Sequence, Tuple, Union
+from typing import Any, Deque, Dict, List, Literal, Optional, Sequence, Tuple, Union
 
 import numpy as np
 
 from dce.baseline_store import BaselineStore
 from dce.clock import ClockMode, MasterClock, PolicyQueue
 from dce.extractors.audio_dsp import extract_prosody
+from dce.extractors.vision_face import extract_vision_frame
 from dce.math_core import compute_mahalanobis, normalized_av_xcorr
 from dce.reasoning.claims_ledger import ClaimsLedger, should_skip_extraction
 from dce.reasoning.llm_adapter import LLMAdapter
@@ -29,6 +32,7 @@ from dce.schemas import (
     AppConfig,
     CancelSpeculativeEvent,
     ConsistencyVerificationResponse,
+    FEATURE_GROUPS,
     HardTurnCommitEvent,
     MahalanobisResult,
     PriorsData,
@@ -40,10 +44,15 @@ from dce.schemas import (
     TurnFeatures,
     TurnTranscript,
     VADChunkResult,
+    VerificationResult,
     VisionFeatures,
 )
 from dce.speaker_registry import SpeakerRegistry
-from dce.vad_endpointing import DualLevelEndpointTracker, LatestWinsSpeculativeMailbox
+from dce.vad_endpointing import (
+    DualLevelEndpointTracker,
+    LatestWinsSpeculativeMailbox,
+    is_speculative_result_valid,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -117,10 +126,14 @@ def vision_worker_process(
                 break
 
             pts_ns, frame = item
+            frame_arr = np.asarray(frame)
+            vis = extract_vision_frame(frame_arr)
             result = {
                 "pts_ns": pts_ns,
-                "mean_lip_aperture": 0.25,
-                "face_detected": True,
+                "mean_lip_aperture": vis.mean_lip_aperture,
+                "blink_rate_per_min": vis.blink_rate_per_min,
+                "face_detected": vis.face_detected,
+                "quality_flag": vis.quality_flag,
                 "status": "OK",
             }
             out_queue.put(result)
@@ -154,10 +167,32 @@ def reasoning_worker_process(
 
             # Handle transcript item
             turn_id = item.get("turn_id", 0) if isinstance(item, dict) else getattr(item, "turn_id", 0)
+            enable_llm = bool(config_dict.get("enable_llm", False)) if isinstance(config_dict, dict) else False
+            if not enable_llm:
+                result = {
+                    "turn_id": turn_id,
+                    "claims_count": 0,
+                    "verdict": None,
+                    "quality_flag": "no_llm_backend",
+                    "status": "OK",
+                }
+                out_queue.put(result)
+                continue
+
+            transcript = (
+                TurnTranscript.model_validate(item)
+                if isinstance(item, dict)
+                else item
+            )
+            ledger = ClaimsLedger(llm_adapter=LLMAdapter())
+            claims = ledger.extract_claims(transcript)
+            verifications = [ledger.verify_consistency(c) for c in claims]
+            top_verdict = verifications[0].response.verdict.value if verifications else None
             result = {
                 "turn_id": turn_id,
-                "claims_count": 0,
-                "verdict": "CONSISTENT",
+                "claims_count": len(claims),
+                "verdict": top_verdict,
+                "quality_flag": "ok",
                 "status": "OK",
             }
             out_queue.put(result)
@@ -170,6 +205,46 @@ def reasoning_worker_process(
 # ============================================================================
 # Master Orchestration Pipeline
 # ============================================================================
+
+_CLOSED_QUESTION_STARTERS = frozenset({
+    "do", "does", "did", "is", "are", "was", "were",
+    "can", "could", "will", "would", "have", "has", "should",
+    "am", "may", "might", "shall", "must",
+})
+
+_WH_QUESTION_WORDS = frozenset({
+    "who", "whom", "whose", "what", "which", "when", "where", "why", "how",
+})
+
+
+def _classify_question_type(text: str) -> Literal["open", "closed"]:
+    """Classify a question as 'open' (wh-word) or 'closed' (leading auxiliary/modal)."""
+    tokens = re.findall(r"[a-zA-Z']+", text.lower())
+    if not tokens:
+        return "open"
+    first = tokens[0]
+    if first in _WH_QUESTION_WORDS:
+        return "open"
+    if first in _CLOSED_QUESTION_STARTERS:
+        return "closed"
+    return "open"
+
+
+def apply_promotion(
+    assignment: SpeakerAssignment,
+    ledger: ClaimsLedger,
+    baseline: BaselineStore,
+) -> None:
+    """Synchronize BaselineStore and ClaimsLedger when a provisional speaker is promoted."""
+    if assignment.promoted_from is not None:
+        baseline.merge_speaker_id(
+            old_id=assignment.promoted_from,
+            new_id=assignment.speaker_id,
+        )
+        ledger.merge_speaker_id(
+            old_id=assignment.promoted_from,
+            new_id=assignment.speaker_id,
+        )
 
 
 class DiscourseConsistencyPipeline:
@@ -212,42 +287,45 @@ class DiscourseConsistencyPipeline:
             FeatureRecorder(recorder_path) if recorder_path is not None else None
         )
 
-        # Correlation matrix and feature ordering (load data/priors_en.json by default)
-        self._feature_order: List[str] = [
-            "response_latency_open",
-            "response_latency_closed",
-            "articulation_rate",
-            "f0_semitone_sd",
-            "jitter_local_pct",
-            "shimmer_local_pct",
-            "hnr_db",
-            "blink_rate_per_min",
-        ]
+        # Correlation matrix and feature ordering (load priors by feature name)
+        self._feature_order: List[str] = list(FEATURE_GROUPS.keys())
         self._correlation_matrix: np.ndarray = self._load_default_correlation_matrix()
 
         self._prior_turn_transcript: Optional[TurnTranscript] = None
         self._recent_transcripts: Deque[TurnTranscript] = collections.deque(maxlen=2)
         self._last_turn_end_ns: Optional[int] = None
         self._completed_turns: List[RecorderTurnRecord] = []
+        self._last_verification_results: List[VerificationResult] = []
 
     def _load_default_correlation_matrix(self) -> np.ndarray:
-        """Load default 8x8 correlation matrix from data/priors_en.json if available."""
-        candidates = [
+        """Load default 8x8 correlation matrix from priors JSON, mapped by feature name."""
+        candidates: List[Path] = []
+        env_priors = os.environ.get("DCE_PRIORS_PATH")
+        if env_priors:
+            candidates.append(Path(env_priors))
+        candidates.extend([
             Path("data/priors_en.json"),
             Path(__file__).resolve().parent.parent.parent / "data" / "priors_en.json",
-        ]
+        ])
         for default_path in candidates:
             if default_path.is_file():
                 try:
                     with default_path.open("r", encoding="utf-8") as f:
                         data = json.load(f)
                     priors_data = PriorsData.model_validate(data)
-                    if priors_data.feature_order:
-                        self._feature_order = list(priors_data.feature_order)
-                    n_feat = len(self._feature_order)
-                    corr = np.asarray(priors_data.correlation_matrix, dtype=np.float64)
-                    if corr.shape == (n_feat, n_feat):
-                        return corr
+                    src_order = list(priors_data.feature_order)
+                    raw_corr = np.asarray(priors_data.correlation_matrix, dtype=np.float64)
+                    if src_order and raw_corr.shape == (len(src_order), len(src_order)):
+                        idx_map = {name: idx for idx, name in enumerate(src_order)}
+                        n_feat = len(self._feature_order)
+                        mapped = np.eye(n_feat, dtype=np.float64)
+                        for i, feat_i in enumerate(self._feature_order):
+                            if feat_i not in idx_map:
+                                continue
+                            for j, feat_j in enumerate(self._feature_order):
+                                if feat_j in idx_map:
+                                    mapped[i, j] = raw_corr[idx_map[feat_i], idx_map[feat_j]]
+                        return mapped
                 except Exception as exc:
                     logger.warning("Could not load default correlation matrix from %s: %s", default_path, exc)
         return np.eye(len(self._feature_order), dtype=np.float64)
@@ -354,6 +432,13 @@ class DiscourseConsistencyPipeline:
         response_latency_closed: Optional[float] = None,
     ) -> RecorderTurnRecord:
         """Process finalized HardTurnCommitEvent across all multimodal subsystems."""
+        # Reconcile any pending speculative trigger against committed turn/epoch
+        pending_spec = self._mailbox.peek()
+        if pending_spec is not None and not is_speculative_result_valid(
+            pending_spec.turn_id, pending_spec.epoch_id, event
+        ):
+            self._mailbox.discard_if_matches(pending_spec.turn_id, pending_spec.epoch_id)
+
         speech_duration_sec = float(event.end_ns - event.start_ns) / 1_000_000_000.0
         timestamp_sec = float(event.start_ns) / 1_000_000_000.0
 
@@ -370,15 +455,7 @@ class DiscourseConsistencyPipeline:
         )
 
         # Handle provisional promotion: synchronize BaselineStore and ClaimsLedger
-        if assignment.promoted_from:
-            self._baseline_store.merge_speaker_id(
-                old_id=assignment.promoted_from,
-                new_id=assignment.speaker_id,
-            )
-            self._claims_ledger.merge_speaker_id(
-                old_id=assignment.promoted_from,
-                new_id=assignment.speaker_id,
-            )
+        apply_promotion(assignment, self._claims_ledger, self._baseline_store)
 
         # 2. Extract Acoustic Prosody
         pcm = event.audio_pcm16k if event.audio_pcm16k is not None else []
@@ -392,9 +469,15 @@ class DiscourseConsistencyPipeline:
         total_pause_ms = sum(p.duration_ms for p in event.intra_turn_pauses)
         lat_open = response_latency_open
         lat_closed = response_latency_closed
-        if lat_open is None and lat_closed is None and self._last_turn_end_ns is not None:
+        if (
+            lat_open is None
+            and lat_closed is None
+            and self._last_turn_end_ns is not None
+            and self._prior_turn_transcript is not None
+            and self._prior_turn_transcript.is_question
+        ):
             gap_sec = max(0.0, float(event.start_ns - self._last_turn_end_ns) / 1_000_000_000.0)
-            if self._prior_turn_transcript is not None and self._prior_turn_transcript.is_question:
+            if _classify_question_type(self._prior_turn_transcript.text) == "closed":
                 lat_closed = gap_sec
             else:
                 lat_open = gap_sec
@@ -466,6 +549,7 @@ class DiscourseConsistencyPipeline:
         )
 
         claims = []
+        verification_results: List[VerificationResult] = []
         verifications: List[ConsistencyVerificationResponse] = []
         if text and not should_skip_extraction(transcript, self._prior_turn_transcript):
             claims = self._claims_ledger.extract_claims(
@@ -473,7 +557,11 @@ class DiscourseConsistencyPipeline:
                 context_turns=list(self._recent_transcripts),
             )
             for clm in claims:
-                verifications.append(self._claims_ledger.verify_consistency(clm))
+                vr = self._claims_ledger.verify_consistency(clm)
+                verification_results.append(vr)
+                verifications.append(vr.response)
+
+        self._last_verification_results = verification_results
 
         self._prior_turn_transcript = transcript
         self._recent_transcripts.append(transcript)

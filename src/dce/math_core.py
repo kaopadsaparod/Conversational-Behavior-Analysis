@@ -15,7 +15,13 @@ from typing import Dict, List, Optional, Sequence, Tuple, Union
 import numpy as np
 from scipy.stats import chi2
 
-from dce.schemas import DirectionLabel, FeatureScore, MahalanobisResult, PriorParameter
+from dce.schemas import (
+    FEATURE_GROUPS,
+    DirectionLabel,
+    FeatureScore,
+    MahalanobisResult,
+    PriorParameter,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -130,7 +136,8 @@ def classify_direction(
     tail_score_threshold: float = 0.05,
     tension_z_threshold: float = 1.5,
     hnr_tension_z_threshold: float = -1.5,
-    calm_z_threshold: float = -1.5,
+    stress_z_threshold: float = 1.5,
+    calm_z_threshold: float = 1.5,
 ) -> Tuple[bool, DirectionLabel]:
     """Classify 4-state cognitive load direction and vocal tension flag.
 
@@ -140,10 +147,11 @@ def classify_direction(
       2. direction_label:
          - If chi2_tail_score >= tail_score_threshold: 'normal'
          - If chi2_tail_score < tail_score_threshold and
-           (max(z_stress, directional) >= 1.5 or max(|z_neutral|) >= 1.5): 'cognitive_load_anomaly'
+           (max(z_stress, directional) >= stress_z_threshold or max(|z_neutral|) >= stress_z_threshold):
+           'cognitive_load_anomaly'
          - If chi2_tail_score < tail_score_threshold and len(directional) > 0 and
-           max(z_stress, directional) < 0.0 and min(z_stress, directional) <= -1.5 and
-           (all |z_neutral| < 1.5 for neutral features): 'calm_deviation'
+           max(z_stress, directional) < 0.0 and min(z_stress, directional) <= -abs(calm_z_threshold) and
+           (all |z_neutral| < stress_z_threshold for neutral features): 'calm_deviation'
          - Else: 'mixed_subthreshold_deviation'
 
     Args:
@@ -152,8 +160,10 @@ def classify_direction(
         feature_z_scores: Map of feature names to their z-scores.
         priors: Map of feature names to PriorParameter instances.
         tail_score_threshold: Threshold for anomalous tail score (default 0.05).
-        tension_z_threshold: Positive z threshold for jitter/shimmer tension (1.5).
-        hnr_tension_z_threshold: Negative z threshold for HNR tension (-1.5).
+        tension_z_threshold: Positive z threshold for jitter/shimmer tension (default 1.5).
+        hnr_tension_z_threshold: Negative z threshold for HNR tension (default -1.5).
+        stress_z_threshold: Positive z magnitude threshold for stress/neutral anomaly (default 1.5).
+        calm_z_threshold: Positive z magnitude threshold for calm deviation (default 1.5).
 
     Returns:
         Tuple of (vocal_tension_flag, DirectionLabel).
@@ -189,8 +199,11 @@ def classify_direction(
     if chi2_tail_score >= tail_score_threshold:
         return vocal_tension_flag, DirectionLabel.NORMAL
 
-    has_stress_anomaly = len(directional_stress_z) > 0 and max(directional_stress_z) >= 1.5
-    has_neutral_anomaly = len(neutral_abs_z) > 0 and max(neutral_abs_z) >= 1.5
+    stress_thresh = abs(stress_z_threshold)
+    calm_thresh = -abs(calm_z_threshold)
+
+    has_stress_anomaly = len(directional_stress_z) > 0 and max(directional_stress_z) >= stress_thresh
+    has_neutral_anomaly = len(neutral_abs_z) > 0 and max(neutral_abs_z) >= stress_thresh
 
     if has_stress_anomaly or has_neutral_anomaly:
         return vocal_tension_flag, DirectionLabel.COGNITIVE_LOAD_ANOMALY
@@ -199,24 +212,12 @@ def classify_direction(
     if len(directional_stress_z) > 0:
         max_stress = max(directional_stress_z)
         min_stress = min(directional_stress_z)
-        neutral_all_calm = len(neutral_abs_z) == 0 or all(az < 1.5 for az in neutral_abs_z)
+        neutral_all_calm = len(neutral_abs_z) == 0 or all(az < stress_thresh for az in neutral_abs_z)
 
-        if max_stress < 0.0 and min_stress <= calm_z_threshold and neutral_all_calm:
+        if max_stress < 0.0 and min_stress <= calm_thresh and neutral_all_calm:
             return vocal_tension_flag, DirectionLabel.CALM_DEVIATION
 
     return vocal_tension_flag, DirectionLabel.MIXED_SUBTHRESHOLD_DEVIATION
-
-
-FEATURE_GROUP_MAP: Dict[str, str] = {
-    "response_latency_open": "timing",
-    "response_latency_closed": "timing",
-    "articulation_rate": "timing",
-    "f0_semitone_sd": "voice",
-    "jitter_local_pct": "voice",
-    "shimmer_local_pct": "voice",
-    "hnr_db": "voice",
-    "blink_rate_per_min": "vision",
-}
 
 
 def compute_mahalanobis(
@@ -230,23 +231,26 @@ def compute_mahalanobis(
     tail_score_threshold: float = 0.05,
     tension_z_threshold: float = 1.5,
     hnr_tension_z_threshold: float = -1.5,
-    calm_z_threshold: float = -1.5,
+    stress_z_threshold: float = 1.5,
+    calm_z_threshold: float = 1.5,
+    z_clip: float = 50.0,
 ) -> MahalanobisResult:
     """Compute regularized Block-Diagonal Mahalanobis distance with eigen-safe fallback.
 
     Structure:
-      - Groups: Timing (0, 1, 2), Voice (3, 4, 5, 6), Vision (7).
-      - Cross-group correlations zeroed; corr(0, 1) zeroed.
+      - Groups from dce.schemas.FEATURE_GROUPS: timing, voice, vision.
+      - Cross-group correlations zeroed; corr(response_latency_open, response_latency_closed) zeroed.
       - Symmetrized: Sigma = (M + M^T) / 2.
       - Regularized: Sigma_hat = (1 - lambda) * Sigma + lambda * I (lambda = 0.30).
-      - Submatrix condition checked against cond_limit (1e12).
+      - Submatrix PD verified via Cholesky and condition checked against cond_limit (1e12).
+      - Z-scores clipped to [-z_clip, +z_clip] before quadratic form calculation.
       - Distance D_M = sqrt(max(z_v^T Sigma_v^-1 z_v, 0.0)).
       - Tail score: chi2.sf(d_sq, df=len(V)).
 
     Args:
         feature_scores: Mapping from feature name to FeatureScore or raw z float.
-        correlation_matrix: 8x8 empirical or literature correlation matrix.
-        feature_order: Ordered list of 8 feature names.
+        correlation_matrix: NxN empirical or literature correlation matrix.
+        feature_order: Ordered list of feature names.
         priors: PriorParameter database for evaluated features.
         reg_lambda: Regularization shrinkage toward identity (default 0.30).
         eig_floor: Eigenvalue floor for safe inversion fallback (default 1e-6).
@@ -254,23 +258,31 @@ def compute_mahalanobis(
         tail_score_threshold: Anomaly threshold on chi2_tail_score (default 0.05).
         tension_z_threshold: Vocal tension threshold for jitter/shimmer (default 1.5).
         hnr_tension_z_threshold: Vocal tension threshold for HNR (default -1.5).
+        stress_z_threshold: Positive z magnitude threshold for stress/neutral anomaly (default 1.5).
+        calm_z_threshold: Positive z magnitude threshold for calm deviation (default 1.5).
+        z_clip: Maximum |z| magnitude before Mahalanobis quadratic form (default 50.0).
 
     Returns:
         MahalanobisResult dataclass instance.
+
+    Raises:
+        ValueError: If correlation_matrix shape does not match feature_order or contains non-finite values.
     """
     n_features = len(feature_order)
     raw_corr = np.array(correlation_matrix, dtype=np.float64)
     if raw_corr.shape != (n_features, n_features):
-        raw_corr = np.eye(n_features, dtype=np.float64)
-    elif not np.all(np.isfinite(raw_corr)):
-        raw_corr = np.nan_to_num(raw_corr, nan=0.0, posinf=0.0, neginf=0.0)
+        raise ValueError(
+            f"correlation_matrix shape {raw_corr.shape} does not match feature_order length ({n_features}, {n_features})."
+        )
+    if not np.all(np.isfinite(raw_corr)):
+        raise ValueError("correlation_matrix contains non-finite values (NaN or Inf).")
 
     # 1. Enforce block-diagonal group structure by feature name
     block_corr = np.copy(raw_corr)
     for i in range(n_features):
         for j in range(n_features):
-            grp_i = FEATURE_GROUP_MAP.get(feature_order[i], f"__unique_{i}")
-            grp_j = FEATURE_GROUP_MAP.get(feature_order[j], f"__unique_{j}")
+            grp_i = FEATURE_GROUPS.get(feature_order[i], f"__unique_{i}")
+            grp_j = FEATURE_GROUPS.get(feature_order[j], f"__unique_{j}")
             if grp_i != grp_j:
                 block_corr[i, j] = 0.0
 
@@ -323,7 +335,8 @@ def compute_mahalanobis(
             feature_z_scores={},
         )
 
-    z_v = np.array(evaluated_z, dtype=np.float64)
+    z_clip_abs = abs(float(z_clip))
+    z_v = np.clip(np.array(evaluated_z, dtype=np.float64), -z_clip_abs, z_clip_abs)
     sigma_v = sigma_hat[np.ix_(evaluated_indices, evaluated_indices)]
 
     eigen_fallback_used = False
@@ -375,6 +388,7 @@ def compute_mahalanobis(
         tail_score_threshold=tail_score_threshold,
         tension_z_threshold=tension_z_threshold,
         hnr_tension_z_threshold=hnr_tension_z_threshold,
+        stress_z_threshold=stress_z_threshold,
         calm_z_threshold=calm_z_threshold,
     )
 

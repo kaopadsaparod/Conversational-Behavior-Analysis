@@ -135,12 +135,12 @@ This document serves as the master 6-phase operational roadmap, detailing comple
   - [x] Pydantic schema serialization into JSON format specs with 1x automated retry mechanism.
 
 ### 1.9 Multimodal Connectors & Spawning Pipeline
-- [x] **Lazy-Import Extractor Modules**:
-  - [x] `extractors/audio_dsp.py`: Dynamic import of `praat-parselmouth` and `faster-whisper`; vocal creak trimming (200 ms tail); minimum 20 glottal periods gate.
-  - [x] `extractors/vision_face.py`: Dynamic import of `mediapipe` and `cv2`; lip aperture and head pose Euler angle extraction.
-- [x] **Multiprocessing Spawning Safety (`src/dce/pipeline.py`)**:
-  - [x] Top-level module worker functions accepting `multiprocessing.Queue` instances.
-  - [x] Windows `spawn` compatibility: zero global queue allocations and clean process termination.
+- [ ] **Lazy-Import Extractor Modules** *(live backend execution unverified)*:
+  - [ ] `extractors/audio_dsp.py`: Dynamic import of `praat-parselmouth` and `faster-whisper`; vocal creak trimming (200 ms tail); `boundary_trim_ms` (15 ms) Praat execution and `transcribe_audio` live execution pending live backend verification.
+  - [ ] `extractors/vision_face.py`: Dynamic import of `mediapipe` and `cv2`; lip aperture and head-pose `±30°` Euler angle gate pending live backend verification.
+- [ ] **Multiprocessing Spawning Safety (`src/dce/pipeline.py`)**:
+  - [ ] Real audio/vision worker loops connected to live extractor backends (pending live backend verification).
+  - [x] Windows `spawn` compatibility: top-level module worker functions accepting `multiprocessing.Queue` instances, zero global queue allocations, and clean process termination.
 
 ### 1.10 Phase 1 Analytical QA Verification Suite (`tests/`)
 - [x] `tests/test_anti_stub_and_spawn.py`: AST scan confirming zero `pass`/`...`/`TODO` in 10 core files; Windows `spawn` multiprocessing IPC execution.

@@ -10,7 +10,7 @@ from __future__ import annotations
 import math
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Literal, Optional, Union
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -139,7 +139,9 @@ class MahalanobisConfig(DCEBaseModel):
     tail_score_threshold: float = 0.05
     tension_z_threshold: float = 1.5
     hnr_tension_z_threshold: float = -1.5
-    calm_z_threshold: float = -1.5
+    stress_z_threshold: float = 1.5
+    calm_z_threshold: float = 1.5
+    z_clip: float = 50.0
 
 
 class AvSyncConfig(DCEBaseModel):
@@ -169,6 +171,7 @@ class ReasoningConfig(DCEBaseModel):
 
     anomaly_guided_search: bool = False
     max_llm_retries: int = 1
+    retrieval_top_k: int = 12
 
 
 class AppConfig(DCEBaseModel):
@@ -244,6 +247,7 @@ class HardTurnCommitEvent(DCEBaseModel):
     """Event emitted when a turn has definitively completed or reached maximum duration."""
 
     turn_id: int
+    valid_epoch_id: int
     start_ns: int
     end_ns: int
     audio_pcm16k: Optional[List[float]] = None
@@ -341,6 +345,18 @@ class DirectionLabel(str, Enum):
     COGNITIVE_LOAD_ANOMALY = "cognitive_load_anomaly"
     CALM_DEVIATION = "calm_deviation"
     MIXED_SUBTHRESHOLD_DEVIATION = "mixed_subthreshold_deviation"
+
+
+FEATURE_GROUPS: Dict[str, Literal["timing", "voice", "vision"]] = {
+    "response_latency_open": "timing",
+    "response_latency_closed": "timing",
+    "articulation_rate": "timing",
+    "f0_semitone_sd": "voice",
+    "jitter_local_pct": "voice",
+    "shimmer_local_pct": "voice",
+    "hnr_db": "voice",
+    "blink_rate_per_min": "vision",
+}
 
 
 class PriorParameter(DCEBaseModel):
@@ -453,6 +469,7 @@ class VerdictStatus(str, Enum):
     TIMELINE_SHIFT = "TIMELINE_SHIFT"
     UNVERIFIABLE = "UNVERIFIABLE"
     REJECTED_INVALID_REF = "REJECTED_INVALID_REF"
+    LLM_ERROR = "LLM_ERROR"
 
 
 class ConsistencyVerificationResponse(DCEBaseModel):
@@ -465,6 +482,13 @@ class ConsistencyVerificationResponse(DCEBaseModel):
     prior_claim_id: Optional[str] = None
     explanation: str
     confidence: float = 1.0
+
+
+class VerificationResult(DCEBaseModel):
+    """Ledger-enriched wrapper around ConsistencyVerificationResponse."""
+
+    response: ConsistencyVerificationResponse
+    conflict_scope: Optional[Literal["self", "cross_speaker"]] = None
 
 
 # ============================================================================

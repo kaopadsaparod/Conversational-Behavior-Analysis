@@ -9,7 +9,9 @@ from __future__ import annotations
 
 import logging
 import threading
-from typing import Any, List, Optional, Sequence, Union
+from typing import List, Optional, Sequence, Union
+
+import numpy as np
 
 from dce.schemas import (
     CancelSpeculativeEvent,
@@ -22,6 +24,29 @@ from dce.schemas import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def is_speculative_result_valid(
+    result_turn_id: int,
+    result_epoch_id: int,
+    commit: HardTurnCommitEvent,
+) -> bool:
+    """Return True if a speculative ASR result matches the committed turn and epoch."""
+    return result_turn_id == commit.turn_id and result_epoch_id == commit.valid_epoch_id
+
+
+def _to_pcm_array(
+    audio_chunk_pcm: Optional[Union[Sequence[float], np.ndarray]],
+) -> np.ndarray:
+    """Convert an audio chunk sequence or ndarray into a 1-D float32 numpy array."""
+    if audio_chunk_pcm is None:
+        return np.empty(0, dtype=np.float32)
+    arr = np.asarray(audio_chunk_pcm)
+    if arr.size == 0:
+        return np.empty(0, dtype=np.float32)
+    if arr.dtype == np.int16:
+        return (arr.astype(np.float32) / 32768.0).ravel()
+    return arr.astype(np.float32, copy=False).ravel()
 
 
 class DualLevelEndpointTracker:
@@ -45,7 +70,7 @@ class DualLevelEndpointTracker:
         self._overlap_voiced_chunks: int = 0
 
         # Sample-accurate audio chunk buffering
-        self._audio_chunks: List[List[float]] = []
+        self._audio_chunks: List[np.ndarray] = []
         self._last_voiced_chunk_idx: int = -1
 
         # Silence and pause tracking
@@ -105,11 +130,50 @@ class DualLevelEndpointTracker:
         """Return flattened PCM audio trimmed up to last_voiced_chunk_idx."""
         if self._last_voiced_chunk_idx < 0 or not self._audio_chunks:
             return []
-        out: List[float] = []
         limit = min(self._last_voiced_chunk_idx + 1, len(self._audio_chunks))
-        for chunk in self._audio_chunks[:limit]:
-            out.extend(chunk)
-        return out
+        non_empty = [chunk for chunk in self._audio_chunks[:limit] if chunk.size > 0]
+        if not non_empty:
+            return []
+        return np.concatenate(non_empty).astype(np.float32, copy=False).tolist()
+
+    def _start_turn(
+        self,
+        chunk: VADChunkResult,
+        pcm_array: np.ndarray,
+        chunk_end_ns: int,
+    ) -> None:
+        """Transition from IDLE to SPEAKING and initialize turn state."""
+        self._state = VADState.SPEAKING
+        self._turn_id += 1
+        self._epoch_id = 1
+        self._turn_start_ns = chunk.pts_ns
+        self._last_voiced_end_ns = chunk_end_ns
+        self._voiced_chunks = 1
+        self._overlap_voiced_chunks = 1 if chunk.is_overlap else 0
+        self._audio_chunks = [pcm_array]
+        self._last_voiced_chunk_idx = 0
+        self._silence_start_ns = None
+        self._speculative_emitted_this_pause = False
+        self._intra_turn_pauses = []
+
+    def _build_commit_event(self, *, forced_split: bool) -> HardTurnCommitEvent:
+        """Construct a HardTurnCommitEvent for the current active turn."""
+        trimmed_pcm = self._get_trimmed_pcm()
+        overlap_ratio = float(self._overlap_voiced_chunks) / float(max(self._voiced_chunks, 1))
+        overlap_flag = bool(overlap_ratio >= self._config.overlap_ratio_threshold)
+        return HardTurnCommitEvent(
+            turn_id=self._turn_id,
+            valid_epoch_id=self._epoch_id,
+            start_ns=self._turn_start_ns,
+            end_ns=self._last_voiced_end_ns,
+            audio_pcm16k=trimmed_pcm,
+            voiced_chunks=self._voiced_chunks,
+            overlap_voiced_chunks=self._overlap_voiced_chunks,
+            overlap_ratio=overlap_ratio,
+            overlap_flag=overlap_flag,
+            forced_split=forced_split,
+            intra_turn_pauses=list(self._intra_turn_pauses),
+        )
 
     def _reset(self) -> None:
         """Reset internal buffers and return tracker to IDLE state."""
@@ -127,13 +191,13 @@ class DualLevelEndpointTracker:
     def process_chunk(
         self,
         chunk: VADChunkResult,
-        audio_chunk_pcm: Optional[Sequence[float]] = None,
+        audio_chunk_pcm: Optional[Union[Sequence[float], np.ndarray]] = None,
     ) -> List[Union[SpeculativeTriggerEvent, CancelSpeculativeEvent, HardTurnCommitEvent]]:
         """Process a streaming audio chunk and return any emitted events.
 
         Args:
             chunk: VAD evaluation result containing vad_prob, pts_ns, and is_overlap.
-            audio_chunk_pcm: Raw 16kHz float32 audio samples for this chunk.
+            audio_chunk_pcm: Raw 16kHz float32/int16 audio samples for this chunk.
 
         Returns:
             List of generated events (triggers, cancellations, or commits).
@@ -141,11 +205,13 @@ class DualLevelEndpointTracker:
         emitted_events: List[
             Union[SpeculativeTriggerEvent, CancelSpeculativeEvent, HardTurnCommitEvent]
         ] = []
-        pcm_list = list(audio_chunk_pcm) if audio_chunk_pcm is not None else []
+        pcm_array = _to_pcm_array(audio_chunk_pcm)
 
         # Determine chunk duration in nanoseconds
-        if len(pcm_list) > 0:
-            chunk_duration_ns = int((len(pcm_list) / float(self._config.sample_rate)) * 1_000_000_000)
+        if pcm_array.size > 0:
+            chunk_duration_ns = int(
+                (pcm_array.size / float(self._config.sample_rate)) * 1_000_000_000
+            )
         else:
             chunk_duration_ns = 20_000_000  # Default 20ms fallback
 
@@ -156,18 +222,7 @@ class DualLevelEndpointTracker:
         # --------------------------------------------------------------------
         if self._state == VADState.IDLE:
             if chunk.vad_prob >= self._config.speech_prob_on:
-                self._state = VADState.SPEAKING
-                self._turn_id += 1
-                self._epoch_id = 1
-                self._turn_start_ns = chunk.pts_ns
-                self._last_voiced_end_ns = chunk_end_ns
-                self._voiced_chunks = 1
-                self._overlap_voiced_chunks = 1 if chunk.is_overlap else 0
-                self._audio_chunks = [pcm_list]
-                self._last_voiced_chunk_idx = 0
-                self._silence_start_ns = None
-                self._speculative_emitted_this_pause = False
-                self._intra_turn_pauses = []
+                self._start_turn(chunk, pcm_array, chunk_end_ns)
             return emitted_events
 
         # --------------------------------------------------------------------
@@ -176,29 +231,16 @@ class DualLevelEndpointTracker:
         current_turn_duration_ms = (chunk_end_ns - self._turn_start_ns) / 1_000_000.0
         if current_turn_duration_ms >= self._config.max_turn_ms:
             # Commit turn immediately due to max duration
-            trimmed_pcm = self._get_trimmed_pcm()
-            overlap_ratio = float(self._overlap_voiced_chunks) / float(max(self._voiced_chunks, 1))
-            overlap_flag = bool(overlap_ratio >= self._config.overlap_ratio_threshold)
-
-            commit_event = HardTurnCommitEvent(
-                turn_id=self._turn_id,
-                start_ns=self._turn_start_ns,
-                end_ns=self._last_voiced_end_ns,
-                audio_pcm16k=trimmed_pcm,
-                voiced_chunks=self._voiced_chunks,
-                overlap_voiced_chunks=self._overlap_voiced_chunks,
-                overlap_ratio=overlap_ratio,
-                overlap_flag=overlap_flag,
-                forced_split=True,
-                intra_turn_pauses=list(self._intra_turn_pauses),
-            )
+            commit_event = self._build_commit_event(forced_split=True)
             self._last_commit_event = commit_event
             emitted_events.append(commit_event)
             self._reset()
+            if chunk.vad_prob >= self._config.speech_prob_on:
+                self._start_turn(chunk, pcm_array, chunk_end_ns)
             return emitted_events
 
         # Always buffer audio during active turn
-        self._audio_chunks.append(pcm_list)
+        self._audio_chunks.append(pcm_array)
 
         # --------------------------------------------------------------------
         # 3. SPEAKING State Handling
@@ -301,24 +343,7 @@ class DualLevelEndpointTracker:
                     ) / 1_000_000.0
 
                     if speech_duration_ms >= self._config.min_speech_ms:
-                        trimmed_pcm = self._get_trimmed_pcm()
-                        overlap_ratio = float(self._overlap_voiced_chunks) / float(
-                            max(self._voiced_chunks, 1)
-                        )
-                        overlap_flag = bool(overlap_ratio >= self._config.overlap_ratio_threshold)
-
-                        commit_event = HardTurnCommitEvent(
-                            turn_id=self._turn_id,
-                            start_ns=self._turn_start_ns,
-                            end_ns=self._last_voiced_end_ns,
-                            audio_pcm16k=trimmed_pcm,
-                            voiced_chunks=self._voiced_chunks,
-                            overlap_voiced_chunks=self._overlap_voiced_chunks,
-                            overlap_ratio=overlap_ratio,
-                            overlap_flag=overlap_flag,
-                            forced_split=False,
-                            intra_turn_pauses=list(self._intra_turn_pauses),
-                        )
+                        commit_event = self._build_commit_event(forced_split=False)
                         self._last_commit_event = commit_event
                         emitted_events.append(commit_event)
 
@@ -337,24 +362,7 @@ class DualLevelEndpointTracker:
         if self._state in (VADState.SPEAKING, VADState.SOFT_PAUSE):
             speech_duration_ms = (self._last_voiced_end_ns - self._turn_start_ns) / 1_000_000.0
             if speech_duration_ms >= self._config.min_speech_ms:
-                trimmed_pcm = self._get_trimmed_pcm()
-                overlap_ratio = float(self._overlap_voiced_chunks) / float(
-                    max(self._voiced_chunks, 1)
-                )
-                overlap_flag = bool(overlap_ratio >= self._config.overlap_ratio_threshold)
-
-                commit_event = HardTurnCommitEvent(
-                    turn_id=self._turn_id,
-                    start_ns=self._turn_start_ns,
-                    end_ns=self._last_voiced_end_ns,
-                    audio_pcm16k=trimmed_pcm,
-                    voiced_chunks=self._voiced_chunks,
-                    overlap_voiced_chunks=self._overlap_voiced_chunks,
-                    overlap_ratio=overlap_ratio,
-                    overlap_flag=overlap_flag,
-                    forced_split=False,
-                    intra_turn_pauses=list(self._intra_turn_pauses),
-                )
+                commit_event = self._build_commit_event(forced_split=False)
                 self._last_commit_event = commit_event
                 self._reset()
                 return commit_event
