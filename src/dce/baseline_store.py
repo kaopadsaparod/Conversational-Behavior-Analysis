@@ -113,6 +113,60 @@ def get_default_priors() -> Dict[str, PriorParameter]:
     }
 
 
+def get_egemaps_priors() -> Dict[str, PriorParameter]:
+    """Return 8 core priors plus noise-robust eGeMAPS spectral/energy priors."""
+    priors = get_default_priors()
+    priors.update(
+        {
+            "spectral_slope_db": PriorParameter(
+                feature_name="spectral_slope_db",
+                pop_median=-4.50,
+                pop_sigma=2.50,
+                sigma_floor=0.50,
+                max_anchor_drift=3.00,
+                log_transform=False,
+                log_offset=0.0,
+                stress_polarity=0,
+            ),
+            "alpha_ratio_db": PriorParameter(
+                feature_name="alpha_ratio_db",
+                pop_median=10.00,
+                pop_sigma=4.50,
+                sigma_floor=1.00,
+                max_anchor_drift=5.00,
+                log_transform=False,
+                log_offset=0.0,
+                stress_polarity=-1,
+            ),
+            "loudness_db": PriorParameter(
+                feature_name="loudness_db",
+                pop_median=-24.00,
+                pop_sigma=6.00,
+                sigma_floor=1.50,
+                max_anchor_drift=6.00,
+                log_transform=False,
+                log_offset=0.0,
+                stress_polarity=1,
+            ),
+        }
+    )
+    return priors
+
+
+def compute_noise_robust_voice_reliability(
+    acoustic_snr_db: Optional[float],
+    snr_threshold_db: float = 12.0,
+) -> float:
+    """Compute a reliability weight in [0.25, 1.0] for jitter/shimmer under noisy mics/VoIP."""
+    if acoustic_snr_db is None or not math.isfinite(acoustic_snr_db):
+        return 1.0
+    if acoustic_snr_db >= snr_threshold_db:
+        return 1.0
+    # Linear ramp from 0.25 (at <= 0 dB) to 1.0 (at snr_threshold_db)
+    ratio = max(0.0, acoustic_snr_db) / max(snr_threshold_db, 1.0)
+    return 0.25 + 0.75 * ratio
+
+
 class BaselineStore:
     """Per-speaker baseline profiling store with Bayesian shrinkage and anchor locks."""
 
@@ -265,12 +319,28 @@ class BaselineStore:
         if not math.isfinite(mad_w) or mad_w < 0.0:
             mad_w = 0.0
 
-        # Bayesian shrinkage
-        k = self._config.shrinkage_k
-        hat_mu = (n_eff * med_w + k * prior.pop_median) / (n_eff + k)
-        sigma_est = (n_eff * (1.4826 * mad_w) + k * prior.pop_sigma) / (n_eff + k)
+        # Bayesian shrinkage (decouple location k_mu and scale k_sigma so scale never collapses)
+        k_sigma = max(self._config.scale_shrinkage_k, 1.0)
+        if self._config.decoupled_shrinkage:
+            if feature_name in (
+                "response_latency_open",
+                "response_latency_closed",
+                "articulation_rate",
+            ):
+                k_mu = (
+                    self._config.l2_location_shrinkage_k
+                    if n_eff >= 3.0
+                    else self._config.acoustic_location_shrinkage_k
+                )
+            else:
+                k_mu = self._config.acoustic_location_shrinkage_k
+        else:
+            k_mu = self._config.shrinkage_k
+
+        hat_mu = (n_eff * med_w + k_mu * prior.pop_median) / (n_eff + k_mu) if (n_eff + k_mu) > 0.0 else med_w
+        sigma_est = (n_eff * (1.4826 * mad_w) + k_sigma * prior.pop_sigma) / (n_eff + k_sigma)
         hat_sigma = max(sigma_est, prior.sigma_floor)
-        confidence_c = n_eff / (n_eff + k)
+        confidence_c = n_eff / (n_eff + k_sigma)
 
         return hat_mu, hat_sigma, confidence_c
 
@@ -330,6 +400,7 @@ class BaselineStore:
         raw_value: Optional[float],
         quality_flag: str = "ok",
         z_score: Optional[float] = None,
+        word_count: Optional[int] = None,
     ) -> float:
         """Gated update of speaker baseline with per-feature anchor locking.
 
@@ -358,8 +429,24 @@ class BaselineStore:
         if z_score is None or not math.isfinite(z_score):
             return 0.0
 
+        existing_samples = self._history.get(speaker_id, {}).get(feature_name, [])
+        n_eff = float(sum(w for _, w in existing_samples))
+
+        # Warm-up starvation guard: while n_eff < 3.0, accept plausible room/mic values even if |z| > 5 vs studio prior
+        plausible_warmup = True
+        if feature_name == "jitter_local_pct" and raw_value > 5.0:
+            plausible_warmup = False
+        elif feature_name == "shimmer_local_pct" and raw_value > 18.0:
+            plausible_warmup = False
+        elif feature_name == "hnr_db" and raw_value < 2.0:
+            plausible_warmup = False
+
         abs_z = abs(z_score)
-        if quality_flag != "ok" or abs_z > self._config.gate_reduced_z:
+        if quality_flag != "ok":
+            weight = 0.0
+        elif n_eff < 3.0 and plausible_warmup:
+            weight = 1.0
+        elif abs_z > self._config.gate_reduced_z:
             weight = 0.0
         elif abs_z > self._config.gate_full_z:
             weight = self._config.gate_reduced_weight
@@ -387,7 +474,9 @@ class BaselineStore:
 
         # Append sample
         self._history[speaker_id][feature_name].append((transformed, weight))
-        self._ok_counts[speaker_id][feature_name] += 1
+        # Guard against warm-up trap: short greetings below min_anchor_words do not advance anchor lock
+        if word_count is None or word_count >= self._config.min_anchor_words:
+            self._ok_counts[speaker_id][feature_name] += 1
 
         # Check anchor lock
         is_locked = self._anchor_locked[speaker_id].get(feature_name, False)
@@ -414,6 +503,7 @@ class BaselineStore:
         self,
         speaker_id: str,
         turn_features: TurnFeatures,
+        word_count: Optional[int] = None,
     ) -> Dict[str, FeatureScore]:
         """Convenience method to score and update all available features of a turn.
 
@@ -424,33 +514,68 @@ class BaselineStore:
         Returns:
             Dictionary mapping feature names to their FeatureScore instances.
         """
+        if turn_features.prosody.voip_or_denoised_flag:
+            fine_wave_flag = "voip_denoised"
+        elif turn_features.prosody.fine_wave_quality_flag != "ok":
+            fine_wave_flag = turn_features.prosody.fine_wave_quality_flag
+        else:
+            fine_wave_flag = turn_features.prosody.quality_flag
         extracted_map: Dict[str, Tuple[Optional[float], str]] = {
             "response_latency_open": (turn_features.timing.response_latency_open, "ok"),
             "response_latency_closed": (turn_features.timing.response_latency_closed, "ok"),
             "articulation_rate": (turn_features.prosody.articulation_rate, turn_features.prosody.quality_flag),
             "f0_semitone_sd": (turn_features.prosody.f0_semitone_sd, turn_features.prosody.quality_flag),
-            "jitter_local_pct": (turn_features.prosody.jitter_local_pct, turn_features.prosody.quality_flag),
-            "shimmer_local_pct": (turn_features.prosody.shimmer_local_pct, turn_features.prosody.quality_flag),
-            "hnr_db": (turn_features.prosody.hnr_db, turn_features.prosody.quality_flag),
+            "jitter_local_pct": (turn_features.prosody.jitter_local_pct, fine_wave_flag),
+            "shimmer_local_pct": (turn_features.prosody.shimmer_local_pct, fine_wave_flag),
+            "hnr_db": (turn_features.prosody.hnr_db, fine_wave_flag),
             "blink_rate_per_min": (turn_features.vision.blink_rate_per_min, turn_features.vision.quality_flag),
         }
+        for egemaps_feat in ("spectral_slope_db", "alpha_ratio_db", "loudness_db"):
+            if egemaps_feat in self._priors:
+                extracted_map[egemaps_feat] = (
+                    getattr(turn_features.prosody, egemaps_feat, None),
+                    turn_features.prosody.quality_flag,
+                )
+
+        noise_reliability = (
+            compute_noise_robust_voice_reliability(
+                turn_features.prosody.acoustic_snr_db,
+                snr_threshold_db=self._config.jitter_shimmer_noise_floor_snr_db,
+            )
+            if self._config.noise_robust_voice_weighting
+            else 1.0
+        )
 
         scores: Dict[str, FeatureScore] = {}
+        raw_z_scores: Dict[str, Optional[float]] = {}
 
         # 1. Score all features first (Score-before-Update)
         for feat, (val, qflag) in extracted_map.items():
             if val is not None and math.isfinite(val):
-                scores[feat] = self.score_feature(speaker_id, feat, val, quality_flag=qflag)
+                fs = self.score_feature(speaker_id, feat, val, quality_flag=qflag)
+                raw_z_scores[feat] = fs.z_score
+                if feat in ("jitter_local_pct", "shimmer_local_pct") and noise_reliability < 1.0:
+                    fs = fs.model_copy(
+                        update={
+                            "z_score": fs.z_score * noise_reliability if fs.z_score is not None else None,
+                            "stress_z": fs.stress_z * noise_reliability if fs.stress_z is not None else None,
+                            "confidence_weight": fs.confidence_weight * noise_reliability,
+                        }
+                    )
+                scores[feat] = fs
 
-        # 2. Gated update using calculated z-scores
+        # 2. Gated update using unattenuated z-scores (prevent noisy mics from corrupting baseline)
         for feat, score in scores.items():
+            if feat in ("jitter_local_pct", "shimmer_local_pct") and noise_reliability < 0.5:
+                continue
             val, qflag = extracted_map[feat]
             self.update_feature(
                 speaker_id=speaker_id,
                 feature_name=feat,
                 raw_value=val,
                 quality_flag=qflag,
-                z_score=score.z_score,
+                z_score=raw_z_scores.get(feat),
+                word_count=word_count,
             )
 
         return scores

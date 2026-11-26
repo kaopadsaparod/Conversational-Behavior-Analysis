@@ -260,3 +260,8 @@ This document serves as the master 6-phase operational roadmap, detailing comple
 - [ ] **Production Packaging & Containerization**:
   - [ ] Multi-stage Dockerfile containing Python 3.13, CUDA 12.8 runtime, and headless OpenCV/MediaPipe bindings.
   - [ ] Automated health checks and graceful degradation fallback when GPU or webcam is unavailable.
+- [x] **Real-Media Adaptation, Wild Calibration & MCP Server (`dce-analyzer`)**:
+  - [x] `src/dce/mcp_server.py` (4 state-locked stdio MCP tools, `<0.2s` lazy startup, `stdout`/`fd 1` -> `stderr` isolation, `config/mcp_config.example.json`).
+  - [x] Acoustic & Vision Real-Media Hardening: 65 Hz zero-phase Butterworth high-pass, physiological reverb ceiling + `fine_wave_quality_flag` isolation, VoIP/noise-gate detector, Voiced Intensity Envelope `articulation_rate`, `FaceLandmarker` (`RunningMode.IMAGE` / `RunningMode.VIDEO` @ 15 FPS), and PyAV (`av 19.0.2`) MP4 decoder.
+  - [x] Decoupled `scale_shrinkage_k=6.0` + warm-up starvation guard + calibrated `data/priors_wild_video_en.json` (from `RLDD Train/` Truthful clips).
+  - [x] `cross-encoder/nli-deberta-v3-xsmall` NLI pre-filter calibrated on DECODE (`same_speaker_only`, raw utterance text, `thr=0.90` -> `F1=0.715`, `Recall=0.880`, `1,055 LLM calls saved` on 100 balanced `dev.jsonl` samples).

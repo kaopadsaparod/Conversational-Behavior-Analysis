@@ -7,8 +7,11 @@ Provides strict JSONL recording guaranteed free of NaN and Infinity values
 from __future__ import annotations
 
 import json
+import wave
 from pathlib import Path
-from typing import Any, Iterator, List, Optional, TextIO, Union
+from typing import Any, Iterator, List, Optional, Sequence, TextIO, Union
+
+import numpy as np
 
 from dce.schemas import RecorderTurnRecord
 
@@ -16,20 +19,69 @@ from dce.schemas import RecorderTurnRecord
 class FeatureRecorder:
     """Thread-safe JSONL logger writing RecorderTurnRecord with strict allow_nan=False."""
 
-    def __init__(self, output_path: Union[str, Path]) -> None:
+    def __init__(
+        self,
+        output_path: Union[str, Path],
+        audio_dir: Optional[Union[str, Path]] = None,
+    ) -> None:
         """Initialize FeatureRecorder.
 
         Args:
             output_path: Target filesystem path for the .jsonl recording file.
+            audio_dir: Optional directory for saving per-turn WAV audio clips.
         """
         self._path: Path = Path(output_path)
         self._path.parent.mkdir(parents=True, exist_ok=True)
         self._file: TextIO = self._path.open("a", encoding="utf-8")
+        self._audio_dir: Optional[Path] = Path(audio_dir) if audio_dir is not None else None
+        if self._audio_dir is not None:
+            self._audio_dir.mkdir(parents=True, exist_ok=True)
 
     @property
     def path(self) -> Path:
         """Return the recording file path."""
         return self._path
+
+    @property
+    def audio_dir(self) -> Optional[Path]:
+        """Return the optional audio clip directory."""
+        return self._audio_dir
+
+    def save_turn_audio(
+        self,
+        turn_id: int,
+        audio_pcm16k: Sequence[float],
+        sample_rate: int = 16000,
+        max_duration_sec: Optional[float] = None,
+    ) -> str:
+        """Save a 16-bit PCM WAV clip for a turn and return its path string.
+
+        Args:
+            turn_id: Turn identifier used in the clip filename.
+            audio_pcm16k: Floating-point PCM samples in [-1.0, 1.0].
+            sample_rate: Audio sample rate in Hz (default 16000).
+            max_duration_sec: Optional maximum clip duration in seconds (None saves full turn).
+
+        Returns:
+            Filesystem path string of the written WAV file.
+        """
+        target_dir = self._audio_dir if self._audio_dir is not None else (self._path.parent / "audio_clips")
+        target_dir.mkdir(parents=True, exist_ok=True)
+        clip_path = target_dir / f"turn_{turn_id:04d}.wav"
+
+        arr = np.asarray(audio_pcm16k, dtype=np.float32)
+        if max_duration_sec is not None and max_duration_sec > 0.0:
+            max_samples = int(round(max_duration_sec * sample_rate))
+            if len(arr) > max_samples:
+                arr = arr[:max_samples]
+
+        pcm_i16 = (np.clip(arr, -1.0, 1.0) * 32767.0).astype(np.int16)
+        with wave.open(str(clip_path), "wb") as wf:
+            wf.setnchannels(1)
+            wf.setsampwidth(2)
+            wf.setframerate(int(sample_rate))
+            wf.writeframes(pcm_i16.tobytes())
+        return str(clip_path)
 
     def write_record(self, record: RecorderTurnRecord) -> None:
         """Serialize and write a RecorderTurnRecord with allow_nan=False.

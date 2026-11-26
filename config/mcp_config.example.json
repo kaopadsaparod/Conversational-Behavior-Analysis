@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "dce-analyzer": {
+      "command": "C:\\Users\\<YOUR_USERNAME>\\Desktop\\Conversational Behavior Analysis\\.venv\\Scripts\\python.exe",
+      "args": ["-m", "dce.mcp_server"]
+    }
+  }
+}

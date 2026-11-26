@@ -41,7 +41,7 @@ def test_windows_spawn_vision_worker_ipc() -> None:
         assert res.get("face_detected") is False
         assert res.get("mean_lip_aperture") is None
         assert res.get("blink_rate_per_min") is None
-        assert res.get("quality_flag") in ("no_vision_backend", "no_face", "extraction_error")
+        assert res.get("quality_flag") in ("no_vision_backend", "no_face", "extraction_error", "low_light")
 
         # Send STOP
         in_q.put("STOP")

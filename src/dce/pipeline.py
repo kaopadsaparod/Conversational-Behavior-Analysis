@@ -21,7 +21,7 @@ import numpy as np
 
 from dce.baseline_store import BaselineStore
 from dce.clock import ClockMode, MasterClock, PolicyQueue
-from dce.extractors.audio_dsp import extract_prosody
+from dce.extractors.audio_dsp import extract_prosody, transcribe_audio
 from dce.extractors.vision_face import extract_vision_frame
 from dce.math_core import compute_mahalanobis, normalized_av_xcorr
 from dce.reasoning.claims_ledger import ClaimsLedger, should_skip_extraction
@@ -30,13 +30,16 @@ from dce.reasoning.templates import generate_physical_explanation
 from dce.recorder import FeatureRecorder
 from dce.schemas import (
     AppConfig,
+    ASRResult,
     CancelSpeculativeEvent,
+    ClaimItem,
     ConsistencyVerificationResponse,
     FEATURE_GROUPS,
     HardTurnCommitEvent,
     MahalanobisResult,
     PriorsData,
     ProsodyFeatures,
+    ReasoningConfig,
     RecorderTurnRecord,
     SpeakerAssignment,
     SpeculativeTriggerEvent,
@@ -46,6 +49,7 @@ from dce.schemas import (
     VADChunkResult,
     VerificationResult,
     VisionFeatures,
+    WordTimestamp,
 )
 from dce.speaker_registry import SpeakerRegistry
 from dce.vad_endpointing import (
@@ -184,7 +188,12 @@ def reasoning_worker_process(
                 if isinstance(item, dict)
                 else item
             )
-            ledger = ClaimsLedger(llm_adapter=LLMAdapter())
+            reasoning_cfg = (
+                ReasoningConfig.model_validate(config_dict["reasoning"])
+                if isinstance(config_dict, dict) and isinstance(config_dict.get("reasoning"), dict)
+                else ReasoningConfig()
+            )
+            ledger = ClaimsLedger(llm_adapter=LLMAdapter(), config=reasoning_cfg)
             claims = ledger.extract_claims(transcript)
             verifications = [ledger.verify_consistency(c) for c in claims]
             top_verdict = verifications[0].response.verdict.value if verifications else None
@@ -281,7 +290,10 @@ class DiscourseConsistencyPipeline:
             reasoning_config=self._config.reasoning,
             hardware_config=self._config.hardware,
         )
-        self._claims_ledger: ClaimsLedger = ClaimsLedger(llm_adapter=llm_adapter)
+        self._claims_ledger: ClaimsLedger = ClaimsLedger(
+            llm_adapter=llm_adapter,
+            config=self._config.reasoning,
+        )
 
         self._recorder: Optional[FeatureRecorder] = (
             FeatureRecorder(recorder_path) if recorder_path is not None else None
@@ -293,6 +305,7 @@ class DiscourseConsistencyPipeline:
 
         self._prior_turn_transcript: Optional[TurnTranscript] = None
         self._recent_transcripts: Deque[TurnTranscript] = collections.deque(maxlen=2)
+        self._hotwords_buffer: Deque[str] = collections.deque(maxlen=20)
         self._last_turn_end_ns: Optional[int] = None
         self._completed_turns: List[RecorderTurnRecord] = []
         self._last_verification_results: List[VerificationResult] = []
@@ -421,12 +434,53 @@ class DiscourseConsistencyPipeline:
 
         return events, completed_record
 
+    _IGNORED_HOTWORD_TOKENS = frozenset({
+        "i", "me", "my", "we", "us", "our", "you", "your",
+        "he", "him", "his", "she", "her", "it", "its", "they", "them", "their",
+    })
+
+    def get_hotwords(self) -> Optional[str]:
+        """Return comma-separated rolling vocabulary hotwords from recent claims, or None."""
+        if not self._hotwords_buffer:
+            return None
+        return ", ".join(self._hotwords_buffer)
+
+    def _update_hotwords_from_claims(self, claims: List[ClaimItem]) -> None:
+        """Update the bounded rolling hotwords buffer from newly extracted claim entities."""
+        for clm in claims:
+            for candidate in (clm.canonical_entity, clm.raw_subject, clm.location_ref):
+                if not candidate:
+                    continue
+                cleaned = re.sub(r"\s+", " ", candidate.strip())
+                low = cleaned.lower()
+                if (
+                    not cleaned
+                    or len(cleaned) < 2
+                    or low in self._IGNORED_HOTWORD_TOKENS
+                    or low.startswith("speaker_")
+                    or low.startswith("spk_")
+                ):
+                    continue
+                if cleaned in self._hotwords_buffer:
+                    self._hotwords_buffer.remove(cleaned)
+                self._hotwords_buffer.append(cleaned)
+
+    def transcribe_turn_audio(self, audio_pcm: Sequence[float]) -> ASRResult:
+        """Transcribe turn audio using rolling entity hotwords from prior claims."""
+        return transcribe_audio(
+            audio_pcm=audio_pcm,
+            sample_rate=self._config.vad.sample_rate,
+            device=self._config.hardware.asr_device,
+            hotwords=self.get_hotwords(),
+        )
+
     def _handle_turn_commit(
         self,
         event: HardTurnCommitEvent,
         voice_embedding: Optional[np.ndarray] = None,
         face_hint: Optional[str] = None,
         transcript_text: Optional[str] = None,
+        asr_words: Optional[List[WordTimestamp]] = None,
         vision_features: Optional[VisionFeatures] = None,
         response_latency_open: Optional[float] = None,
         response_latency_closed: Optional[float] = None,
@@ -515,9 +569,11 @@ class DiscourseConsistencyPipeline:
         )
 
         # 4. Score Features against Speaker Baseline
+        word_count = len(transcript_text.split()) if transcript_text is not None else None
         feature_scores = self._baseline_store.score_and_update_turn(
             speaker_id=assignment.speaker_id,
             turn_features=turn_features,
+            word_count=word_count,
         )
 
         # 5. Compute Regularized Block-Diagonal Mahalanobis Distance
@@ -546,6 +602,7 @@ class DiscourseConsistencyPipeline:
             end_ns=event.end_ns,
             is_question=is_q,
             confidence=1.0 if text else None,
+            words=asr_words or [],
         )
 
         claims = []
@@ -556,6 +613,7 @@ class DiscourseConsistencyPipeline:
                 transcript,
                 context_turns=list(self._recent_transcripts),
             )
+            self._update_hotwords_from_claims(claims)
             for clm in claims:
                 vr = self._claims_ledger.verify_consistency(clm)
                 verification_results.append(vr)
@@ -568,6 +626,18 @@ class DiscourseConsistencyPipeline:
         self._last_turn_end_ns = event.end_ns
 
         # 7. Construct and Record Output Record
+        audio_clip_path: Optional[str] = None
+        if (
+            self._recorder is not None
+            and getattr(self._recorder, "audio_dir", None) is not None
+            and len(pcm) > 0
+        ):
+            audio_clip_path = self._recorder.save_turn_audio(
+                turn_id=event.turn_id,
+                audio_pcm16k=pcm,
+                sample_rate=self._config.vad.sample_rate,
+            )
+
         record = RecorderTurnRecord(
             turn_id=event.turn_id,
             speaker_assignment=assignment,
@@ -577,6 +647,7 @@ class DiscourseConsistencyPipeline:
             claims=claims,
             verifications=verifications,
             verification=verifications[0] if verifications else None,
+            audio_clip_path=audio_clip_path,
         )
 
         if self._recorder is not None:

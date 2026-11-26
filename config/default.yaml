@@ -46,9 +46,12 @@ baseline:
   rolling_window_turns: 40
   shrinkage_k: 6.0
   anchor_lock_turns: 8
+  min_anchor_words: 8
   gate_full_z: 3.0
   gate_reduced_z: 5.0
   gate_reduced_weight: 0.2
+  noise_robust_voice_weighting: true
+  jitter_shimmer_noise_floor_snr_db: 12.0
 
 mahalanobis:
   reg_lambda: 0.30
@@ -60,6 +63,11 @@ mahalanobis:
   stress_z_threshold: 1.5
   calm_z_threshold: 1.5
   z_clip: 50.0
+  calibration_source: "ravdess+besst"
+  besst_low_load_d_sq_p95: null
+  besst_high_load_d_sq_p50: null
+  cognitive_load_d_sq_threshold: null
+  cognitive_load_d_sq_per_df_threshold: null
 
 av_sync:
   grid_hz: 50.0
@@ -81,3 +89,6 @@ reasoning:
   anomaly_guided_search: false
   max_llm_retries: 1
   retrieval_top_k: 12
+  nli_prefilter_enabled: false
+  nli_model_name: "cross-encoder/nli-deberta-v3-xsmall"
+  nli_contradiction_threshold: 0.10

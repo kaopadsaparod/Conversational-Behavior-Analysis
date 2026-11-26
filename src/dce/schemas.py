@@ -117,6 +117,9 @@ class ProsodyConfig(DCEBaseModel):
     default_pitch_floor_hz: float = 75.0
     pitch_floor_min_hz: float = 60.0
     pitch_floor_max_hz: float = 140.0
+    highpass_cutoff_hz: float = 65.0
+    max_physiological_jitter_pct: float = 5.0
+    max_physiological_shimmer_pct: float = 15.0
 
 
 class BaselineConfig(DCEBaseModel):
@@ -124,10 +127,17 @@ class BaselineConfig(DCEBaseModel):
 
     rolling_window_turns: int = 40
     shrinkage_k: float = 6.0
+    scale_shrinkage_k: float = 6.0
+    l2_location_shrinkage_k: float = 0.0
+    acoustic_location_shrinkage_k: float = 3.0
+    decoupled_shrinkage: bool = False
     anchor_lock_turns: int = 8
+    min_anchor_words: int = 8
     gate_full_z: float = 3.0
     gate_reduced_z: float = 5.0
     gate_reduced_weight: float = 0.2
+    noise_robust_voice_weighting: bool = True
+    jitter_shimmer_noise_floor_snr_db: float = 12.0
 
 
 class MahalanobisConfig(DCEBaseModel):
@@ -142,6 +152,11 @@ class MahalanobisConfig(DCEBaseModel):
     stress_z_threshold: float = 1.5
     calm_z_threshold: float = 1.5
     z_clip: float = 50.0
+    calibration_source: str = "ravdess+besst"
+    besst_low_load_d_sq_p95: Optional[float] = None
+    besst_high_load_d_sq_p50: Optional[float] = None
+    cognitive_load_d_sq_threshold: Optional[float] = None
+    cognitive_load_d_sq_per_df_threshold: Optional[float] = None
 
 
 class AvSyncConfig(DCEBaseModel):
@@ -172,6 +187,9 @@ class ReasoningConfig(DCEBaseModel):
     anomaly_guided_search: bool = False
     max_llm_retries: int = 1
     retrieval_top_k: int = 12
+    nli_prefilter_enabled: bool = False
+    nli_model_name: str = "cross-encoder/nli-deberta-v3-xsmall"
+    nli_contradiction_threshold: float = 0.10
 
 
 class AppConfig(DCEBaseModel):
@@ -268,6 +286,23 @@ class VADChunkResult(DCEBaseModel):
     pts_ns: int = 0
 
 
+class WordTimestamp(DCEBaseModel):
+    """Word-level ASR alignment and confidence metadata."""
+
+    word: str
+    start: float
+    end: float
+    probability: Optional[float] = None
+
+
+class ASRResult(DCEBaseModel):
+    """Structured output from ASR transcription including word-level timestamps."""
+
+    text: str = ""
+    words: List[WordTimestamp] = Field(default_factory=list)
+    language: Optional[str] = None
+
+
 class TurnTranscript(DCEBaseModel):
     """Completed textual transcription of a conversational turn."""
 
@@ -278,6 +313,7 @@ class TurnTranscript(DCEBaseModel):
     end_ns: int
     is_question: bool = False
     confidence: Optional[float] = None
+    words: List[WordTimestamp] = Field(default_factory=list)
 
 
 # ============================================================================
@@ -294,7 +330,13 @@ class ProsodyFeatures(DCEBaseModel):
     shimmer_local_pct: Optional[float] = None
     hnr_db: Optional[float] = None
     articulation_rate: Optional[float] = None
+    spectral_slope_db: Optional[float] = None
+    alpha_ratio_db: Optional[float] = None
+    loudness_db: Optional[float] = None
+    acoustic_snr_db: Optional[float] = None
     glottal_periods_count: int = 0
+    voip_or_denoised_flag: bool = False
+    fine_wave_quality_flag: str = "ok"
     quality_flag: str = "ok"
 
 
@@ -305,6 +347,13 @@ class VisionFeatures(DCEBaseModel):
     mean_lip_aperture: Optional[float] = None
     face_detected: bool = False
     face_id_hint: Optional[str] = None
+    head_pose_yaw_deg: Optional[float] = None
+    head_pose_pitch_deg: Optional[float] = None
+    head_pose_roll_deg: Optional[float] = None
+    eye_gaze_horizontal: Optional[float] = None
+    eye_gaze_vertical: Optional[float] = None
+    action_units: Dict[str, float] = Field(default_factory=dict)
+    low_light_flag: bool = False
     quality_flag: str = "ok"
 
 
@@ -467,6 +516,7 @@ class VerdictStatus(str, Enum):
     CONSISTENT = "CONSISTENT"
     DIRECT_CONTRADICTION = "DIRECT_CONTRADICTION"
     TIMELINE_SHIFT = "TIMELINE_SHIFT"
+    NEEDS_AUDIO_REVIEW = "NEEDS_AUDIO_REVIEW"
     UNVERIFIABLE = "UNVERIFIABLE"
     REJECTED_INVALID_REF = "REJECTED_INVALID_REF"
     LLM_ERROR = "LLM_ERROR"
@@ -507,3 +557,4 @@ class RecorderTurnRecord(DCEBaseModel):
     claims: List[ClaimItem] = Field(default_factory=list)
     verifications: List[ConsistencyVerificationResponse] = Field(default_factory=list)
     verification: Optional[ConsistencyVerificationResponse] = None
+    audio_clip_path: Optional[str] = None

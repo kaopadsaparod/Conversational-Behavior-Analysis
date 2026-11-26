@@ -88,6 +88,8 @@ desktop.ini
 # Local output / media / checkpoints
 recordings/
 output/
+dataset/
+data/models/
 *.mp4
 *.wav
 *.avi

@@ -1,147 +1,107 @@
 """Discourse Consistency Engine (dce).
 
 Neuro-symbolic conversational cognitive load analysis and consistency verification.
+
+Uses PEP 562 lazy exports so lightweight entrypoints such as ``python -m dce.mcp_server``
+start in <0.2s without eagerly importing numpy/scipy/pydantic/pipeline modules.
 """
 
 from __future__ import annotations
 
-from dce.baseline_store import BaselineStore, get_default_priors
-from dce.clock import ClockMode, MasterClock, PolicyQueue, QueuePolicy
-from dce.math_core import (
-    classify_direction,
-    compute_mahalanobis,
-    f0_to_semitones,
-    normalized_av_xcorr,
-    weighted_mad,
-    weighted_median,
-)
-from dce.pipeline import (
-    DiscourseConsistencyPipeline,
-    audio_worker_process,
-    reasoning_worker_process,
-    vision_worker_process,
-)
-from dce.reasoning.claims_ledger import ClaimsLedger, assert_firewall_compliance, should_skip_extraction
-from dce.reasoning.llm_adapter import LLMAdapter, sanitize_gemini_schema
-from dce.reasoning.templates import generate_physical_explanation
-from dce.recorder import FeatureRecorder, ReplayLoader
-from dce.schemas import (
-    AppConfig,
-    AvSyncConfig,
-    BaselineConfig,
-    CancelSpeculativeEvent,
-    ClaimExtractionResponse,
-    ClaimItem,
-    ClaimPolarity,
-    ClockConfig,
-    ConsistencyVerificationResponse,
-    DCEBaseModel,
-    DirectionLabel,
-    FeatureScore,
-    HardTurnCommitEvent,
-    HardwareConfig,
-    MahalanobisConfig,
-    MahalanobisResult,
-    PauseRecord,
-    PriorParameter,
-    PriorsData,
-    ProsodyConfig,
-    ProsodyFeatures,
-    QueuesConfig,
-    ReasoningConfig,
-    RecorderTurnRecord,
-    SpeakerAssignment,
-    SpeakerRegistryConfig,
-    SpeculativeTriggerEvent,
-    TimingFeatures,
-    TurnFeatures,
-    TurnTranscript,
-    VADChunkResult,
-    VadConfig,
-    VADState,
-    VerdictStatus,
-    VisionFeatures,
-    load_config,
-    sanitize_nan_inf,
-)
-from dce.speaker_registry import SpeakerRegistry
-from dce.vad_endpointing import DualLevelEndpointTracker, LatestWinsSpeculativeMailbox
+import importlib
+from typing import Any, Dict, List, Tuple
 
 __version__ = "0.1.0"
 
-__all__ = [
-    "__version__",
+_LAZY_EXPORTS: Dict[str, Tuple[str, str]] = {
     # Clock & Queues
-    "MasterClock",
-    "ClockMode",
-    "PolicyQueue",
-    "QueuePolicy",
+    "MasterClock": ("dce.clock", "MasterClock"),
+    "ClockMode": ("dce.clock", "ClockMode"),
+    "PolicyQueue": ("dce.clock", "PolicyQueue"),
+    "QueuePolicy": ("dce.clock", "QueuePolicy"),
     # Schemas
-    "DCEBaseModel",
-    "AppConfig",
-    "ClockConfig",
-    "QueuesConfig",
-    "HardwareConfig",
-    "VadConfig",
-    "ProsodyConfig",
-    "BaselineConfig",
-    "MahalanobisConfig",
-    "AvSyncConfig",
-    "SpeakerRegistryConfig",
-    "ReasoningConfig",
-    "load_config",
-    "sanitize_nan_inf",
-    "VADState",
-    "PauseRecord",
-    "SpeculativeTriggerEvent",
-    "CancelSpeculativeEvent",
-    "HardTurnCommitEvent",
-    "VADChunkResult",
-    "TurnTranscript",
-    "ProsodyFeatures",
-    "VisionFeatures",
-    "TimingFeatures",
-    "TurnFeatures",
-    "DirectionLabel",
-    "PriorParameter",
-    "PriorsData",
-    "FeatureScore",
-    "MahalanobisResult",
-    "SpeakerAssignment",
-    "ClaimPolarity",
-    "ClaimItem",
-    "ClaimExtractionResponse",
-    "VerdictStatus",
-    "ConsistencyVerificationResponse",
-    "RecorderTurnRecord",
+    "DCEBaseModel": ("dce.schemas", "DCEBaseModel"),
+    "AppConfig": ("dce.schemas", "AppConfig"),
+    "ClockConfig": ("dce.schemas", "ClockConfig"),
+    "QueuesConfig": ("dce.schemas", "QueuesConfig"),
+    "HardwareConfig": ("dce.schemas", "HardwareConfig"),
+    "VadConfig": ("dce.schemas", "VadConfig"),
+    "ProsodyConfig": ("dce.schemas", "ProsodyConfig"),
+    "BaselineConfig": ("dce.schemas", "BaselineConfig"),
+    "MahalanobisConfig": ("dce.schemas", "MahalanobisConfig"),
+    "AvSyncConfig": ("dce.schemas", "AvSyncConfig"),
+    "SpeakerRegistryConfig": ("dce.schemas", "SpeakerRegistryConfig"),
+    "ReasoningConfig": ("dce.schemas", "ReasoningConfig"),
+    "load_config": ("dce.schemas", "load_config"),
+    "sanitize_nan_inf": ("dce.schemas", "sanitize_nan_inf"),
+    "VADState": ("dce.schemas", "VADState"),
+    "PauseRecord": ("dce.schemas", "PauseRecord"),
+    "SpeculativeTriggerEvent": ("dce.schemas", "SpeculativeTriggerEvent"),
+    "CancelSpeculativeEvent": ("dce.schemas", "CancelSpeculativeEvent"),
+    "HardTurnCommitEvent": ("dce.schemas", "HardTurnCommitEvent"),
+    "VADChunkResult": ("dce.schemas", "VADChunkResult"),
+    "TurnTranscript": ("dce.schemas", "TurnTranscript"),
+    "ProsodyFeatures": ("dce.schemas", "ProsodyFeatures"),
+    "VisionFeatures": ("dce.schemas", "VisionFeatures"),
+    "TimingFeatures": ("dce.schemas", "TimingFeatures"),
+    "TurnFeatures": ("dce.schemas", "TurnFeatures"),
+    "DirectionLabel": ("dce.schemas", "DirectionLabel"),
+    "PriorParameter": ("dce.schemas", "PriorParameter"),
+    "PriorsData": ("dce.schemas", "PriorsData"),
+    "FeatureScore": ("dce.schemas", "FeatureScore"),
+    "MahalanobisResult": ("dce.schemas", "MahalanobisResult"),
+    "SpeakerAssignment": ("dce.schemas", "SpeakerAssignment"),
+    "ClaimPolarity": ("dce.schemas", "ClaimPolarity"),
+    "ClaimItem": ("dce.schemas", "ClaimItem"),
+    "ClaimExtractionResponse": ("dce.schemas", "ClaimExtractionResponse"),
+    "VerdictStatus": ("dce.schemas", "VerdictStatus"),
+    "ConsistencyVerificationResponse": ("dce.schemas", "ConsistencyVerificationResponse"),
+    "RecorderTurnRecord": ("dce.schemas", "RecorderTurnRecord"),
     # Math Core
-    "f0_to_semitones",
-    "weighted_median",
-    "weighted_mad",
-    "compute_mahalanobis",
-    "classify_direction",
-    "normalized_av_xcorr",
+    "f0_to_semitones": ("dce.math_core", "f0_to_semitones"),
+    "weighted_median": ("dce.math_core", "weighted_median"),
+    "weighted_mad": ("dce.math_core", "weighted_mad"),
+    "compute_mahalanobis": ("dce.math_core", "compute_mahalanobis"),
+    "classify_direction": ("dce.math_core", "classify_direction"),
+    "normalized_av_xcorr": ("dce.math_core", "normalized_av_xcorr"),
     # Baseline Store
-    "BaselineStore",
-    "get_default_priors",
+    "BaselineStore": ("dce.baseline_store", "BaselineStore"),
+    "get_default_priors": ("dce.baseline_store", "get_default_priors"),
     # Speaker Registry
-    "SpeakerRegistry",
+    "SpeakerRegistry": ("dce.speaker_registry", "SpeakerRegistry"),
     # VAD & Endpointing
-    "DualLevelEndpointTracker",
-    "LatestWinsSpeculativeMailbox",
+    "DualLevelEndpointTracker": ("dce.vad_endpointing", "DualLevelEndpointTracker"),
+    "LatestWinsSpeculativeMailbox": ("dce.vad_endpointing", "LatestWinsSpeculativeMailbox"),
     # Feature Recorder & Replay
-    "FeatureRecorder",
-    "ReplayLoader",
+    "FeatureRecorder": ("dce.recorder", "FeatureRecorder"),
+    "ReplayLoader": ("dce.recorder", "ReplayLoader"),
     # Reasoning Subsystem
-    "generate_physical_explanation",
-    "LLMAdapter",
-    "sanitize_gemini_schema",
-    "ClaimsLedger",
-    "assert_firewall_compliance",
-    "should_skip_extraction",
+    "generate_physical_explanation": ("dce.reasoning.templates", "generate_physical_explanation"),
+    "LLMAdapter": ("dce.reasoning.llm_adapter", "LLMAdapter"),
+    "sanitize_gemini_schema": ("dce.reasoning.llm_adapter", "sanitize_gemini_schema"),
+    "ClaimsLedger": ("dce.reasoning.claims_ledger", "ClaimsLedger"),
+    "assert_firewall_compliance": ("dce.reasoning.claims_ledger", "assert_firewall_compliance"),
+    "should_skip_extraction": ("dce.reasoning.claims_ledger", "should_skip_extraction"),
     # Pipeline Orchestration & Multiprocessing Workers
-    "DiscourseConsistencyPipeline",
-    "audio_worker_process",
-    "vision_worker_process",
-    "reasoning_worker_process",
-]
+    "DiscourseConsistencyPipeline": ("dce.pipeline", "DiscourseConsistencyPipeline"),
+    "audio_worker_process": ("dce.pipeline", "audio_worker_process"),
+    "vision_worker_process": ("dce.pipeline", "vision_worker_process"),
+    "reasoning_worker_process": ("dce.pipeline", "reasoning_worker_process"),
+}
+
+__all__: List[str] = ["__version__", *_LAZY_EXPORTS.keys()]
+
+
+def __getattr__(name: str) -> Any:
+    target = _LAZY_EXPORTS.get(name)
+    if target is None:
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    mod_name, attr_name = target
+    module = importlib.import_module(mod_name)
+    value = getattr(module, attr_name)
+    globals()[name] = value
+    return value
+
+
+def __dir__() -> List[str]:
+    return sorted(__all__)

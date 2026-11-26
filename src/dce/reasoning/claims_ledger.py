@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Callable, Dict, List, Optional, Set, Tuple
 
 from dce.reasoning.llm_adapter import LLMAdapter
 from dce.schemas import (
@@ -87,6 +87,100 @@ _MULTI_WORD_FILLERS: Set[Tuple[str, str]] = {
     ("got", "it"),
     ("thank", "you"),
 }
+
+_PHONETIC_FRAGILE_PAIRS: Set[Tuple[str, str]] = {
+    ("13", "30"), ("thirteen", "thirty"),
+    ("14", "40"), ("fourteen", "forty"),
+    ("15", "50"), ("fifteen", "fifty"),
+    ("16", "60"), ("sixteen", "sixty"),
+    ("17", "70"), ("seventeen", "seventy"),
+    ("18", "80"), ("eighteen", "eighty"),
+    ("19", "90"), ("nineteen", "ninety"),
+    ("can", "can't"), ("can", "cannot"), ("won't", "want"),
+    ("did", "didn't"), ("do", "don't"), ("is", "isn't"),
+    ("was", "wasn't"), ("were", "weren't"), ("have", "haven't"),
+    ("has", "hasn't"), ("had", "hadn't"), ("would", "wouldn't"),
+    ("could", "couldn't"), ("should", "shouldn't"),
+    ("leave", "live"), ("left", "lived"),
+    ("two", "to"), ("too", "to"), ("no", "know"),
+    ("hear", "here"), ("their", "there"), ("sent", "cent"),
+    ("wait", "weight"), ("week", "weak"), ("right", "write"),
+    ("buy", "by"), ("night", "knight"), ("eight", "ate"),
+    ("for", "four"), ("one", "won"), ("wear", "where"),
+    ("knew", "new"), ("weather", "whether"), ("plane", "plain"),
+    ("principal", "principle"), ("bare", "bear"), ("break", "brake"),
+}
+_PHONETIC_FRAGILE_SET: Set[frozenset] = {frozenset(pair) for pair in _PHONETIC_FRAGILE_PAIRS}
+
+
+_PHONETIC_CANONICAL_MAP: Dict[str, str] = {
+    "1": "one",
+    "2": "two",
+    "4": "four",
+    "8": "eight",
+    "13": "thirteen",
+    "30": "thirty",
+    "14": "fourteen",
+    "40": "forty",
+    "15": "fifteen",
+    "50": "fifty",
+    "16": "sixteen",
+    "60": "sixty",
+    "17": "seventeen",
+    "70": "seventy",
+    "18": "eighteen",
+    "80": "eighty",
+    "19": "nineteen",
+    "90": "ninety",
+    "cannot": "can't",
+    "cant": "can't",
+    "wont": "won't",
+    "didnt": "didn't",
+    "dont": "don't",
+    "isnt": "isn't",
+    "wasnt": "wasn't",
+    "werent": "weren't",
+    "havent": "haven't",
+    "hasnt": "hasn't",
+    "hadnt": "hadn't",
+    "wouldnt": "wouldn't",
+    "couldnt": "couldn't",
+    "shouldnt": "shouldn't",
+}
+
+
+def _normalize_phonetic_tokens(text: Optional[str]) -> List[str]:
+    """Tokenize and normalize numbers/contractions for phonetic-fragile matching."""
+    if not text:
+        return []
+    lowered = text.lower()
+    lowered = re.sub(r"\bcan\s+not\b", "cannot", lowered)
+    lowered = re.sub(r"\bwill\s+not\b", "wont", lowered)
+    lowered = re.sub(r"\bdid\s+not\b", "didnt", lowered)
+    lowered = re.sub(r"\bdo\s+not\b", "dont", lowered)
+    raw_tokens = re.findall(r"[a-z0-9']+", lowered)
+    return [_PHONETIC_CANONICAL_MAP.get(tok, tok) for tok in raw_tokens]
+
+
+def is_phonetic_fragile_difference(claim_a: ClaimItem, claim_b: ClaimItem) -> bool:
+    """Return True if two claims differ only by known phonetic-fragile / ASR-confusable tokens."""
+    tokens_a = _normalize_phonetic_tokens(claim_a.object_value) + _normalize_phonetic_tokens(claim_a.time_ref_raw)
+    tokens_b = _normalize_phonetic_tokens(claim_b.object_value) + _normalize_phonetic_tokens(claim_b.time_ref_raw)
+
+    if not tokens_a or not tokens_b or tokens_a == tokens_b:
+        return False
+
+    # Compare token-by-token when aligned in length, or single-token difference in sets
+    if len(tokens_a) == len(tokens_b):
+        diffs = [(a, b) for a, b in zip(tokens_a, tokens_b) if a != b]
+        return bool(diffs) and all(frozenset(pair) in _PHONETIC_FRAGILE_SET for pair in diffs)
+
+    set_a, set_b = set(tokens_a), set(tokens_b)
+    only_a = set_a - set_b
+    only_b = set_b - set_a
+    if len(only_a) == 1 and len(only_b) == 1:
+        return frozenset((next(iter(only_a)), next(iter(only_b)))) in _PHONETIC_FRAGILE_SET
+    return False
 
 
 def _tokenize_firewall(text: str) -> List[str]:
@@ -167,6 +261,184 @@ def should_skip_extraction(
     return True
 
 
+class NLIPreFilter:
+    """Utterance-structured NLI pre-filter (e.g., DeBERTa-v3-xsmall) before LLM Step B.
+
+    Lazily imports transformers/torch when loading a HuggingFace NLI model and
+    falls back to a deterministic lexical/polarity heuristic when unavailable.
+    """
+
+    def __init__(
+        self,
+        model_name: str = "cross-encoder/nli-deberta-v3-xsmall",
+        scorer_fn: Optional[Callable[[str, str], float]] = None,
+        use_hf_model: bool = True,
+    ) -> None:
+        self.model_name = model_name
+        self._scorer_fn = scorer_fn
+        self._use_hf_model = use_hf_model
+        self._tokenizer: object = None
+        self._model: object = None
+        self._hf_load_attempted: bool = False
+        self._contradiction_idx: int = 0
+        self._entailment_idx: int = 1
+        self._device: str = "cpu"
+
+    @staticmethod
+    def format_utterance_claim(claim: ClaimItem) -> str:
+        """Format a ClaimItem as clean raw proposition text (no artificial speaker wrapper)."""
+        if claim.predicate == "stated" and claim.canonical_entity == "dialogue_fact":
+            return claim.object_value.strip()
+        stance = getattr(claim.polarity, "value", claim.polarity)
+        time_part = f" at {claim.time_ref_raw}" if claim.time_ref_raw else ""
+        loc_part = f" in {claim.location_ref}" if claim.location_ref else ""
+        neg_prefix = "not " if str(stance).lower() == "negative" else ""
+        return (
+            f"{claim.canonical_entity} {neg_prefix}{claim.predicate} "
+            f"{claim.object_value}{time_part}{loc_part}."
+        ).strip()
+
+    @staticmethod
+    def _heuristic_contradiction_score(premise: str, hypothesis: str) -> float:
+        """Lightweight fallback NLI contradiction scorer when transformers is unavailable."""
+        def _strip_boilerplate(text: str) -> str:
+            low = text.strip().lower()
+            if " stated that " in low:
+                return low.split(" stated that ", 1)[1]
+            return low
+
+        p_low = _strip_boilerplate(premise)
+        h_low = _strip_boilerplate(hypothesis)
+        p_tokens = set(re.findall(r"[a-z0-9']+", p_low))
+        h_tokens = set(re.findall(r"[a-z0-9']+", h_low))
+
+        neg_markers = {"not", "no", "never", "neither", "none", "didn't", "didnt", "wasn't", "isnt", "negative"}
+        p_neg = bool(p_tokens & neg_markers)
+        h_neg = bool(h_tokens & neg_markers)
+
+        p_content = p_tokens - neg_markers
+        h_content = h_tokens - neg_markers
+        content_overlap = len(p_content & h_content) / max(len(p_content | h_content), 1)
+
+        if p_neg != h_neg and content_overlap >= 0.30:
+            return 0.85
+
+        # Differing numbers or times (handles attached units like '9am' vs '10am')
+        p_nums = set(re.findall(r"\d+(?::\d+)?", p_low))
+        h_nums = set(re.findall(r"\d+(?::\d+)?", h_low))
+        if p_nums and h_nums and p_nums != h_nums and content_overlap >= 0.25:
+            return 0.80
+
+        if content_overlap >= 0.85 and p_neg == h_neg:
+            return 0.05
+        if p_content != h_content and content_overlap >= 0.45:
+            return 0.60
+        return 0.15
+
+    def _ensure_hf_model(self) -> bool:
+        """Lazily load HuggingFace NLI model and tokenizer; return True if ready."""
+        if self._model is not None and self._tokenizer is not None:
+            return True
+        if self._hf_load_attempted or not self._use_hf_model:
+            return False
+        self._hf_load_attempted = True
+        try:
+            import torch  # noqa: F401
+            from transformers import AutoModelForSequenceClassification, AutoTokenizer
+
+            self._tokenizer = AutoTokenizer.from_pretrained(self.model_name)
+            self._model = AutoModelForSequenceClassification.from_pretrained(self.model_name)
+            self._model.to(self._device)
+            self._model.eval()
+            label2id = getattr(self._model.config, "label2id", {}) or {}
+            for lbl, idx in label2id.items():
+                low_lbl = str(lbl).lower()
+                if "contradict" in low_lbl:
+                    self._contradiction_idx = int(idx)
+                elif "entail" in low_lbl:
+                    self._entailment_idx = int(idx)
+            if not label2id:
+                id2label = getattr(self._model.config, "id2label", {}) or {}
+                for idx, lbl in id2label.items():
+                    low_lbl = str(lbl).lower()
+                    if "contradict" in low_lbl:
+                        self._contradiction_idx = int(idx)
+                    elif "entail" in low_lbl:
+                        self._entailment_idx = int(idx)
+            return True
+        except Exception as exc:
+            logger.warning("NLI model '%s' unavailable (%s); using heuristic fallback.", self.model_name, exc)
+            self._tokenizer = None
+            self._model = None
+            return False
+
+    def predict_scores(self, premise: str, hypothesis: str) -> Tuple[float, Optional[float]]:
+        """Return (contradiction_prob, entailment_prob_or_none) for (premise, hypothesis)."""
+        if self._scorer_fn is not None:
+            score = float(self._scorer_fn(premise, hypothesis))
+            return max(0.0, min(1.0, score)), None
+
+        if self._ensure_hf_model():
+            try:
+                import torch
+
+                inputs = self._tokenizer(
+                    premise,
+                    hypothesis,
+                    return_tensors="pt",
+                    truncation=True,
+                    max_length=256,
+                )
+                inputs = {k: v.to(self._device) for k, v in inputs.items()}
+                with torch.no_grad():
+                    logits = self._model(**inputs).logits
+                    probs = torch.softmax(logits, dim=-1).squeeze(0)
+                    c_prob = float(probs[self._contradiction_idx].item())
+                    e_prob = (
+                        float(probs[self._entailment_idx].item())
+                        if self._entailment_idx < len(probs)
+                        else None
+                    )
+                    return c_prob, e_prob
+            except Exception as exc:
+                logger.warning("NLI inference failed (%s); falling back to heuristic.", exc)
+
+        return self._heuristic_contradiction_score(premise, hypothesis), None
+
+    def predict_contradiction_score(self, premise: str, hypothesis: str) -> float:
+        """Predict contradiction probability in [0.0, 1.0] for (premise, hypothesis)."""
+        c_prob, _ = self.predict_scores(premise, hypothesis)
+        return c_prob
+
+    def filter_candidates(
+        self,
+        current_claim: ClaimItem,
+        candidates: List[ClaimItem],
+        threshold: float = 0.10,
+        entailment_skip_threshold: float = 0.85,
+        same_speaker_only: bool = True,
+    ) -> List[ClaimItem]:
+        """Return prior claim candidates for Step B, preserving temporal claims and low-entailment pairs."""
+        if not candidates:
+            return []
+        hypothesis = self.format_utterance_claim(current_claim)
+        curr_has_time = bool(current_claim.time_ref_raw or current_claim.time_ref_normalized)
+        scored: List[Tuple[float, ClaimItem]] = []
+        for cand in candidates:
+            if same_speaker_only and cand.speaker_id != current_claim.speaker_id:
+                continue
+            cand_has_time = bool(cand.time_ref_raw or cand.time_ref_normalized)
+            premise = self.format_utterance_claim(cand)
+            c_score, e_score = self.predict_scores(premise, hypothesis)
+            # Never drop temporal pairs prematurely (NLI often scores indirect TIMELINE_SHIFT as neutral)
+            if curr_has_time or cand_has_time:
+                scored.append((max(c_score, threshold), cand))
+            elif c_score >= threshold or (e_score is not None and e_score <= entailment_skip_threshold):
+                scored.append((c_score, cand))
+        scored.sort(key=lambda item: (item[0], item[1].turn_id), reverse=True)
+        return [item[1] for item in scored]
+
+
 class ClaimsLedger:
     """In-memory verifiable proposition store and multi-speaker claim consistency tracker."""
 
@@ -175,26 +447,40 @@ class ClaimsLedger:
         llm_adapter: Optional[LLMAdapter] = None,
         retrieval_top_k: Optional[int] = None,
         config: Optional[ReasoningConfig] = None,
+        nli_prefilter: Optional[NLIPreFilter] = None,
     ) -> None:
         """Initialize ClaimsLedger.
 
         Args:
             llm_adapter: Configured LLM adapter for structured extraction and verification.
             retrieval_top_k: Maximum number of prior claims retrieved per verification.
-            config: Optional ReasoningConfig providing retrieval_top_k.
+            config: Optional ReasoningConfig providing retrieval_top_k and NLI settings.
+            nli_prefilter: Optional NLIPreFilter instance for pre-filtering before Step B.
         """
+        self._config: ReasoningConfig = config if config is not None else ReasoningConfig()
         self._llm: LLMAdapter = llm_adapter if llm_adapter is not None else LLMAdapter()
         self._retrieval_top_k: int = (
             retrieval_top_k
             if retrieval_top_k is not None
-            else (config.retrieval_top_k if config is not None else ReasoningConfig().retrieval_top_k)
+            else self._config.retrieval_top_k
         )
+        if nli_prefilter is not None:
+            self._nli_prefilter: Optional[NLIPreFilter] = nli_prefilter
+        elif self._config.nli_prefilter_enabled:
+            self._nli_prefilter = NLIPreFilter(model_name=self._config.nli_model_name)
+        else:
+            self._nli_prefilter = None
+
         self._claims: Dict[str, ClaimItem] = {}
         self._claims_by_turn: Dict[int, List[ClaimItem]] = {}
         self._claims_by_speaker: Dict[str, List[ClaimItem]] = {}
         self._entity_aliases: Dict[str, str] = {}
         self._next_claim_num: int = 1
-        self.stats: Dict[str, int] = {"llm_errors": 0}
+        self.stats: Dict[str, int] = {
+            "llm_errors": 0,
+            "nli_prefilter_skipped": 0,
+            "nli_prefilter_passed": 0,
+        }
 
     @property
     def claims(self) -> Dict[str, ClaimItem]:
@@ -275,7 +561,10 @@ class ClaimsLedger:
             "Current utterance by {speaker_id} (Turn {turn_id}):\n"
             '"{utterance}"\n\n'
             "Extract all explicit, verifiable factual claims as structured propositions. "
-            "Include canonical entities, predicates, object values, time references, and affirmative or negative status."
+            "Include canonical entities, predicates, object values, time references, and affirmative or negative status. "
+            "When the prior turn is a negative question (e.g., 'Didn't you...?') and the current utterance is a short "
+            "'Yes' or 'No' reply, resolve affirmation or negation using the full clause and agreement context rather than "
+            "blindly assuming 'Yes' means an affirmative event."
         )
 
         prompt_framing = framing_context_str + framing_template.format(
@@ -291,7 +580,8 @@ class ClaimsLedger:
 
         system_instruction = (
             "You are a factual claim extraction system. Extract structured subject-predicate-object "
-            "propositions. Do not include opinions or filler words."
+            "propositions. Do not include opinions or filler words. Resolve L2 yes/no answers to negative questions "
+            "using prior question agreement context."
         )
 
         # Enforce Neuro-Symbolic Firewall ONLY on prompt framing and system instructions
@@ -399,6 +689,32 @@ class ClaimsLedger:
                 conflict_scope=None,
             )
 
+        if self._nli_prefilter is not None:
+            filtered_candidates = self._nli_prefilter.filter_candidates(
+                current_claim,
+                candidates,
+                threshold=self._config.nli_contradiction_threshold,
+            )
+            if not filtered_candidates:
+                self.stats["nli_prefilter_skipped"] += 1
+                top_prior = candidates[0]
+                return VerificationResult(
+                    response=ConsistencyVerificationResponse(
+                        verdict=VerdictStatus.CONSISTENT,
+                        source_turn_id=current_claim.turn_id,
+                        prior_turn_id=top_prior.turn_id,
+                        source_claim_id=current_claim.claim_id,
+                        prior_claim_id=top_prior.claim_id,
+                        explanation="NLI pre-filter found no contradiction candidates; LLM Step B skipped.",
+                        confidence=0.9,
+                    ),
+                    conflict_scope=(
+                        "self" if top_prior.speaker_id == current_claim.speaker_id else "cross_speaker"
+                    ),
+                )
+            self.stats["nli_prefilter_passed"] += 1
+            candidates = filtered_candidates
+
         candidate_by_id: Dict[str, ClaimItem] = {c.claim_id: c for c in candidates}
 
         # Build prompt from separated framing and transcript-derived parts
@@ -503,6 +819,19 @@ class ClaimsLedger:
                 conflict_scope = (
                     "self" if prior_claim.speaker_id == current_claim.speaker_id else "cross_speaker"
                 )
+                if resp.verdict in (
+                    VerdictStatus.DIRECT_CONTRADICTION,
+                    VerdictStatus.TIMELINE_SHIFT,
+                ) and is_phonetic_fragile_difference(current_claim, prior_claim):
+                    resp = resp.model_copy(
+                        update={
+                            "verdict": VerdictStatus.NEEDS_AUDIO_REVIEW,
+                            "explanation": (
+                                f"{resp.explanation} "
+                                "[Audio review recommended: difference may stem from phonetic-fragile ASR confusion]"
+                            ).strip(),
+                        }
+                    )
 
             return VerificationResult(response=resp, conflict_scope=conflict_scope)
 

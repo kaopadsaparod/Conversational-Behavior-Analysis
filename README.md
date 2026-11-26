@@ -279,12 +279,15 @@ discourse-consistency-engine/
 ├── README.md                       # Comprehensive engineering documentation & formulas
 ├── pyproject.toml                  # Lightweight core dependencies + optional extras
 ├── config/
-│   └── default.yaml                # Production engine configuration
+│   ├── default.yaml                # Production engine configuration
+│   └── mcp_config.example.json     # Windows stdio MCP config for Antigravity / Claude Code / Codex
 ├── data/
-│   └── priors_en.json              # 8-feature literature population priors (calibrated: false)
+│   ├── priors_en.json              # 8-feature literature population priors (calibrated: false)
+│   └── priors_wild_video_en.json   # Calibrated courtroom/wild-video priors (RLDD Train-Truthful)
 ├── src/
 │   └── dce/
-│       ├── __init__.py             # Package root
+│       ├── __init__.py             # Package root (PEP 562 lazy exports)
+│       ├── mcp_server.py           # 4-tool state-locked stdio MCP server (dce-analyzer)
 │       ├── schemas.py              # Pydantic v2 data contracts & NaN/Inf sanitization
 │       ├── clock.py                # MasterClock & PolicyQueue (block, drop_oldest, never_drop)
 │       ├── math_core.py            # Semitone, weighted median/MAD, Mahalanobis, 4-state, 50Hz ZNCC
@@ -320,7 +323,23 @@ discourse-consistency-engine/
 
 ---
 
-## 6. Quick Start & Testing
+## 6. MCP Integration (`dce-analyzer`) & Verified Benchmarks
+
+### 4-Tool State-Locked MCP Workflow (`python -m dce.mcp_server`)
+1. `dce_ingest_media` — Decodes `.wav`/`.mp4` (via PyAV + OpenCV 15 FPS), computes acoustic prosody, `FaceLandmarker` kinematics, and Mahalanobis scores into locked backend memory; returns **only** firewall-safe annotated transcripts (`[word? p=0.52 | alt: ...]`) and incomplete-sentence flags.
+2. `dce_submit_verdicts` — Validates `turn_id` references, automatically downgrades phonetic-fragile / low-confidence collisions (`15/50`, `can/can't`, `did/didn't`) to `NEEDS_AUDIO_REVIEW` (`NEEDS_HUMAN_REVIEW`), and locks text verdicts.
+3. `dce_unlock_signals` — Refuses (`FIREWALL_LOCKED`) until `dce_submit_verdicts` succeeds; unlocks `BaselineStore` + `Mahalanobis` + `templates.py` explanations and writes `.jsonl` replay logs.
+4. `dce_slice_turn_audio` — Exports a 3-second 16 kHz WAV clip for human audio verification.
+
+### Verified Benchmark & Test Snapshot
+- **Automated Test Suite**: `python -m pytest -q` — **146 passed**
+- **DECODE Contradiction Pre-Filter (`dev.jsonl`, 100 balanced samples: 50 pos / 50 neg, same-speaker raw text)**:
+  - Lexical heuristic baseline (`0.50`): `Precision=0.600`, `Recall=0.360`, `F1=0.450`, `Accuracy=0.560`
+  - `cross-encoder/nli-deberta-v3-xsmall` (`thr=0.90`, calibrated on `train.jsonl`): **`TP=44, FP=29, TN=21, FN=6 | Precision=0.603, Recall=0.880, F1=0.715, Accuracy=0.650, LLM calls saved=1,055`**
+
+---
+
+## 7. Quick Start & Testing
 
 ### Installation
 ```bash
@@ -343,7 +362,7 @@ pytest -v
 
 ---
 
-## 7. License & Ethical Compliance
+## 8. License & Ethical Compliance
 
 - **Software License**: Apache License 2.0. See [LICENSE](LICENSE) for details.
 - **Dataset Compliance**: Any empirical calibration scripts utilizing external acoustic datasets (e.g. RAVDESS CC BY-NC-SA 4.0) must strictly comply with Non-Commercial and Share-Alike provisions.

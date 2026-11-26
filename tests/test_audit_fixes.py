@@ -471,7 +471,7 @@ def test_transcribe_audio_hallucination_filtering_and_head_pose_gate(monkeypatch
 
     out = transcribe_audio([0.1] * 1600)
     assert captured_kwargs.get("word_timestamps") is True
-    assert out == "Valid speech."
+    assert out.text == "Valid speech."
 
     # Test estimate_head_pose_euler with mocked cv2
     fake_cv2 = types.ModuleType("cv2")

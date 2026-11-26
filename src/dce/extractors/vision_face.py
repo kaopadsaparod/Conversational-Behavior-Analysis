@@ -8,13 +8,97 @@ from __future__ import annotations
 
 import logging
 import math
-from typing import Any, Optional, Tuple, Union
+import threading
+import urllib.request
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 
 from dce.schemas import VisionFeatures
 
 logger = logging.getLogger(__name__)
+
+FACE_LANDMARKER_URL = (
+    "https://storage.googleapis.com/mediapipe-models/face_landmarker/"
+    "face_landmarker/float16/latest/face_landmarker.task"
+)
+DEFAULT_FACE_LANDMARKER_PATH = (
+    Path(__file__).resolve().parents[3] / "data" / "models" / "face_landmarker.task"
+)
+
+_LANDMARKER_LOCK = threading.Lock()
+_IMAGE_LANDMARKER_CACHE: Dict[Tuple[Any, str], Any] = {}
+
+
+def clear_face_landmarker_cache() -> None:
+    """Close and clear cached stateless IMAGE-mode FaceLandmarker instances."""
+    with _LANDMARKER_LOCK:
+        for landmarker in _IMAGE_LANDMARKER_CACHE.values():
+            close_fn = getattr(landmarker, "close", None)
+            if callable(close_fn):
+                try:
+                    close_fn()
+                except Exception:
+                    pass
+        _IMAGE_LANDMARKER_CACHE.clear()
+
+
+def ensure_face_landmarker_model(model_path: Optional[Union[str, Path]] = None) -> Path:
+    """Return local path to face_landmarker.task, downloading it once if missing."""
+    target = Path(model_path) if model_path is not None else DEFAULT_FACE_LANDMARKER_PATH
+    with _LANDMARKER_LOCK:
+        if target.is_file() and target.stat().st_size > 0:
+            return target
+        target.parent.mkdir(parents=True, exist_ok=True)
+        tmp_path = target.with_suffix(".task.tmp")
+        urllib.request.urlretrieve(FACE_LANDMARKER_URL, str(tmp_path))
+        tmp_path.replace(target)
+        return target
+
+
+def _get_image_face_landmarker(mp_module: Any, model_path: Path) -> Any:
+    """Return a cached stateless RunningMode.IMAGE FaceLandmarker singleton."""
+    cache_key = (mp_module, str(model_path))
+    with _LANDMARKER_LOCK:
+        landmarker = _IMAGE_LANDMARKER_CACHE.get(cache_key)
+        if landmarker is None:
+            vision = mp_module.tasks.vision
+            base_options = mp_module.tasks.BaseOptions(
+                model_asset_path=str(model_path)
+            )
+            options = vision.FaceLandmarkerOptions(
+                base_options=base_options,
+                running_mode=vision.RunningMode.IMAGE,
+                num_faces=1,
+                min_face_detection_confidence=0.5,
+                min_face_presence_confidence=0.5,
+                output_face_blendshapes=True,
+                output_facial_transformation_matrixes=True,
+            )
+            landmarker = vision.FaceLandmarker.create_from_options(options)
+            _IMAGE_LANDMARKER_CACHE[cache_key] = landmarker
+        return landmarker
+
+
+def _euler_from_transformation_matrix(matrix_4x4: Any) -> Optional[Tuple[float, float, float]]:
+    """Extract folded (pitch, yaw, roll) in degrees from MediaPipe 4x4 facial transformation matrix."""
+    try:
+        import cv2
+
+        mat = np.asarray(matrix_4x4, dtype=np.float64)
+        if mat.shape != (4, 4):
+            return None
+        rmat = mat[:3, :3]
+        angles, _, _, _, _, _ = cv2.RQDecomp3x3(rmat)
+        pitch = fold_euler_angle_deg(float(angles[0]))
+        yaw = fold_euler_angle_deg(float(angles[1]))
+        roll = fold_euler_angle_deg(float(angles[2]))
+        if not (math.isfinite(pitch) and math.isfinite(yaw) and math.isfinite(roll)):
+            return None
+        return pitch, yaw, roll
+    except Exception:
+        return None
 
 
 def compute_eye_aspect_ratio(eye_landmarks: np.ndarray) -> float:
@@ -73,14 +157,15 @@ def estimate_head_pose_euler(
         dtype=np.float64,
     )
 
+    # Camera-aligned 3D face model (X right, Y down, Z into face) so frontal pose -> (0, 0, 0) deg
     model_points = np.array(
         [
-            (0.0, 0.0, 0.0),          # Nose tip
-            (0.0, -330.0, -65.0),     # Chin
-            (-225.0, 170.0, -135.0),  # Left eye outer corner
-            (225.0, 170.0, -135.0),   # Right eye outer corner
-            (-150.0, -150.0, -125.0), # Left mouth corner
-            (150.0, -150.0, -125.0),  # Right mouth corner
+            (0.0, 0.0, 0.0),           # Nose tip
+            (0.0, 330.0, 65.0),        # Chin
+            (-225.0, -170.0, 135.0),   # Left eye outer corner
+            (225.0, -170.0, 135.0),    # Right eye outer corner
+            (-150.0, 150.0, 125.0),    # Left mouth corner
+            (150.0, 150.0, 125.0),     # Right mouth corner
         ],
         dtype=np.float64,
     )
@@ -109,16 +194,121 @@ def estimate_head_pose_euler(
 
     rmat, _ = cv2.Rodrigues(rotation_vec)
     angles, _, _, _, _, _ = cv2.RQDecomp3x3(rmat)
-    pitch, yaw, roll = float(angles[0]), float(angles[1]), float(angles[2])
+    pitch, yaw, roll = (
+        fold_euler_angle_deg(float(angles[0])),
+        fold_euler_angle_deg(float(angles[1])),
+        fold_euler_angle_deg(float(angles[2])),
+    )
     if not (math.isfinite(pitch) and math.isfinite(yaw) and math.isfinite(roll)):
         return None
     return pitch, yaw, roll
+
+
+def fold_euler_angle_deg(angle_deg: float) -> float:
+    """Fold OpenCV RQDecomp3x3 Euler angles (e.g. +-178 deg frontal flip) into [-90, +90] deg."""
+    if not math.isfinite(angle_deg):
+        return angle_deg
+    wrapped = ((angle_deg + 180.0) % 360.0) - 180.0
+    if wrapped > 90.0:
+        wrapped -= 180.0
+    elif wrapped < -90.0:
+        wrapped += 180.0
+    return wrapped
+
+
+def evaluate_head_pose_quality(
+    pitch_deg: float,
+    yaw_deg: float,
+    roll_deg: float = 0.0,
+    max_yaw_deg: float = 30.0,
+    max_pitch_deg: float = 25.0,
+    max_roll_deg: float = 30.0,
+) -> Tuple[bool, str]:
+    """Evaluate head pose angles against OpenFace-style quality gate thresholds.
+
+    Rejects frames where speaker turns head > 30 deg, tilts > 30 deg, or pitches
+    head down/up > 25 deg (e.g., looking down to read documents) to prevent
+    spurious Blink/Lip Z-Score spikes.
+    """
+    if not (math.isfinite(pitch_deg) and math.isfinite(yaw_deg) and math.isfinite(roll_deg)):
+        return False, "extreme_head_pose"
+    pitch = fold_euler_angle_deg(pitch_deg)
+    yaw = fold_euler_angle_deg(yaw_deg)
+    roll = fold_euler_angle_deg(roll_deg)
+    if abs(yaw) > max_yaw_deg or abs(pitch) > max_pitch_deg or abs(roll) > max_roll_deg:
+        return False, "extreme_head_pose"
+    return True, "ok"
+
+
+def compute_eye_gaze_offset(coords: np.ndarray) -> Optional[Tuple[float, float]]:
+    """Compute normalized horizontal and vertical iris gaze offset in [-1, 1] from MediaPipe iris landmarks."""
+    if len(coords) < 478:
+        return None
+
+    def _single_eye_gaze(iris_idx: int, c_left: int, c_right: int, c_top: int, c_bot: int) -> Tuple[float, float]:
+        iris = coords[iris_idx]
+        left, right = coords[c_left], coords[c_right]
+        top, bot = coords[c_top], coords[c_bot]
+        w = max(float(np.linalg.norm(right - left)), 1.0)
+        h = max(float(np.linalg.norm(bot - top)), 1.0)
+        cx = 0.5 * (left[0] + right[0])
+        cy = 0.5 * (top[1] + bot[1])
+        return float((iris[0] - cx) / (0.5 * w)), float((iris[1] - cy) / (0.5 * h))
+
+    lgx, lgy = _single_eye_gaze(468, 33, 133, 159, 145)
+    rgx, rgy = _single_eye_gaze(473, 362, 263, 386, 374)
+    gx = 0.5 * (lgx + rgx)
+    gy = 0.5 * (lgy + rgy)
+    return (
+        max(-1.0, min(1.0, gx)),
+        max(-1.0, min(1.0, gy)),
+    )
+
+
+def compute_facial_action_units(
+    coords: np.ndarray,
+    ear_blink_threshold: float = 0.20,
+) -> Dict[str, float]:
+    """Compute geometric Py-FEAT/OpenFace-inspired Action Units normalized by inter-ocular distance."""
+    if len(coords) <= 291:
+        return {}
+
+    left_eye_outer = coords[33]
+    right_eye_outer = coords[263]
+    inter_ocular = max(float(np.linalg.norm(right_eye_outer - left_eye_outer)), 1.0)
+
+    # AU01: Inner brow raise (distance from inner brow 107/336 to eye inner corner 133/362)
+    au01 = float(
+        0.5 * (np.linalg.norm(coords[107] - coords[133]) + np.linalg.norm(coords[336] - coords[362]))
+        / inter_ocular
+    )
+    # AU04: Brow lowerer (inverse proxy: distance between inner brows 107 and 336)
+    au04 = float(1.0 - min(1.0, np.linalg.norm(coords[107] - coords[336]) / inter_ocular))
+    # AU12: Lip corner puller (mouth width 61-291 / inter_ocular)
+    au12 = float(np.linalg.norm(coords[61] - coords[291]) / inter_ocular)
+    # AU25: Lips part (inner lip height 13-14 / inter_ocular)
+    au25 = float(np.linalg.norm(coords[13] - coords[14]) / inter_ocular)
+
+    ear_l = compute_eye_aspect_ratio(coords[[33, 160, 158, 133, 153, 144]])
+    ear_r = compute_eye_aspect_ratio(coords[[362, 385, 387, 263, 373, 380]])
+    mean_ear = 0.5 * (ear_l + ear_r)
+    au45 = 1.0 if mean_ear < ear_blink_threshold else 0.0
+
+    return {
+        "AU01_inner_brow_raise": round(au01, 4),
+        "AU04_brow_lowerer": round(au04, 4),
+        "AU12_lip_corner_puller": round(au12, 4),
+        "AU25_lips_part": round(au25, 4),
+        "AU45_blink": au45,
+    }
 
 
 def extract_vision_frame(
     frame_rgb: np.ndarray,
     ear_blink_threshold: float = 0.20,
     max_head_pose_deg: float = 30.0,
+    max_pitch_deg: float = 25.0,
+    min_luma: float = 20.0,
 ) -> VisionFeatures:
     """Extract facial kinematics from a single video frame.
 
@@ -153,70 +343,77 @@ def extract_vision_frame(
         )
 
     try:
-        mp_face_mesh = mp.solutions.face_mesh
-        with mp_face_mesh.FaceMesh(
-            static_image_mode=True,
-            max_num_faces=1,
-            refine_landmarks=True,
-            min_detection_confidence=0.5,
-        ) as face_mesh:
-            results = face_mesh.process(frame_rgb)
-            if not results.multi_face_landmarks:
+        # Low-light quality gate
+        mean_luma = float(np.mean(frame_rgb))
+        if mean_luma < min_luma:
+            return VisionFeatures(
+                blink_rate_per_min=None,
+                mean_lip_aperture=None,
+                face_detected=False,
+                low_light_flag=True,
+                quality_flag="low_light",
+            )
+
+        if frame_rgb.ndim == 2:
+            frame_rgb = np.stack([frame_rgb, frame_rgb, frame_rgb], axis=-1)
+        if frame_rgb.dtype != np.uint8:
+            frame_rgb = np.clip(frame_rgb, 0, 255).astype(np.uint8)
+
+        h, w = frame_rgb.shape[:2]
+        landmarks = None
+        blendshapes_map: Dict[str, float] = {}
+        transform_matrix: Any = None
+
+        if hasattr(mp, "tasks"):
+            model_path = ensure_face_landmarker_model()
+            landmarker = _get_image_face_landmarker(mp, model_path)
+            mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=np.ascontiguousarray(frame_rgb))
+            results = landmarker.detect(mp_image)
+            if not getattr(results, "face_landmarks", None):
                 return VisionFeatures(
                     blink_rate_per_min=None,
                     mean_lip_aperture=None,
                     face_detected=False,
                     quality_flag="no_face",
                 )
-
-            landmarks = results.multi_face_landmarks[0].landmark
-            h, w, _ = frame_rgb.shape
-            coords = np.array([[lm.x * w, lm.y * h] for lm in landmarks], dtype=np.float64)
-
-            # Head-pose Euler angle gate (±30 deg)
-            euler = estimate_head_pose_euler(coords, w, h)
-            if euler is not None:
-                pitch_deg, yaw_deg, _ = euler
-                if abs(yaw_deg) > max_head_pose_deg or abs(pitch_deg) > max_head_pose_deg:
+            landmarks = results.face_landmarks[0]
+            if getattr(results, "face_blendshapes", None):
+                blendshapes_map = {
+                    str(b.category_name): float(b.score)
+                    for b in results.face_blendshapes[0]
+                    if getattr(b, "category_name", None)
+                }
+            if getattr(results, "facial_transformation_matrixes", None):
+                transform_matrix = results.facial_transformation_matrixes[0]
+        else:
+            mp_face_mesh = mp.solutions.face_mesh
+            with mp_face_mesh.FaceMesh(
+                static_image_mode=True,
+                max_num_faces=1,
+                refine_landmarks=True,
+                min_detection_confidence=0.5,
+            ) as face_mesh:
+                results = face_mesh.process(frame_rgb)
+                if not results.multi_face_landmarks:
                     return VisionFeatures(
                         blink_rate_per_min=None,
                         mean_lip_aperture=None,
-                        face_detected=True,
-                        face_id_hint=None,
-                        quality_flag="extreme_head_pose",
+                        face_detected=False,
+                        quality_flag="no_face",
                     )
+                landmarks = results.multi_face_landmarks[0].landmark
 
-            # Inner lip aperture: distance between upper inner lip (13) and lower inner lip (14)
-            # Normalized by horizontal lip width: distance between corners (61, 291)
-            lip_top = coords[13]
-            lip_bottom = coords[14]
-            lip_left = coords[61]
-            lip_right = coords[291]
-
-            lip_height = float(np.linalg.norm(lip_top - lip_bottom))
-            lip_width = float(np.linalg.norm(lip_left - lip_right))
-            norm_lip_aperture = lip_height / max(lip_width, 1.0)
-
-            # Left eye EAR: landmarks [33, 160, 158, 133, 153, 144]
-            left_eye_indices = [33, 160, 158, 133, 153, 144]
-            left_eye_pts = coords[left_eye_indices]
-            ear_left = compute_eye_aspect_ratio(left_eye_pts)
-
-            # Right eye EAR: landmarks [362, 385, 387, 263, 373, 380]
-            right_eye_indices = [362, 385, 387, 263, 373, 380]
-            right_eye_pts = coords[right_eye_indices]
-            ear_right = compute_eye_aspect_ratio(right_eye_pts)
-
-            mean_ear = 0.5 * (ear_left + ear_right)
-            is_blink = mean_ear < ear_blink_threshold
-
-            return VisionFeatures(
-                blink_rate_per_min=None,
-                mean_lip_aperture=norm_lip_aperture,
-                face_detected=True,
-                face_id_hint=None,
-                quality_flag="ok",
-            )
+        coords = np.array([[lm.x * w, lm.y * h] for lm in landmarks], dtype=np.float64)
+        return _build_vision_features_from_landmarks(
+            coords=coords,
+            image_width=w,
+            image_height=h,
+            ear_blink_threshold=ear_blink_threshold,
+            max_head_pose_deg=max_head_pose_deg,
+            max_pitch_deg=max_pitch_deg,
+            blendshapes_map=blendshapes_map,
+            transform_matrix=transform_matrix,
+        )
 
     except Exception as exc:
         logger.warning("Visual extraction error: %s", exc)
@@ -226,3 +423,201 @@ def extract_vision_frame(
             face_detected=False,
             quality_flag="extraction_error",
         )
+
+
+def _build_vision_features_from_landmarks(
+    coords: np.ndarray,
+    image_width: int,
+    image_height: int,
+    ear_blink_threshold: float = 0.20,
+    max_head_pose_deg: float = 30.0,
+    max_pitch_deg: float = 25.0,
+    blendshapes_map: Optional[Dict[str, float]] = None,
+    transform_matrix: Any = None,
+) -> VisionFeatures:
+    """Build VisionFeatures from 2D pixel landmarks + optional blendshapes/transformation matrix."""
+    euler = (
+        _euler_from_transformation_matrix(transform_matrix)
+        if transform_matrix is not None
+        else None
+    )
+    if euler is None:
+        euler = estimate_head_pose_euler(coords, image_width, image_height)
+
+    pitch_deg: Optional[float] = None
+    yaw_deg: Optional[float] = None
+    roll_deg: Optional[float] = None
+    if euler is not None:
+        pitch_deg, yaw_deg, roll_deg = euler
+        pose_ok, pose_flag = evaluate_head_pose_quality(
+            pitch_deg=pitch_deg,
+            yaw_deg=yaw_deg,
+            roll_deg=roll_deg,
+            max_yaw_deg=max_head_pose_deg,
+            max_pitch_deg=max_pitch_deg,
+            max_roll_deg=max_head_pose_deg,
+        )
+        if not pose_ok:
+            return VisionFeatures(
+                blink_rate_per_min=None,
+                mean_lip_aperture=None,
+                face_detected=True,
+                face_id_hint=None,
+                head_pose_yaw_deg=yaw_deg,
+                head_pose_pitch_deg=pitch_deg,
+                head_pose_roll_deg=roll_deg,
+                quality_flag=pose_flag,
+            )
+
+    lip_top = coords[13]
+    lip_bottom = coords[14]
+    lip_left = coords[61]
+    lip_right = coords[291]
+    lip_height = float(np.linalg.norm(lip_top - lip_bottom))
+    lip_width = float(np.linalg.norm(lip_left - lip_right))
+    norm_lip_aperture = lip_height / max(lip_width, 1.0)
+
+    gaze = compute_eye_gaze_offset(coords)
+    action_units = compute_facial_action_units(coords, ear_blink_threshold=ear_blink_threshold)
+    if blendshapes_map:
+        blink_l = blendshapes_map.get("eyeBlinkLeft")
+        blink_r = blendshapes_map.get("eyeBlinkRight")
+        if blink_l is not None and blink_r is not None:
+            action_units["AU45_blink_blendshape"] = round(0.5 * (blink_l + blink_r), 4)
+            action_units["AU45_blink"] = 1.0 if 0.5 * (blink_l + blink_r) >= 0.45 else 0.0
+
+    return VisionFeatures(
+        blink_rate_per_min=None,
+        mean_lip_aperture=norm_lip_aperture,
+        face_detected=True,
+        face_id_hint=None,
+        head_pose_yaw_deg=yaw_deg,
+        head_pose_pitch_deg=pitch_deg,
+        head_pose_roll_deg=roll_deg,
+        eye_gaze_horizontal=gaze[0] if gaze is not None else None,
+        eye_gaze_vertical=gaze[1] if gaze is not None else None,
+        action_units=action_units,
+        low_light_flag=False,
+        quality_flag="ok",
+    )
+
+
+def extract_vision_sequence(
+    frames_rgb: Sequence[np.ndarray],
+    fps: float = 15.0,
+    ear_blink_threshold: float = 0.20,
+    max_head_pose_deg: float = 30.0,
+    max_pitch_deg: float = 25.0,
+    min_luma: float = 20.0,
+) -> List[VisionFeatures]:
+    """Process a contiguous video frame sequence using a fresh RunningMode.VIDEO FaceLandmarker.
+
+    Creates a dedicated VIDEO-mode instance per sequence so timestamp_ms is strictly
+    monotonic and isolated from other files, and computes blink_rate_per_min across
+    valid frames.
+    """
+    if not frames_rgb:
+        return []
+
+    try:
+        import cv2  # noqa: F401
+        import mediapipe as mp
+    except ImportError:
+        return [
+            VisionFeatures(face_detected=False, quality_flag="no_vision_backend")
+            for _ in frames_rgb
+        ]
+
+    if not hasattr(mp, "tasks"):
+        return [
+            extract_vision_frame(
+                f,
+                ear_blink_threshold=ear_blink_threshold,
+                max_head_pose_deg=max_head_pose_deg,
+                max_pitch_deg=max_pitch_deg,
+                min_luma=min_luma,
+            )
+            for f in frames_rgb
+        ]
+
+    model_path = ensure_face_landmarker_model()
+    vision = mp.tasks.vision
+    base_options = mp.tasks.BaseOptions(model_asset_path=str(model_path))
+    options = vision.FaceLandmarkerOptions(
+        base_options=base_options,
+        running_mode=vision.RunningMode.VIDEO,
+        num_faces=1,
+        min_face_detection_confidence=0.5,
+        min_face_presence_confidence=0.5,
+        output_face_blendshapes=True,
+        output_facial_transformation_matrixes=True,
+    )
+
+    out_features: List[VisionFeatures] = []
+    blink_events = 0
+    prev_blinking = False
+    valid_frames = 0
+    step_ms = max(1, int(round(1000.0 / max(fps, 1.0))))
+
+    with vision.FaceLandmarker.create_from_options(options) as landmarker:
+        for idx, raw_frame in enumerate(frames_rgb):
+            if raw_frame is None or raw_frame.size == 0:
+                out_features.append(VisionFeatures(face_detected=False, quality_flag="empty_frame"))
+                continue
+            if float(np.mean(raw_frame)) < min_luma:
+                out_features.append(
+                    VisionFeatures(face_detected=False, low_light_flag=True, quality_flag="low_light")
+                )
+                continue
+
+            frame = np.stack([raw_frame, raw_frame, raw_frame], axis=-1) if raw_frame.ndim == 2 else raw_frame
+            if frame.dtype != np.uint8:
+                frame = np.clip(frame, 0, 255).astype(np.uint8)
+            h, w = frame.shape[:2]
+            mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=np.ascontiguousarray(frame))
+            results = landmarker.detect_for_video(mp_image, idx * step_ms)
+            if not getattr(results, "face_landmarks", None):
+                out_features.append(VisionFeatures(face_detected=False, quality_flag="no_face"))
+                continue
+
+            coords = np.array([[lm.x * w, lm.y * h] for lm in results.face_landmarks[0]], dtype=np.float64)
+            blendshapes_map = (
+                {
+                    str(b.category_name): float(b.score)
+                    for b in results.face_blendshapes[0]
+                    if getattr(b, "category_name", None)
+                }
+                if getattr(results, "face_blendshapes", None)
+                else {}
+            )
+            transform_matrix = (
+                results.facial_transformation_matrixes[0]
+                if getattr(results, "facial_transformation_matrixes", None)
+                else None
+            )
+            vf = _build_vision_features_from_landmarks(
+                coords=coords,
+                image_width=w,
+                image_height=h,
+                ear_blink_threshold=ear_blink_threshold,
+                max_head_pose_deg=max_head_pose_deg,
+                max_pitch_deg=max_pitch_deg,
+                blendshapes_map=blendshapes_map,
+                transform_matrix=transform_matrix,
+            )
+            if vf.quality_flag == "ok":
+                valid_frames += 1
+                is_blinking = vf.action_units.get("AU45_blink", 0.0) >= 0.5
+                if is_blinking and not prev_blinking:
+                    blink_events += 1
+                prev_blinking = is_blinking
+            out_features.append(vf)
+
+    valid_sec = float(valid_frames) / max(fps, 1.0)
+    blink_rate = float(blink_events) / (valid_sec / 60.0) if valid_sec >= 8.0 else None
+    if blink_rate is not None:
+        out_features = [
+            vf.model_copy(update={"blink_rate_per_min": blink_rate}) if vf.quality_flag == "ok" else vf
+            for vf in out_features
+        ]
+    return out_features
