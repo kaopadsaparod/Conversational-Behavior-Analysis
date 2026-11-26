@@ -33,6 +33,7 @@ class AblationMetrics:
     total_turns: int = 0
     anomalies_detected: int = 0
     contradictions_flagged: int = 0
+    positive_rate: float = 0.0
     f1_score: float = 0.0
 
 
@@ -59,18 +60,25 @@ def evaluate_loso(records: Sequence[RecorderTurnRecord]) -> Dict[str, AblationMe
                 math_anomalies += 1
 
         is_llm_contradiction = False
-        if r.verification is not None:
-            if r.verification.verdict in (
-                VerdictStatus.DIRECT_CONTRADICTION,
-                VerdictStatus.TIMELINE_SHIFT,
-            ):
-                is_llm_contradiction = True
-                llm_contradictions += 1
+        verifications_to_check = (
+            r.verifications
+            if r.verifications
+            else ([r.verification] if r.verification is not None else [])
+        )
+        if any(
+            v.verdict in (VerdictStatus.DIRECT_CONTRADICTION, VerdictStatus.TIMELINE_SHIFT)
+            for v in verifications_to_check
+        ):
+            is_llm_contradiction = True
+            llm_contradictions += 1
 
         if is_math_anomaly or is_llm_contradiction:
             hybrid_flags += 1
 
     total = max(len(records), 1)
+    math_rate = math_anomalies / total
+    llm_rate = llm_contradictions / total
+    hybrid_rate = hybrid_flags / total
 
     return {
         "math_only": AblationMetrics(
@@ -78,21 +86,24 @@ def evaluate_loso(records: Sequence[RecorderTurnRecord]) -> Dict[str, AblationMe
             total_turns=len(records),
             anomalies_detected=math_anomalies,
             contradictions_flagged=0,
-            f1_score=math_anomalies / total,
+            positive_rate=math_rate,
+            f1_score=math_rate,
         ),
         "llm_only": AblationMetrics(
             condition_name="LLM-Only (Claims Ledger)",
             total_turns=len(records),
             anomalies_detected=0,
             contradictions_flagged=llm_contradictions,
-            f1_score=llm_contradictions / total,
+            positive_rate=llm_rate,
+            f1_score=llm_rate,
         ),
         "hybrid": AblationMetrics(
             condition_name="Neuro-Symbolic Hybrid (Full DCE)",
             total_turns=len(records),
             anomalies_detected=math_anomalies,
             contradictions_flagged=llm_contradictions,
-            f1_score=hybrid_flags / total,
+            positive_rate=hybrid_rate,
+            f1_score=hybrid_rate,
         ),
     }
 

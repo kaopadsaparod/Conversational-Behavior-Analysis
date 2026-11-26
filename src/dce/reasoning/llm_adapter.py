@@ -34,8 +34,10 @@ def _inline_defs(node: Any, defs: Dict[str, Any], visited: Optional[set] = None)
                 ref_name = ref_path.split("/")[-1]
                 if ref_name in defs and ref_name not in visited:
                     target = copy.deepcopy(defs[ref_name])
+                    node.pop("$ref", None)
+                    merged = {**target, **node}
                     node.clear()
-                    node.update(target)
+                    node.update(merged)
                     return _inline_defs(node, defs, visited | {ref_name})
 
         for k, v in list(node.items()):
@@ -180,6 +182,10 @@ class LLMAdapter:
             try:
                 if self._provider == "gemini":
                     return self._generate_gemini(prompt, response_model, system_prompt)
+                if attempt > 0 and self._hardware_cfg.ollama_fallback_model:
+                    self._active_ollama_model = self._hardware_cfg.ollama_fallback_model
+                else:
+                    self._active_ollama_model = self._hardware_cfg.ollama_model
                 return self._generate_ollama(prompt, response_model, system_prompt)
             except Exception as exc:
                 last_error = exc
@@ -188,6 +194,8 @@ class LLMAdapter:
                     attempt + 1,
                     exc,
                 )
+            finally:
+                self._active_ollama_model = self._hardware_cfg.ollama_model
 
         raise RuntimeError(
             f"LLM structured generation failed after {self._max_retries + 1} attempts: {last_error}"
@@ -198,6 +206,7 @@ class LLMAdapter:
         prompt: str,
         response_model: Type[T],
         system_prompt: Optional[str] = None,
+        model_name: Optional[str] = None,
     ) -> T:
         """Query Ollama backend using structured JSON format."""
         # LAZY IMPORT of httpx or ollama
@@ -214,8 +223,9 @@ class LLMAdapter:
             messages.append({"role": "system", "content": system_prompt})
         messages.append({"role": "user", "content": prompt})
 
+        selected_model = model_name or getattr(self, "_active_ollama_model", None) or self._hardware_cfg.ollama_model
         payload = {
-            "model": self._hardware_cfg.ollama_model,
+            "model": selected_model,
             "messages": messages,
             "format": schema,
             "stream": False,

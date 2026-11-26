@@ -58,6 +58,13 @@ class DCEBaseModel(BaseModel):
 # ============================================================================
 
 
+class ClockMode(str, Enum):
+    """Execution mode of the MasterClock and pipeline."""
+
+    OFFLINE = "offline"
+    LIVE = "live"
+
+
 class ClockConfig(DCEBaseModel):
     """Configuration for MasterClock."""
 
@@ -167,7 +174,7 @@ class ReasoningConfig(DCEBaseModel):
 class AppConfig(DCEBaseModel):
     """Root configuration model combining all DCE subsystem options."""
 
-    mode: str = "offline"
+    mode: ClockMode = ClockMode.OFFLINE
     clock: ClockConfig = Field(default_factory=ClockConfig)
     queues: QueuesConfig = Field(default_factory=QueuesConfig)
     hardware: HardwareConfig = Field(default_factory=HardwareConfig)
@@ -426,7 +433,7 @@ class ClaimItem(DCEBaseModel):
     time_ref_raw: Optional[str] = None
     time_ref_normalized: Optional[str] = None
     location_ref: Optional[str] = None
-    polarity: str = "affirmative"
+    polarity: ClaimPolarity = ClaimPolarity.AFFIRMATIVE
     confidence: float = 1.0
 
 
@@ -474,4 +481,5 @@ class RecorderTurnRecord(DCEBaseModel):
     features: TurnFeatures
     mahalanobis: Optional[MahalanobisResult] = None
     claims: List[ClaimItem] = Field(default_factory=list)
+    verifications: List[ConsistencyVerificationResponse] = Field(default_factory=list)
     verification: Optional[ConsistencyVerificationResponse] = None

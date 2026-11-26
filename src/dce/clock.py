@@ -15,11 +15,7 @@ from enum import Enum
 from typing import Any, Deque, Optional
 
 
-class ClockMode(str, Enum):
-    """Execution mode of the MasterClock."""
-
-    OFFLINE = "offline"
-    LIVE = "live"
+from dce.schemas import ClockMode
 
 
 class QueuePolicy(str, Enum):

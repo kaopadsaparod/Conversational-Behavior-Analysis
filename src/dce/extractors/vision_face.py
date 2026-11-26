@@ -42,9 +42,83 @@ def compute_eye_aspect_ratio(eye_landmarks: np.ndarray) -> float:
     return (v1 + v2) / (2.0 * h)
 
 
+def estimate_head_pose_euler(
+    coords: np.ndarray,
+    image_width: int,
+    image_height: int,
+) -> Optional[Tuple[float, float, float]]:
+    """Estimate head pose Euler angles (pitch, yaw, roll) in degrees via cv2.solvePnP.
+
+    Uses 6 canonical MediaPipe Face Mesh landmarks:
+    nose tip (1), chin (152), left eye outer corner (33), right eye outer corner (263),
+    left mouth corner (61), right mouth corner (291).
+    """
+    if len(coords) <= 291:
+        return None
+
+    try:
+        import cv2
+    except ImportError:
+        return None
+
+    image_points = np.array(
+        [
+            coords[1],    # Nose tip
+            coords[152],  # Chin
+            coords[33],   # Left eye outer corner
+            coords[263],  # Right eye outer corner
+            coords[61],   # Left mouth corner
+            coords[291],  # Right mouth corner
+        ],
+        dtype=np.float64,
+    )
+
+    model_points = np.array(
+        [
+            (0.0, 0.0, 0.0),          # Nose tip
+            (0.0, -330.0, -65.0),     # Chin
+            (-225.0, 170.0, -135.0),  # Left eye outer corner
+            (225.0, 170.0, -135.0),   # Right eye outer corner
+            (-150.0, -150.0, -125.0), # Left mouth corner
+            (150.0, -150.0, -125.0),  # Right mouth corner
+        ],
+        dtype=np.float64,
+    )
+
+    focal_length = float(max(image_width, 1))
+    center = (image_width / 2.0, image_height / 2.0)
+    camera_matrix = np.array(
+        [
+            [focal_length, 0.0, center[0]],
+            [0.0, focal_length, center[1]],
+            [0.0, 0.0, 1.0],
+        ],
+        dtype=np.float64,
+    )
+    dist_coeffs = np.zeros((4, 1), dtype=np.float64)
+
+    success, rotation_vec, _ = cv2.solvePnP(
+        model_points,
+        image_points,
+        camera_matrix,
+        dist_coeffs,
+        flags=cv2.SOLVEPNP_ITERATIVE,
+    )
+    if not success:
+        return None
+
+    rmat, _ = cv2.Rodrigues(rotation_vec)
+    angles, _, _, _, _, _ = cv2.RQDecomp3x3(rmat)
+    pitch, yaw, roll = float(angles[0]), float(angles[1]), float(angles[2])
+    if not (math.isfinite(pitch) and math.isfinite(yaw) and math.isfinite(roll)):
+        return None
+    return pitch, yaw, roll
+
+
 def extract_vision_frame(
     frame_rgb: np.ndarray,
     ear_blink_threshold: float = 0.20,
+    max_head_pose_deg: float = 30.0,
 ) -> VisionFeatures:
     """Extract facial kinematics from a single video frame.
 
@@ -98,6 +172,19 @@ def extract_vision_frame(
             landmarks = results.multi_face_landmarks[0].landmark
             h, w, _ = frame_rgb.shape
             coords = np.array([[lm.x * w, lm.y * h] for lm in landmarks], dtype=np.float64)
+
+            # Head-pose Euler angle gate (±30 deg)
+            euler = estimate_head_pose_euler(coords, w, h)
+            if euler is not None:
+                pitch_deg, yaw_deg, _ = euler
+                if abs(yaw_deg) > max_head_pose_deg or abs(pitch_deg) > max_head_pose_deg:
+                    return VisionFeatures(
+                        blink_rate_per_min=None,
+                        mean_lip_aperture=None,
+                        face_detected=True,
+                        face_id_hint="FACE_0",
+                        quality_flag="extreme_head_pose",
+                    )
 
             # Inner lip aperture: distance between upper inner lip (13) and lower inner lip (14)
             # Normalized by horizontal lip width: distance between corners (61, 291)

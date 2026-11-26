@@ -91,7 +91,7 @@ def weighted_median(
     for k in range(n):
         cum_weight += valid_pairs[k][1]
         # Check exact half-weight tie condition with next element
-        if k < n - 1 and math.isclose(cum_weight, half_weight, rel_tol=1e-12, abs_tol=1e-12):
+        if k < n - 1 and math.isclose(cum_weight, half_weight, rel_tol=1e-12, abs_tol=0.0):
             return 0.5 * (valid_pairs[k][0] + valid_pairs[k + 1][0])
         if cum_weight > half_weight:
             return valid_pairs[k][0]
@@ -130,6 +130,7 @@ def classify_direction(
     tail_score_threshold: float = 0.05,
     tension_z_threshold: float = 1.5,
     hnr_tension_z_threshold: float = -1.5,
+    calm_z_threshold: float = -1.5,
 ) -> Tuple[bool, DirectionLabel]:
     """Classify 4-state cognitive load direction and vocal tension flag.
 
@@ -200,10 +201,22 @@ def classify_direction(
         min_stress = min(directional_stress_z)
         neutral_all_calm = len(neutral_abs_z) == 0 or all(az < 1.5 for az in neutral_abs_z)
 
-        if max_stress < 0.0 and min_stress <= -1.5 and neutral_all_calm:
+        if max_stress < 0.0 and min_stress <= calm_z_threshold and neutral_all_calm:
             return vocal_tension_flag, DirectionLabel.CALM_DEVIATION
 
     return vocal_tension_flag, DirectionLabel.MIXED_SUBTHRESHOLD_DEVIATION
+
+
+FEATURE_GROUP_MAP: Dict[str, str] = {
+    "response_latency_open": "timing",
+    "response_latency_closed": "timing",
+    "articulation_rate": "timing",
+    "f0_semitone_sd": "voice",
+    "jitter_local_pct": "voice",
+    "shimmer_local_pct": "voice",
+    "hnr_db": "voice",
+    "blink_rate_per_min": "vision",
+}
 
 
 def compute_mahalanobis(
@@ -217,6 +230,7 @@ def compute_mahalanobis(
     tail_score_threshold: float = 0.05,
     tension_z_threshold: float = 1.5,
     hnr_tension_z_threshold: float = -1.5,
+    calm_z_threshold: float = -1.5,
 ) -> MahalanobisResult:
     """Compute regularized Block-Diagonal Mahalanobis distance with eigen-safe fallback.
 
@@ -248,26 +262,24 @@ def compute_mahalanobis(
     raw_corr = np.array(correlation_matrix, dtype=np.float64)
     if raw_corr.shape != (n_features, n_features):
         raw_corr = np.eye(n_features, dtype=np.float64)
+    elif not np.all(np.isfinite(raw_corr)):
+        raw_corr = np.nan_to_num(raw_corr, nan=0.0, posinf=0.0, neginf=0.0)
 
-    # 1. Enforce block-diagonal group structure: timing(0,1,2), voice(3,4,5,6), vision(7)
-    group_map: Dict[int, int] = {
-        0: 0, 1: 0, 2: 0,  # timing
-        3: 1, 4: 1, 5: 1, 6: 1,  # voice
-        7: 2,  # vision
-    }
-
+    # 1. Enforce block-diagonal group structure by feature name
     block_corr = np.copy(raw_corr)
     for i in range(n_features):
         for j in range(n_features):
-            grp_i = group_map.get(i, i)
-            grp_j = group_map.get(j, j)
+            grp_i = FEATURE_GROUP_MAP.get(feature_order[i], f"__unique_{i}")
+            grp_j = FEATURE_GROUP_MAP.get(feature_order[j], f"__unique_{j}")
             if grp_i != grp_j:
                 block_corr[i, j] = 0.0
 
-    # Specifically zero out correlation between latency_open(0) and latency_closed(1)
-    if n_features > 1:
-        block_corr[0, 1] = 0.0
-        block_corr[1, 0] = 0.0
+    # Specifically zero out correlation between response_latency_open and response_latency_closed
+    if "response_latency_open" in feature_order and "response_latency_closed" in feature_order:
+        idx_open = list(feature_order).index("response_latency_open")
+        idx_closed = list(feature_order).index("response_latency_closed")
+        block_corr[idx_open, idx_closed] = 0.0
+        block_corr[idx_closed, idx_open] = 0.0
 
     # Symmetrize
     sym_corr = (block_corr + block_corr.T) / 2.0
@@ -317,27 +329,43 @@ def compute_mahalanobis(
     eigen_fallback_used = False
     solved_vec: Optional[np.ndarray] = None
 
-    # Check condition limit
+    # Check positive-definiteness and condition limit before trusting solve
     try:
-        cond_val = float(np.linalg.cond(sigma_v))
-        if cond_val <= cond_limit:
-            solved_vec = np.linalg.solve(sigma_v, z_v)
+        if np.all(np.isfinite(sigma_v)):
+            eigvals_check = np.linalg.eigvalsh(sigma_v)
+            min_eig = float(eigvals_check[0])
+            cond_val = float(np.linalg.cond(sigma_v))
+            if min_eig > eig_floor and cond_val <= cond_limit:
+                np.linalg.cholesky(sigma_v)
+                solved_vec = np.linalg.solve(sigma_v, z_v)
+            else:
+                eigen_fallback_used = True
         else:
+            sigma_v = np.nan_to_num(sigma_v, nan=0.0, posinf=0.0, neginf=0.0)
             eigen_fallback_used = True
     except np.linalg.LinAlgError:
         eigen_fallback_used = True
 
     if eigen_fallback_used or solved_vec is None:
-        logger.warning("Submatrix ill-conditioned or singular; applying eigen-safe fallback.")
+        logger.warning("Submatrix ill-conditioned, indefinite, or singular; applying eigen-safe fallback.")
         eigvals, eigvecs = np.linalg.eigh(sigma_v)
         safe_eigs = np.maximum(eigvals, eig_floor)
         sigma_v_inv = eigvecs @ np.diag(1.0 / safe_eigs) @ eigvecs.T
         solved_vec = sigma_v_inv @ z_v
         eigen_fallback_used = True
 
-    d_sq = max(float(np.dot(z_v, solved_vec)), 0.0)
+    with np.errstate(over="ignore", invalid="ignore"):
+        raw_d_sq = float(np.dot(z_v, solved_vec))
+    if math.isnan(raw_d_sq):
+        d_sq = 0.0
+    elif math.isinf(raw_d_sq):
+        d_sq = 1.0e300 if raw_d_sq > 0.0 else 0.0
+    else:
+        d_sq = min(max(raw_d_sq, 0.0), 1.0e300)
     d_m = math.sqrt(d_sq)
     tail_score = float(chi2.sf(d_sq, df=k))
+    if not math.isfinite(tail_score):
+        tail_score = 0.0
 
     vocal_tension, direction = classify_direction(
         chi2_tail_score=tail_score,
@@ -347,6 +375,7 @@ def compute_mahalanobis(
         tail_score_threshold=tail_score_threshold,
         tension_z_threshold=tension_z_threshold,
         hnr_tension_z_threshold=hnr_tension_z_threshold,
+        calm_z_threshold=calm_z_threshold,
     )
 
     return MahalanobisResult(
@@ -440,11 +469,11 @@ def normalized_av_xcorr(
 
     for k in range(-max_lag_samples, max_lag_samples + 1):
         if k >= 0:
-            v_slice = v_grid[k:]
-            a_slice = a_grid[: n_pts - k]
+            v_slice = v_grid[: n_pts - k]
+            a_slice = a_grid[k:]
         else:
-            v_slice = v_grid[: n_pts + k]
-            a_slice = a_grid[-k:]
+            v_slice = v_grid[-k:]
+            a_slice = a_grid[: n_pts + k]
 
         overlap_len = len(v_slice)
         if overlap_len < min_overlap_samples:

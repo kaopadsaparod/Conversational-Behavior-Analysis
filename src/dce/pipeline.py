@@ -8,10 +8,12 @@ Enforces top-level picklable worker functions compatible with Windows multiproce
 
 from __future__ import annotations
 
+import collections
+import json
 import logging
 import multiprocessing
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
+from typing import Any, Deque, Dict, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 
@@ -20,12 +22,16 @@ from dce.clock import ClockMode, MasterClock, PolicyQueue
 from dce.extractors.audio_dsp import extract_prosody
 from dce.math_core import compute_mahalanobis, normalized_av_xcorr
 from dce.reasoning.claims_ledger import ClaimsLedger, should_skip_extraction
+from dce.reasoning.llm_adapter import LLMAdapter
 from dce.reasoning.templates import generate_physical_explanation
 from dce.recorder import FeatureRecorder
 from dce.schemas import (
     AppConfig,
+    CancelSpeculativeEvent,
+    ConsistencyVerificationResponse,
     HardTurnCommitEvent,
     MahalanobisResult,
+    PriorsData,
     ProsodyFeatures,
     RecorderTurnRecord,
     SpeakerAssignment,
@@ -196,13 +202,17 @@ class DiscourseConsistencyPipeline:
         self._speaker_registry: SpeakerRegistry = SpeakerRegistry(
             config=self._config.speaker_registry
         )
-        self._claims_ledger: ClaimsLedger = ClaimsLedger()
+        llm_adapter = LLMAdapter(
+            reasoning_config=self._config.reasoning,
+            hardware_config=self._config.hardware,
+        )
+        self._claims_ledger: ClaimsLedger = ClaimsLedger(llm_adapter=llm_adapter)
 
         self._recorder: Optional[FeatureRecorder] = (
             FeatureRecorder(recorder_path) if recorder_path is not None else None
         )
 
-        # Correlation matrix and feature ordering
+        # Correlation matrix and feature ordering (load data/priors_en.json by default)
         self._feature_order: List[str] = [
             "response_latency_open",
             "response_latency_closed",
@@ -213,10 +223,34 @@ class DiscourseConsistencyPipeline:
             "hnr_db",
             "blink_rate_per_min",
         ]
-        self._correlation_matrix: np.ndarray = np.eye(len(self._feature_order), dtype=np.float64)
+        self._correlation_matrix: np.ndarray = self._load_default_correlation_matrix()
 
         self._prior_turn_transcript: Optional[TurnTranscript] = None
+        self._recent_transcripts: Deque[TurnTranscript] = collections.deque(maxlen=2)
+        self._last_turn_end_ns: Optional[int] = None
         self._completed_turns: List[RecorderTurnRecord] = []
+
+    def _load_default_correlation_matrix(self) -> np.ndarray:
+        """Load default 8x8 correlation matrix from data/priors_en.json if available."""
+        candidates = [
+            Path("data/priors_en.json"),
+            Path(__file__).resolve().parent.parent.parent / "data" / "priors_en.json",
+        ]
+        for default_path in candidates:
+            if default_path.is_file():
+                try:
+                    with default_path.open("r", encoding="utf-8") as f:
+                        data = json.load(f)
+                    priors_data = PriorsData.model_validate(data)
+                    if priors_data.feature_order:
+                        self._feature_order = list(priors_data.feature_order)
+                    n_feat = len(self._feature_order)
+                    corr = np.asarray(priors_data.correlation_matrix, dtype=np.float64)
+                    if corr.shape == (n_feat, n_feat):
+                        return corr
+                except Exception as exc:
+                    logger.warning("Could not load default correlation matrix from %s: %s", default_path, exc)
+        return np.eye(len(self._feature_order), dtype=np.float64)
 
     @property
     def clock(self) -> MasterClock:
@@ -256,6 +290,9 @@ class DiscourseConsistencyPipeline:
         voice_embedding: Optional[np.ndarray] = None,
         face_hint: Optional[str] = None,
         transcript_text: Optional[str] = None,
+        vision_features: Optional[VisionFeatures] = None,
+        response_latency_open: Optional[float] = None,
+        response_latency_closed: Optional[float] = None,
     ) -> Tuple[List[Any], Optional[RecorderTurnRecord]]:
         """Process streaming audio chunk and return generated events and finalized turn record.
 
@@ -290,12 +327,18 @@ class DiscourseConsistencyPipeline:
             if isinstance(event, SpeculativeTriggerEvent):
                 self._mailbox.put_latest(event)
 
+            elif isinstance(event, CancelSpeculativeEvent):
+                self._mailbox.discard_if_matches(event.turn_id, event.invalidated_epoch_id)
+
             elif isinstance(event, HardTurnCommitEvent):
                 completed_record = self._handle_turn_commit(
                     event=event,
                     voice_embedding=voice_embedding,
                     face_hint=face_hint,
                     transcript_text=transcript_text,
+                    vision_features=vision_features,
+                    response_latency_open=response_latency_open,
+                    response_latency_closed=response_latency_closed,
                 )
 
         return events, completed_record
@@ -306,6 +349,9 @@ class DiscourseConsistencyPipeline:
         voice_embedding: Optional[np.ndarray] = None,
         face_hint: Optional[str] = None,
         transcript_text: Optional[str] = None,
+        vision_features: Optional[VisionFeatures] = None,
+        response_latency_open: Optional[float] = None,
+        response_latency_closed: Optional[float] = None,
     ) -> RecorderTurnRecord:
         """Process finalized HardTurnCommitEvent across all multimodal subsystems."""
         speech_duration_sec = float(event.end_ns - event.start_ns) / 1_000_000_000.0
@@ -344,22 +390,36 @@ class DiscourseConsistencyPipeline:
 
         # 3. Assemble Timing and Multimodal Features
         total_pause_ms = sum(p.duration_ms for p in event.intra_turn_pauses)
+        lat_open = response_latency_open
+        lat_closed = response_latency_closed
+        if lat_open is None and lat_closed is None and self._last_turn_end_ns is not None:
+            gap_sec = max(0.0, float(event.start_ns - self._last_turn_end_ns) / 1_000_000_000.0)
+            if self._prior_turn_transcript is not None and self._prior_turn_transcript.is_question:
+                lat_closed = gap_sec
+            else:
+                lat_open = gap_sec
+
         timing = TimingFeatures(
-            response_latency_open=0.25,
-            response_latency_closed=0.10,
+            response_latency_open=lat_open,
+            response_latency_closed=lat_closed,
             turn_duration_ms=speech_duration_sec * 1000.0,
             speech_duration_ms=speech_duration_sec * 1000.0,
             total_pause_ms=total_pause_ms,
             pause_count=len(event.intra_turn_pauses),
         )
 
-        vision = VisionFeatures(
-            blink_rate_per_min=18.0,
-            mean_lip_aperture=0.25,
-            face_detected=True,
-            face_id_hint=face_hint,
-            quality_flag="ok",
-        )
+        if vision_features is not None:
+            vision = vision_features
+            if face_hint is not None and vision.face_id_hint is None:
+                vision = vision.model_copy(update={"face_id_hint": face_hint})
+        else:
+            vision = VisionFeatures(
+                blink_rate_per_min=None,
+                mean_lip_aperture=None,
+                face_detected=False,
+                face_id_hint=face_hint,
+                quality_flag="unavailable",
+            )
 
         turn_features = TurnFeatures(
             turn_id=event.turn_id,
@@ -389,6 +449,7 @@ class DiscourseConsistencyPipeline:
             tail_score_threshold=self._config.mahalanobis.tail_score_threshold,
             tension_z_threshold=self._config.mahalanobis.tension_z_threshold,
             hnr_tension_z_threshold=self._config.mahalanobis.hnr_tension_z_threshold,
+            calm_z_threshold=self._config.mahalanobis.calm_z_threshold,
         )
 
         # 6. Transcript and Claims Reasoning
@@ -405,13 +466,18 @@ class DiscourseConsistencyPipeline:
         )
 
         claims = []
-        verification = None
+        verifications: List[ConsistencyVerificationResponse] = []
         if text and not should_skip_extraction(transcript, self._prior_turn_transcript):
-            claims = self._claims_ledger.extract_claims(transcript)
+            claims = self._claims_ledger.extract_claims(
+                transcript,
+                context_turns=list(self._recent_transcripts),
+            )
             for clm in claims:
-                verification = self._claims_ledger.verify_consistency(clm)
+                verifications.append(self._claims_ledger.verify_consistency(clm))
 
         self._prior_turn_transcript = transcript
+        self._recent_transcripts.append(transcript)
+        self._last_turn_end_ns = event.end_ns
 
         # 7. Construct and Record Output Record
         record = RecorderTurnRecord(
@@ -421,7 +487,8 @@ class DiscourseConsistencyPipeline:
             features=turn_features,
             mahalanobis=mahalanobis_res,
             claims=claims,
-            verification=verification,
+            verifications=verifications,
+            verification=verifications[0] if verifications else None,
         )
 
         if self._recorder is not None:
@@ -430,11 +497,27 @@ class DiscourseConsistencyPipeline:
         self._completed_turns.append(record)
         return record
 
-    def flush(self) -> Optional[RecorderTurnRecord]:
+    def flush(
+        self,
+        voice_embedding: Optional[np.ndarray] = None,
+        face_hint: Optional[str] = None,
+        transcript_text: Optional[str] = None,
+        vision_features: Optional[VisionFeatures] = None,
+        response_latency_open: Optional[float] = None,
+        response_latency_closed: Optional[float] = None,
+    ) -> Optional[RecorderTurnRecord]:
         """Flush pending audio buffers at end-of-file (EOF)."""
         commit_event = self._endpoint_tracker.flush()
         if commit_event is not None:
-            return self._handle_turn_commit(commit_event)
+            return self._handle_turn_commit(
+                event=commit_event,
+                voice_embedding=voice_embedding,
+                face_hint=face_hint,
+                transcript_text=transcript_text,
+                vision_features=vision_features,
+                response_latency_open=response_latency_open,
+                response_latency_closed=response_latency_closed,
+            )
         return None
 
     def close(self) -> None:

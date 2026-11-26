@@ -114,7 +114,7 @@ This document serves as the master 6-phase operational roadmap, detailing comple
   - [x] `FeatureRecorder` enforcing `json.dumps(..., allow_nan=False)` for bit-exact serialization.
   - [x] Synchronous and thread-safe turn recording (`RecorderTurnRecord`).
 - [x] **Deterministic Replay Engine**:
-  - [x] `FeatureReplayLoader` providing reproducible offline stream replay without numerical divergence.
+  - [x] `ReplayLoader` providing reproducible offline stream replay without numerical divergence.
 
 ### 1.8 Neuro-Symbolic Reasoning & Firewall (`src/dce/reasoning/`)
 - [x] **Neuro-Symbolic Firewall Isolation**:

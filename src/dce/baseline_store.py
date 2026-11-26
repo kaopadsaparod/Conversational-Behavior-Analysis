@@ -277,10 +277,11 @@ class BaselineStore:
             FeatureScore instance containing raw, transformed, z-score, and confidence.
         """
         prior = self._priors.get(feature_name)
-        if raw_value is None or not math.isfinite(raw_value) or prior is None:
+        if raw_value is None or not math.isfinite(raw_value) or prior is None or quality_flag != "ok":
+            safe_raw = float(raw_value) if (raw_value is not None and math.isfinite(raw_value)) else None
             return FeatureScore(
                 feature_name=feature_name,
-                raw_value=raw_value,
+                raw_value=safe_raw,
                 transformed_value=None,
                 baseline_mean=None,
                 baseline_sigma=None,

@@ -183,7 +183,7 @@ def main() -> None:
 
     priors_data = process_dataset(audio_dir)
     with out_path.open("w", encoding="utf-8") as f:
-        json.dump(priors_data.model_dump(), f, indent=2)
+        json.dump(priors_data.model_dump(), f, indent=2, allow_nan=False)
 
     logger.info("Saved prior distribution to %s", out_path)
 

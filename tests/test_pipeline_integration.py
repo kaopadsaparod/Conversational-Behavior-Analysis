@@ -26,6 +26,7 @@ from dce.schemas import (
     ClockConfig,
     DirectionLabel,
     VadConfig,
+    VisionFeatures,
 )
 
 
@@ -66,11 +67,18 @@ def test_pipeline_streaming_turn_lifecycle(tmp_path: Path) -> None:
 
     # 2. Feed 45 silence chunks (45 * 20ms = 900ms) to trigger 800ms hard EOT
     committed_record = None
+    sample_vision = VisionFeatures(
+        blink_rate_per_min=18.0,
+        mean_lip_aperture=0.25,
+        face_detected=True,
+        quality_flag="ok",
+    )
     for _ in range(45):
         events, rec = pipeline.process_chunk(
             audio_pcm=pcm_silence,
             vad_prob=0.10,
             pts_ns=pts_ns,
+            vision_features=sample_vision,
         )
         if rec is not None:
             committed_record = rec

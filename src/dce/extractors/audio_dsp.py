@@ -87,8 +87,9 @@ def extract_prosody(
         sound = parselmouth.Sound(values=audio_arr, sampling_frequency=float(sample_rate))
 
         # Extract pitch contour
+        time_step_sec = 0.01
         pitch = sound.to_pitch(
-            time_step=0.01,
+            time_step=time_step_sec,
             pitch_floor=pitch_floor_hz,
             pitch_ceiling=500.0,
         )
@@ -106,10 +107,44 @@ def extract_prosody(
                 quality_flag="unvoiced",
             )
 
-        f0_median = float(np.median(f0_values[voiced_mask]))
+        # Apply boundary_trim_ms (15 ms) on contiguous voiced segments >= min_voiced_segment_ms (75 ms)
+        frame_ms = time_step_sec * 1000.0
+        min_seg_frames = max(1, int(math.ceil(cfg.min_voiced_segment_ms / frame_ms)))
+        trim_frames = max(0, int(round(cfg.boundary_trim_ms / frame_ms)))
+        trimmed_voiced_mask = np.zeros_like(voiced_mask, dtype=bool)
+
+        idx = 0
+        n_frames = len(voiced_mask)
+        while idx < n_frames:
+            if voiced_mask[idx]:
+                seg_start = idx
+                while idx < n_frames and voiced_mask[idx]:
+                    idx += 1
+                seg_end = idx
+                if (seg_end - seg_start) >= min_seg_frames:
+                    t_start = seg_start + trim_frames
+                    t_end = seg_end - trim_frames
+                    if t_end > t_start:
+                        trimmed_voiced_mask[t_start:t_end] = True
+            else:
+                idx += 1
+
+        if not np.any(trimmed_voiced_mask):
+            return ProsodyFeatures(
+                f0_median_hz=None,
+                f0_semitone_sd=None,
+                jitter_local_pct=None,
+                shimmer_local_pct=None,
+                hnr_db=None,
+                glottal_periods_count=0,
+                quality_flag="insufficient_data",
+            )
+
+        f0_median = float(np.median(f0_values[trimmed_voiced_mask]))
 
         # Semitone standard deviation
-        semitones = f0_to_semitones(f0_values, f0_median)
+        trimmed_f0 = np.where(trimmed_voiced_mask, f0_values, 0.0)
+        semitones = f0_to_semitones(trimmed_f0, f0_median)
         valid_semitones = semitones[np.isfinite(semitones)]
         f0_semitone_sd = (
             float(np.std(valid_semitones)) if len(valid_semitones) > 1 else 0.0
@@ -238,8 +273,24 @@ def transcribe_audio(
             beam_size=5,
             initial_prompt=initial_prompt,
             vad_filter=False,
+            word_timestamps=True,
         )
-        return " ".join(seg.text.strip() for seg in segments).strip()
+        clean_parts = []
+        for seg in segments:
+            text = (getattr(seg, "text", "") or "").strip()
+            if not text:
+                continue
+            no_speech_prob = getattr(seg, "no_speech_prob", None)
+            avg_logprob = getattr(seg, "avg_logprob", None)
+            compression_ratio = getattr(seg, "compression_ratio", None)
+            if no_speech_prob is not None and no_speech_prob > 0.8:
+                continue
+            if avg_logprob is not None and avg_logprob < -1.0:
+                continue
+            if compression_ratio is not None and compression_ratio > 2.4:
+                continue
+            clean_parts.append(text)
+        return " ".join(clean_parts).strip()
     except Exception as exc:
         logger.warning("ASR transcription error: %s", exc)
         return ""

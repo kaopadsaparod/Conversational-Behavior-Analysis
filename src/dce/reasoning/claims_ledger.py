@@ -28,18 +28,37 @@ PROHIBITED_FIREWALL_TERMS: Set[str] = {
     "hnr",
     "f0",
     "semitone",
+    "semitones",
     "latency",
     "blink",
     "z_score",
     "mahalanobis",
+    "mahalanobis_distance",
+    "d_sq",
     "chi2_tail_score",
     "vocal_tension",
     "cognitive_load_anomaly",
+    "articulation_rate",
+}
+
+_PRONOUN_CONTRACTIONS: Set[str] = {"i", "i'm", "i've", "i'll", "i'd"}
+
+_COMMON_SINGLE_WORD_FILLERS: Set[str] = {
+    "yeah", "yes", "no", "nope", "nah", "okay", "ok", "right", "sure", "fine",
+    "well", "uh", "um", "hmm", "mhm", "hello", "hi", "hey", "bye", "thanks",
+    "thank", "please", "sorry", "what", "why", "how", "who", "where", "when",
+    "really", "great", "good", "cool", "nice", "alright", "true", "false",
+    "maybe", "perhaps", "definitely", "absolutely", "exactly", "indeed",
+    "agreed", "wait", "stop", "go", "never", "always", "nothing", "something",
+    "everything", "negative", "affirmative",
 }
 
 
 def assert_firewall_compliance(text: str) -> None:
     """Verify that text contains zero physical signal names or acoustic metric terms.
+
+    Matches both standalone terms and underscore-delimited metric identifiers
+    (e.g. 'jitter_local_pct', 'f0_semitone_sd', 'z_score', 'semitones').
 
     Args:
         text: Prompt text destined for LLM ingestion.
@@ -49,7 +68,7 @@ def assert_firewall_compliance(text: str) -> None:
     """
     lower_text = text.lower()
     for term in PROHIBITED_FIREWALL_TERMS:
-        pattern = r"\b" + re.escape(term) + r"\b"
+        pattern = r"(?<![a-z0-9])" + re.escape(term) + r"(?![a-z0-9])"
         if re.search(pattern, lower_text):
             raise ValueError(
                 f"Neuro-Symbolic Firewall violation: LLM prompt contains prohibited physical signal term: '{term}'"
@@ -87,11 +106,21 @@ def should_skip_extraction(
         if has_digits:
             return False
 
-        # Check if contains capitalized proper nouns (excluding first word of utterance)
+        # Check if contains capitalized proper nouns
         has_proper_nouns = False
-        if len(words) > 1:
+        if len(words) == 1:
+            token = re.sub(r"^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$", "", words[0])
+            if (
+                token
+                and token[0].isupper()
+                and token.lower() not in _PRONOUN_CONTRACTIONS
+                and token.lower() not in _COMMON_SINGLE_WORD_FILLERS
+            ):
+                has_proper_nouns = True
+        elif len(words) > 1:
             for w in words[1:]:
-                if w and w[0].isupper() and w.lower() not in {"i"}:
+                token = re.sub(r"^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$", "", w)
+                if token and token[0].isupper() and token.lower() not in _PRONOUN_CONTRACTIONS:
                     has_proper_nouns = True
                     break
 
@@ -145,12 +174,13 @@ class ClaimsLedger:
 
     def register_alias(self, alias: str, canonical: str) -> None:
         """Register an entity alias mapping to its canonical form."""
-        norm_alias = alias.strip().lower()
-        norm_canonical = canonical.strip().lower()
+        norm_alias = re.sub(r"\s+", " ", alias.strip().lower())
+        norm_canonical = re.sub(r"\s+", " ", canonical.strip().lower())
         self._entity_aliases[norm_alias] = norm_canonical
 
     def add_claim(self, claim: ClaimItem) -> None:
         """Store a structured claim into the ledger."""
+        claim.canonical_entity = self.normalize_entity(claim.canonical_entity or claim.raw_subject)
         self._claims[claim.claim_id] = claim
 
         if claim.turn_id not in self._claims_by_turn:
@@ -179,9 +209,13 @@ class ClaimsLedger:
         """
         # Build prompt using clean transcripts
         context_str = ""
+        framing_context_str = ""
         if context_turns:
-            lines = [f"{t.speaker_id}: {t.text}" for t in context_turns[-2:]]
+            recent_ctx = context_turns[-2:]
+            lines = [f"{t.speaker_id}: {t.text}" for t in recent_ctx]
+            framing_lines = [f"{t.speaker_id}: <transcript>" for t in recent_ctx]
             context_str = "Prior context:\n" + "\n".join(lines) + "\n\n"
+            framing_context_str = "Prior context:\n" + "\n".join(framing_lines) + "\n\n"
 
         prompt = (
             f"{context_str}"
@@ -191,13 +225,24 @@ class ClaimsLedger:
             f"Include canonical entities, predicates, object values, time references, and polarity."
         )
 
-        # Enforce Neuro-Symbolic Firewall
-        assert_firewall_compliance(prompt)
+        # Audit non-transcript prompt framing and system instruction separately from spoken text
+        # so legitimate English words (e.g. 'blink', 'latency') in speech do not crash extraction.
+        prompt_framing = (
+            f"{framing_context_str}"
+            f"Current utterance by {transcript.speaker_id} (Turn {transcript.turn_id}):\n"
+            f'"<transcript>"\n\n'
+            f"Extract all explicit, verifiable factual claims as structured propositions. "
+            f"Include canonical entities, predicates, object values, time references, and polarity."
+        )
 
         system_instruction = (
             "You are a factual claim extraction system. Extract structured subject-predicate-object "
             "propositions. Do not include opinions or filler words."
         )
+
+        # Enforce Neuro-Symbolic Firewall on prompt framing and system instructions
+        assert_firewall_compliance(prompt_framing)
+        assert_firewall_compliance(system_instruction)
 
         extracted_claims: List[ClaimItem] = []
         try:
@@ -252,14 +297,27 @@ class ClaimsLedger:
             ConsistencyVerificationResponse instance.
         """
         # Find candidates if not provided
+        def _norm_opt(val: Optional[str]) -> Optional[str]:
+            if val is None:
+                return None
+            cleaned = re.sub(r"\s+", " ", val.strip().lower())
+            return cleaned if cleaned else None
+
         if candidate_prior_claims is None:
+            curr_entity = self.normalize_entity(current_claim.canonical_entity or current_claim.raw_subject)
+            curr_subj = _norm_opt(current_claim.raw_subject)
+            curr_time_norm = _norm_opt(current_claim.time_ref_normalized)
+            curr_time_raw = _norm_opt(current_claim.time_ref_raw)
+
             candidates = [
                 c
                 for c in self._claims.values()
                 if c.turn_id < current_claim.turn_id
                 and (
-                    c.canonical_entity == current_claim.canonical_entity
-                    or c.raw_subject.lower() == current_claim.raw_subject.lower()
+                    c.canonical_entity == curr_entity
+                    or (curr_subj is not None and _norm_opt(c.raw_subject) == curr_subj)
+                    or (curr_time_norm is not None and _norm_opt(c.time_ref_normalized) == curr_time_norm)
+                    or (curr_time_raw is not None and _norm_opt(c.time_ref_raw) == curr_time_raw)
                 )
             ]
         else:
@@ -294,12 +352,22 @@ class ClaimsLedger:
             f"Provide the exact prior_turn_id and prior_claim_id referenced."
         )
 
-        assert_firewall_compliance(prompt)
+        prompt_framing = (
+            f"Target Claim [{current_claim.claim_id}] (Turn {current_claim.turn_id}, Speaker {current_claim.speaker_id}):\n"
+            f"<claim>\n\n"
+            f"Prior Claims in Ledger:\n<prior_claims>\n\n"
+            f"Evaluate consistency between the target claim and the prior claims. "
+            f"Return CONSISTENT, DIRECT_CONTRADICTION, TIMELINE_SHIFT, or UNVERIFIABLE. "
+            f"Provide the exact prior_turn_id and prior_claim_id referenced."
+        )
 
         system_instruction = (
             "You are a strict logical consistency verification auditor. Compare factual propositions. "
             "Identify direct contradictions or temporal shifts."
         )
+
+        assert_firewall_compliance(prompt_framing)
+        assert_firewall_compliance(system_instruction)
 
         try:
             resp = self._llm.generate_structured(
@@ -309,11 +377,39 @@ class ClaimsLedger:
             )
 
             # CRITICAL REF VALIDATION
-            # If referenced turn_id does not exist in ledger, fail safe to REJECTED_INVALID_REF
-            if resp.prior_turn_id is not None and resp.prior_turn_id not in self._claims_by_turn:
+            # Validate source_turn_id, prior_turn_id, and prior_claim_id; fail safe to REJECTED_INVALID_REF
+            invalid_reason: Optional[str] = None
+            if resp.source_turn_id != current_claim.turn_id:
+                invalid_reason = (
+                    f"source_turn_id {resp.source_turn_id} does not match current_claim.turn_id {current_claim.turn_id}."
+                )
+            elif resp.verdict in (VerdictStatus.DIRECT_CONTRADICTION, VerdictStatus.TIMELINE_SHIFT) and (
+                resp.prior_turn_id is None or resp.prior_claim_id is None
+            ):
+                invalid_reason = (
+                    f"Verdict {resp.verdict.value} requires both prior_turn_id and prior_claim_id."
+                )
+            elif resp.prior_turn_id is not None and resp.prior_turn_id not in self._claims_by_turn:
+                invalid_reason = f"Referenced prior turn {resp.prior_turn_id} does not exist in ledger."
+            elif resp.prior_turn_id is not None and resp.prior_turn_id >= current_claim.turn_id:
+                invalid_reason = (
+                    f"Referenced prior_turn_id {resp.prior_turn_id} is not strictly before current_claim.turn_id {current_claim.turn_id}."
+                )
+            elif resp.prior_claim_id is not None and resp.prior_claim_id not in self._claims:
+                invalid_reason = f"Referenced prior_claim_id {resp.prior_claim_id} does not exist in ledger."
+            elif (
+                resp.prior_claim_id is not None
+                and resp.prior_turn_id is not None
+                and self._claims[resp.prior_claim_id].turn_id != resp.prior_turn_id
+            ):
+                invalid_reason = (
+                    f"Referenced prior_claim_id {resp.prior_claim_id} does not belong to prior_turn_id {resp.prior_turn_id}."
+                )
+
+            if invalid_reason is not None:
                 logger.warning(
-                    "LLM produced invalid prior_turn_id reference: %s. Rejecting as REJECTED_INVALID_REF.",
-                    resp.prior_turn_id,
+                    "LLM produced invalid reference (%s). Rejecting as REJECTED_INVALID_REF.",
+                    invalid_reason,
                 )
                 return ConsistencyVerificationResponse(
                     verdict=VerdictStatus.REJECTED_INVALID_REF,
@@ -321,7 +417,7 @@ class ClaimsLedger:
                     prior_turn_id=resp.prior_turn_id,
                     source_claim_id=current_claim.claim_id,
                     prior_claim_id=resp.prior_claim_id,
-                    explanation=f"Referenced prior turn {resp.prior_turn_id} does not exist in ledger.",
+                    explanation=invalid_reason,
                     confidence=1.0,
                 )
 
