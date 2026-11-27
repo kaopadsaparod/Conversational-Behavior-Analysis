@@ -1,0 +1,500 @@
+{
+  "decode_785": {
+    "verdict": "TIMELINE_SHIFT",
+    "prior_turn_id": 6,
+    "source_turn_id": 16,
+    "reason": "SPK_0 says they did not get the job (T6) then suddenly says they were just offered a new job (T16) within the same conversation."
+  },
+  "decode_3886": {
+    "verdict": "CONSISTENT",
+    "prior_turn_id": null,
+    "source_turn_id": null,
+    "reason": "Consistent preferences and locations."
+  },
+  "decode_1168": {
+    "verdict": "DIRECT_CONTRADICTION",
+    "prior_turn_id": 8,
+    "source_turn_id": 12,
+    "reason": "SPK_1 says audiobooks are great (T8) then says they don't enjoy audiobooks (T12)."
+  },
+  "decode_1378": {
+    "verdict": "DIRECT_CONTRADICTION",
+    "prior_turn_id": 3,
+    "source_turn_id": 7,
+    "reason": "SPK_0 lives in Oklahoma (T3) then says they live in California (T7)."
+  },
+  "decode_122": {
+    "verdict": "DIRECT_CONTRADICTION",
+    "prior_turn_id": 6,
+    "source_turn_id": 12,
+    "reason": "SPK_1 says favorite movie is 16 Candles (T6) then says they don't like it (T12)."
+  },
+  "decode_2342": {
+    "verdict": "CONSISTENT",
+    "prior_turn_id": null,
+    "source_turn_id": null,
+    "reason": "T3 elaborates on T1."
+  },
+  "decode_1903": {
+    "verdict": "DIRECT_CONTRADICTION",
+    "prior_turn_id": 1,
+    "source_turn_id": 11,
+    "reason": "SPK_0 claims red is at the end of spectrum (T1) then claims yellow is also at the end (T11)."
+  },
+  "decode_2384": {
+    "verdict": "CONSISTENT",
+    "prior_turn_id": null,
+    "source_turn_id": null,
+    "reason": "Consistent music and painting discussion."
+  },
+  "decode_2834": {
+    "verdict": "CONSISTENT",
+    "prior_turn_id": null,
+    "source_turn_id": null,
+    "reason": "Consistent pasta making discussion."
+  },
+  "decode_814": {
+    "verdict": "DIRECT_CONTRADICTION",
+    "prior_turn_id": 3,
+    "source_turn_id": 7,
+    "reason": "SPK_0 likes taking care of self with expensive things (T3) then denies using expensive things (T7)."
+  },
+  "decode_27": {
+    "verdict": "DIRECT_CONTRADICTION",
+    "prior_turn_id": 8,
+    "source_turn_id": 12,
+    "reason": "SPK_1 hated seeing cooling towers taken down (T8) then is glad they are getting rid of them (T12)."
+  },
+  "decode_888": {
+    "verdict": "DIRECT_CONTRADICTION",
+    "prior_turn_id": 1,
+    "source_turn_id": 11,
+    "reason": "SPK_0 mentions their kid (T1) then says they don't have any children (T11)."
+  },
+  "decode_1946": {
+    "verdict": "DIRECT_CONTRADICTION",
+    "prior_turn_id": 4,
+    "source_turn_id": 6,
+    "reason": "SPK_1 prefers working out at night (T4) then says they don't like to work out at all (T6)."
+  },
+  "decode_2207": {
+    "verdict": "CONSISTENT",
+    "prior_turn_id": null,
+    "source_turn_id": null,
+    "reason": "Consistent story about no visitors."
+  },
+  "decode_2710": {
+    "verdict": "CONSISTENT",
+    "prior_turn_id": null,
+    "source_turn_id": null,
+    "reason": "Consistent Snoop Dogg / Turbo discussion."
+  },
+  "decode_2650": {
+    "verdict": "CONSISTENT",
+    "prior_turn_id": null,
+    "source_turn_id": null,
+    "reason": "Consistent cooking/job discussion."
+  },
+  "decode_1229": {
+    "verdict": "DIRECT_CONTRADICTION",
+    "prior_turn_id": 8,
+    "source_turn_id": 10,
+    "reason": "SPK_1 has no time for a boyfriend (T8) then has a lot of free time (T10)."
+  },
+  "decode_3803": {
+    "verdict": "CONSISTENT",
+    "prior_turn_id": null,
+    "source_turn_id": null,
+    "reason": "Consistent facts about 7."
+  },
+  "decode_3859": {
+    "verdict": "CONSISTENT",
+    "prior_turn_id": null,
+    "source_turn_id": null,
+    "reason": "Consistent small talk."
+  },
+  "decode_575": {
+    "verdict": "TIMELINE_SHIFT",
+    "prior_turn_id": 5,
+    "source_turn_id": 7,
+    "reason": "SPK_0 is in high school ready to graduate (T5) then says they already graduated (T7)."
+  },
+  "decode_2069": {
+    "verdict": "CONSISTENT",
+    "prior_turn_id": null,
+    "source_turn_id": null,
+    "reason": "Consistent carbonara discussion."
+  },
+  "decode_304": {
+    "verdict": "DIRECT_CONTRADICTION",
+    "prior_turn_id": 4,
+    "source_turn_id": 6,
+    "reason": "SPK_1 forgets names of people known for years (T4) then claims they hardly ever forget names (T6)."
+  },
+  "decode_997": {
+    "verdict": "DIRECT_CONTRADICTION",
+    "prior_turn_id": 4,
+    "source_turn_id": 6,
+    "reason": "SPK_1 saw him in concert last year (T4) then has never been to a concert (T6)."
+  },
+  "decode_721": {
+    "verdict": "DIRECT_CONTRADICTION",
+    "prior_turn_id": 9,
+    "source_turn_id": 11,
+    "reason": "SPK_0 has waist-length hair (T9) then has short hair (T11)."
+  },
+  "decode_1115": {
+    "verdict": "DIRECT_CONTRADICTION",
+    "prior_turn_id": 7,
+    "source_turn_id": 9,
+    "reason": "SPK_0 is eating dinner (T7) then will skip dinner (T9)."
+  },
+  "decode_1486": {
+    "verdict": "DIRECT_CONTRADICTION",
+    "prior_turn_id": 1,
+    "source_turn_id": 9,
+    "reason": "SPK_0's favorite color is red (T1) then least favorite color is red (T9)."
+  },
+  "decode_2657": {
+    "verdict": "CONSISTENT",
+    "prior_turn_id": null,
+    "source_turn_id": null,
+    "reason": "Consistent hair dye discussion."
+  },
+  "decode_485": {
+    "verdict": "DIRECT_CONTRADICTION",
+    "prior_turn_id": 3,
+    "source_turn_id": 11,
+    "reason": "SPK_0 works at an elementary school (T3) then says they are 12 years old (T11)."
+  },
+  "decode_1662": {
+    "verdict": "DIRECT_CONTRADICTION",
+    "prior_turn_id": 4,
+    "source_turn_id": 6,
+    "reason": "SPK_1 says meal sounds yummy (T4) then says it sounded disgusting (T6)."
+  },
+  "decode_3281": {
+    "verdict": "CONSISTENT",
+    "prior_turn_id": null,
+    "source_turn_id": null,
+    "reason": "Consistent fitness discussion."
+  },
+  "decode_944": {
+    "verdict": "DIRECT_CONTRADICTION",
+    "prior_turn_id": 7,
+    "source_turn_id": 11,
+    "reason": "SPK_0 speaks Spanish almost fluently (T7) then wishes they knew a word of Spanish (T11)."
+  },
+  "decode_2478": {
+    "verdict": "CONSISTENT",
+    "prior_turn_id": null,
+    "source_turn_id": null,
+    "reason": "Consistent amusement park preferences."
+  },
+  "decode_2432": {
+    "verdict": "CONSISTENT",
+    "prior_turn_id": null,
+    "source_turn_id": null,
+    "reason": "Consistent sci-fi discussion."
+  },
+  "decode_2274": {
+    "verdict": "CONSISTENT",
+    "prior_turn_id": null,
+    "source_turn_id": null,
+    "reason": "Consistent Prince/comics discussion."
+  },
+  "decode_2919": {
+    "verdict": "CONSISTENT",
+    "prior_turn_id": null,
+    "source_turn_id": null,
+    "reason": "Consistent missing emu story."
+  },
+  "decode_908": {
+    "verdict": "DIRECT_CONTRADICTION",
+    "prior_turn_id": 7,
+    "source_turn_id": 9,
+    "reason": "SPK_0 says Japan has lots of small farms (T7) then says Japan doesn't have any small scale farms (T9)."
+  },
+  "decode_2062": {
+    "verdict": "CONSISTENT",
+    "prior_turn_id": null,
+    "source_turn_id": null,
+    "reason": "Consistent Target history."
+  },
+  "decode_187": {
+    "verdict": "DIRECT_CONTRADICTION",
+    "prior_turn_id": 1,
+    "source_turn_id": 9,
+    "reason": "SPK_0 says food is good (T1) then says all food is bad to their tastes (T9)."
+  },
+  "decode_69": {
+    "verdict": "DIRECT_CONTRADICTION",
+    "prior_turn_id": 5,
+    "source_turn_id": 7,
+    "reason": "SPK_0 played basketball in high school (T5) then never played sports in high school (T7)."
+  },
+  "decode_266": {
+    "verdict": "DIRECT_CONTRADICTION",
+    "prior_turn_id": 5,
+    "source_turn_id": 7,
+    "reason": "SPK_0 is a lawyer (T5) then wishes they had gone to school for something (T7)."
+  },
+  "decode_3171": {
+    "verdict": "CONSISTENT",
+    "prior_turn_id": null,
+    "source_turn_id": null,
+    "reason": "Consistent small talk."
+  },
+  "decode_1791": {
+    "verdict": "DIRECT_CONTRADICTION",
+    "prior_turn_id": 3,
+    "source_turn_id": 5,
+    "reason": "SPK_0 says used car was ratty and crappy (T3) then says car was in good shape (T5)."
+  },
+  "decode_1267": {
+    "verdict": "CONSISTENT",
+    "prior_turn_id": null,
+    "source_turn_id": null,
+    "reason": "Mood shift in T8, not factual contradiction."
+  },
+  "decode_3805": {
+    "verdict": "CONSISTENT",
+    "prior_turn_id": null,
+    "source_turn_id": null,
+    "reason": "Consistent empathy exchange."
+  },
+  "decode_804": {
+    "verdict": "DIRECT_CONTRADICTION",
+    "prior_turn_id": 8,
+    "source_turn_id": 10,
+    "reason": "SPK_1 feels strongly about recycling (T8) then doesn't think recycling is a good thing (T10)."
+  },
+  "decode_3856": {
+    "verdict": "CONSISTENT",
+    "prior_turn_id": null,
+    "source_turn_id": null,
+    "reason": "Consistent jazz discussion."
+  },
+  "decode_1119": {
+    "verdict": "DIRECT_CONTRADICTION",
+    "prior_turn_id": 7,
+    "source_turn_id": 13,
+    "reason": "SPK_0 plays piano and guitar (T7) then wishes they knew how to play an instrument (T13)."
+  },
+  "decode_894": {
+    "verdict": "DIRECT_CONTRADICTION",
+    "prior_turn_id": 4,
+    "source_turn_id": 6,
+    "reason": "SPK_1 says cheat day once isn't too bad (T4) then is totally against cheat days (T6)."
+  },
+  "decode_2773": {
+    "verdict": "CONSISTENT",
+    "prior_turn_id": null,
+    "source_turn_id": null,
+    "reason": "Consistent tea/running discussion."
+  },
+  "decode_802": {
+    "verdict": "DIRECT_CONTRADICTION",
+    "prior_turn_id": 3,
+    "source_turn_id": 11,
+    "reason": "SPK_0 is drinking fancy tea (T3) then says they hate tea (T11)."
+  },
+  "decode_1544": {
+    "verdict": "DIRECT_CONTRADICTION",
+    "prior_turn_id": 4,
+    "source_turn_id": 6,
+    "reason": "SPK_1 says sticking with what you know is safer (T4) then says trying new foods is a safe option (T6)."
+  },
+  "decode_823": {
+    "verdict": "DIRECT_CONTRADICTION",
+    "prior_turn_id": 8,
+    "source_turn_id": 14,
+    "reason": "SPK_1 has a cat and dog (T8) then wishes they had a pet (T14)."
+  },
+  "decode_1420": {
+    "verdict": "DIRECT_CONTRADICTION",
+    "prior_turn_id": 7,
+    "source_turn_id": 9,
+    "reason": "SPK_0 warns against home bleaching (T7) then encourages bleaching at home (T9)."
+  },
+  "decode_1942": {
+    "verdict": "DIRECT_CONTRADICTION",
+    "prior_turn_id": 4,
+    "source_turn_id": 6,
+    "reason": "SPK_1 says something was going on (T4) then says nothing was going on (T6)."
+  },
+  "decode_3008": {
+    "verdict": "CONSISTENT",
+    "prior_turn_id": null,
+    "source_turn_id": null,
+    "reason": "Consistent health/sleep discussion."
+  },
+  "decode_253": {
+    "verdict": "DIRECT_CONTRADICTION",
+    "prior_turn_id": 5,
+    "source_turn_id": 9,
+    "reason": "SPK_0 says cheaper to make yourself (T5) then says it would cost more to make yourself (T9)."
+  },
+  "decode_2392": {
+    "verdict": "CONSISTENT",
+    "prior_turn_id": null,
+    "source_turn_id": null,
+    "reason": "Consistent classical music/pets discussion."
+  },
+  "decode_401": {
+    "verdict": "DIRECT_CONTRADICTION",
+    "prior_turn_id": 2,
+    "source_turn_id": 10,
+    "reason": "SPK_1 likes jazz (T2) then doesn't care much for jazz (T10)."
+  },
+  "decode_1147": {
+    "verdict": "DIRECT_CONTRADICTION",
+    "prior_turn_id": 12,
+    "source_turn_id": 14,
+    "reason": "SPK_1 claims to have two dogs (T12) then says 1 cat and 1 dog (T14)."
+  },
+  "decode_533": {
+    "verdict": "DIRECT_CONTRADICTION",
+    "prior_turn_id": 5,
+    "source_turn_id": 9,
+    "reason": "SPK_0 enjoys history very much (T5) then says history is not enjoyable at all (T9)."
+  },
+  "decode_580": {
+    "verdict": "DIRECT_CONTRADICTION",
+    "prior_turn_id": 6,
+    "source_turn_id": 8,
+    "reason": "SPK_1 goes to the gym a lot (T6) then hates any physical activity (T8)."
+  },
+  "decode_1150": {
+    "verdict": "DIRECT_CONTRADICTION",
+    "prior_turn_id": 7,
+    "source_turn_id": 9,
+    "reason": "SPK_0 has a sister (T7) then says they only got a brother (T9)."
+  },
+  "decode_1049": {
+    "verdict": "DIRECT_CONTRADICTION",
+    "prior_turn_id": 7,
+    "source_turn_id": 9,
+    "reason": "SPK_0 likes abstract works (T7) then says abstract works are not things they like (T9)."
+  },
+  "decode_1213": {
+    "verdict": "DIRECT_CONTRADICTION",
+    "prior_turn_id": 9,
+    "source_turn_id": 11,
+    "reason": "SPK_0 learned about stocks at Yale (T9) then knows nothing about stocks (T11)."
+  },
+  "decode_1114": {
+    "verdict": "DIRECT_CONTRADICTION",
+    "prior_turn_id": 11,
+    "source_turn_id": 13,
+    "reason": "SPK_0 is a cat person, dogs too needy (T11) then would never let a cat in home, prefers dog (T13)."
+  },
+  "decode_3148": {
+    "verdict": "CONSISTENT",
+    "prior_turn_id": null,
+    "source_turn_id": null,
+    "reason": "Consistent diet discussion."
+  },
+  "decode_2758": {
+    "verdict": "CONSISTENT",
+    "prior_turn_id": null,
+    "source_turn_id": null,
+    "reason": "Consistent pasta discussion."
+  },
+  "decode_42": {
+    "verdict": "DIRECT_CONTRADICTION",
+    "prior_turn_id": 1,
+    "source_turn_id": 3,
+    "reason": "SPK_0 claims to have never had alcohol (T1) then implies having had a problem with alcohol and being sober for 20 years (T3)."
+  },
+  "decode_1511": {
+    "verdict": "DIRECT_CONTRADICTION",
+    "prior_turn_id": 5,
+    "source_turn_id": 7,
+    "reason": "SPK_0 hopes they get the job and roots for them (T5) then says they do not think they will get the job (T7)."
+  },
+  "decode_91": {
+    "verdict": "DIRECT_CONTRADICTION",
+    "prior_turn_id": 1,
+    "source_turn_id": 6,
+    "reason": "SPK_0 says they had not spoken to the family member in a long time (T1) then says they talked a few weeks ago (T6)."
+  },
+  "decode_3320": {
+    "verdict": "CONSISTENT",
+    "prior_turn_id": null,
+    "source_turn_id": null,
+    "reason": "Consistent retelling of borrowing sister dress."
+  },
+  "decode_3471": {
+    "verdict": "CONSISTENT",
+    "prior_turn_id": null,
+    "source_turn_id": null,
+    "reason": "Consistent hobbies and English study."
+  },
+  "decode_3897": {
+    "verdict": "CONSISTENT",
+    "prior_turn_id": null,
+    "source_turn_id": null,
+    "reason": "Consistent pasta and sugar beets discussion."
+  },
+  "decode_3070": {
+    "verdict": "CONSISTENT",
+    "prior_turn_id": null,
+    "source_turn_id": null,
+    "reason": "Consistent persona lines."
+  },
+  "decode_2889": {
+    "verdict": "CONSISTENT",
+    "prior_turn_id": null,
+    "source_turn_id": null,
+    "reason": "Consistent hobbies."
+  },
+  "decode_1240": {
+    "verdict": "DIRECT_CONTRADICTION",
+    "prior_turn_id": 5,
+    "source_turn_id": 7,
+    "reason": "SPK_0 says they feel like a kid during Christmas (T5) then says Christmas is not fun anymore as an adult (T7)."
+  },
+  "decode_2068": {
+    "verdict": "CONSISTENT",
+    "prior_turn_id": null,
+    "source_turn_id": null,
+    "reason": "Consistent introvert discussion."
+  },
+  "decode_2193": {
+    "verdict": "CONSISTENT",
+    "prior_turn_id": null,
+    "source_turn_id": null,
+    "reason": "Consistent presentation discussion."
+  },
+  "decode_137": {
+    "verdict": "DIRECT_CONTRADICTION",
+    "prior_turn_id": 3,
+    "source_turn_id": 7,
+    "reason": "SPK_0 says it is wonderful (T3) then says it sounds kind of boring (T7)."
+  },
+  "decode_2636": {
+    "verdict": "CONSISTENT",
+    "prior_turn_id": null,
+    "source_turn_id": null,
+    "reason": "Consistent boredom while husband is away."
+  },
+  "decode_1513": {
+    "verdict": "DIRECT_CONTRADICTION",
+    "prior_turn_id": 5,
+    "source_turn_id": 7,
+    "reason": "SPK_1 praises them for attempting it (T5) then scolds them for not trying to fix it (T7)."
+  },
+  "decode_2445": {
+    "verdict": "CONSISTENT",
+    "prior_turn_id": null,
+    "source_turn_id": null,
+    "reason": "Consistent hair dying history."
+  },
+  "decode_2886": {
+    "verdict": "CONSISTENT",
+    "prior_turn_id": null,
+    "source_turn_id": null,
+    "reason": "Consistent story."
+  }
+}

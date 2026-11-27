@@ -537,6 +537,24 @@ class BaselineStore:
                     turn_features.prosody.quality_flag,
                 )
 
+        au_map = {
+            "au01_inner_brow_raise": "AU01_inner_brow_raise",
+            "au04_brow_lowerer": "AU04_brow_lowerer",
+            "au12_lip_corner_puller": "AU12_lip_corner_puller",
+            "au25_lips_part": "AU25_lips_part",
+        }
+        for feat_key, au_key in au_map.items():
+            if feat_key in self._priors:
+                extracted_map[feat_key] = (
+                    turn_features.vision.action_units.get(au_key),
+                    turn_features.vision.quality_flag,
+                )
+        if "eye_gaze_horizontal" in self._priors:
+            extracted_map["eye_gaze_horizontal"] = (
+                turn_features.vision.eye_gaze_horizontal,
+                turn_features.vision.quality_flag,
+            )
+
         noise_reliability = (
             compute_noise_robust_voice_reliability(
                 turn_features.prosody.acoustic_snr_db,

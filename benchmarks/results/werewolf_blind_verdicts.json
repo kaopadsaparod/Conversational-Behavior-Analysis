@@ -1,0 +1,58 @@
+[
+  {
+    "game_num": 1,
+    "players": [
+      {"player": "Justin", "mode_b_deceptive": true, "rationale": "Claimed Seer (T26/T44), admitted lying about 2 werewolves in center (T64), then admitted Werewolf (T121)."},
+      {"player": "Mitchell", "mode_b_deceptive": false, "rationale": "Consistent Troublemaker claim switching Paul and Justin (T21-T33)."},
+      {"player": "Paul", "mode_b_deceptive": false, "rationale": "Shifted joking claims (werewolf/robber/tanner/villager) consistent with Tanner baiting."},
+      {"player": "Mike", "mode_b_deceptive": false, "rationale": "Late Robber claim (T111) without direct self-contradiction."}
+    ]
+  },
+  {
+    "game_num": 2,
+    "players": [
+      {"player": "Justin", "mode_b_deceptive": true, "rationale": "Claimed Revealer (T4/T38), then shifted to Drunk (T42/T45/T52) contradicting Mitchell's Revealer confirmation."},
+      {"player": "Julie", "mode_b_deceptive": false, "rationale": "No contradictory role claims."},
+      {"player": "Paul", "mode_b_deceptive": true, "rationale": "Contradictory werewolf claim in T63 ('solo werewolf' and 'other werewolf' simultaneously)."},
+      {"player": "Mitchell", "mode_b_deceptive": false, "rationale": "Consistent Robber claim confirming Justin's original Revealer card."}
+    ]
+  },
+  {
+    "game_num": 3,
+    "players": [
+      {"player": "Justin", "mode_b_deceptive": false, "rationale": "Consistent Robber claim robbing James and seeing Witch (T16-T59)."},
+      {"player": "Mitchell", "mode_b_deceptive": false, "rationale": "Consistent non-robber claim, accepts witched werewolf state."},
+      {"player": "Paul", "mode_b_deceptive": false, "rationale": "Consistent Seer claim seeing werewolf in center (T12-T48)."},
+      {"player": "James", "mode_b_deceptive": true, "rationale": "Multi-role self-contradiction: Witch (T21/T32) -> Troublemaker (T65) -> Werewolf (T70)."}
+    ]
+  },
+  {
+    "game_num": 4,
+    "players": [
+      {"player": "Eric", "mode_b_deceptive": true, "rationale": "Explicitly stated starting as solo Werewolf before Shane's Robber swap (T34/T52)."},
+      {"player": "Shane", "mode_b_deceptive": false, "rationale": "Consistent Robber claim swapping with Eric (T33-T74)."},
+      {"player": "Calvin", "mode_b_deceptive": false, "rationale": "Consistent Villager claim (T22/T61)."},
+      {"player": "Aaron", "mode_b_deceptive": false, "rationale": "Consistent Seer claim checking Rick (T66)."},
+      {"player": "Rick", "mode_b_deceptive": false, "rationale": "Consistent Villager claim (T20/T63)."}
+    ]
+  },
+  {
+    "game_num": 5,
+    "players": [
+      {"player": "Justin", "mode_b_deceptive": false, "rationale": "Consistent Hunter claim (T57)."},
+      {"player": "Laura", "mode_b_deceptive": false, "rationale": "Consistent Robber swapping with Mitchell (T20/T136)."},
+      {"player": "Paul", "mode_b_deceptive": true, "rationale": "Unique-role Seer clash with James + shifted from 'on the board' (T32) to Seer (T63)."},
+      {"player": "James", "mode_b_deceptive": true, "rationale": "Unique-role Seer clash with Paul (T19/T36/T110)."},
+      {"player": "Mitchell", "mode_b_deceptive": false, "rationale": "Consistent Insomniac->Robber confirmation (T19/T137)."}
+    ]
+  },
+  {
+    "game_num": 6,
+    "players": [
+      {"player": "Justin", "mode_b_deceptive": true, "rationale": "Persistent evasion when pressed on role/card (T102/T113 'my little secret', 'not going to tell you')."},
+      {"player": "Mitchell", "mode_b_deceptive": false, "rationale": "Consistent Robber claim corroborated by Paul (T93) and Mike (T119)."},
+      {"player": "Paul", "mode_b_deceptive": true, "rationale": "Claimed Seer (T52/T93) then contradicted self claiming 'Mitchell and I were werewolves together' (T134)."},
+      {"player": "Mike", "mode_b_deceptive": false, "rationale": "Consistent Troublemaker claim switching Justin and Paul (T50-T120)."}
+    ]
+  }
+]

@@ -1,0 +1,327 @@
+{
+  "overall": {
+    "mode_a": {
+      "n": 24,
+      "tp": 3,
+      "fp": 3,
+      "tn": 9,
+      "fn": 9,
+      "precision": 0.5,
+      "recall": 0.25,
+      "f1": 0.3333,
+      "accuracy": 0.5
+    },
+    "mode_b": {
+      "n": 24,
+      "tp": 3,
+      "fp": 1,
+      "tn": 11,
+      "fn": 9,
+      "precision": 0.75,
+      "recall": 0.25,
+      "f1": 0.375,
+      "accuracy": 0.5833
+    },
+    "mode_c": {
+      "n": 24,
+      "tp": 4,
+      "fp": 1,
+      "tn": 11,
+      "fn": 8,
+      "precision": 0.8,
+      "recall": 0.3333,
+      "f1": 0.4706,
+      "accuracy": 0.625
+    }
+  },
+  "by_dataset": {
+    "rldd_test": {
+      "mode_a": {
+        "n": 12,
+        "tp": 0,
+        "fp": 2,
+        "tn": 4,
+        "fn": 6,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "accuracy": 0.3333
+      },
+      "mode_b": {
+        "n": 12,
+        "tp": 2,
+        "fp": 0,
+        "tn": 6,
+        "fn": 4,
+        "precision": 1.0,
+        "recall": 0.3333,
+        "f1": 0.5,
+        "accuracy": 0.6667
+      },
+      "mode_c": {
+        "n": 12,
+        "tp": 2,
+        "fp": 0,
+        "tn": 6,
+        "fn": 4,
+        "precision": 1.0,
+        "recall": 0.3333,
+        "f1": 0.5,
+        "accuracy": 0.6667
+      }
+    },
+    "werewolf_youtube": {
+      "mode_a": {
+        "n": 12,
+        "tp": 3,
+        "fp": 1,
+        "tn": 5,
+        "fn": 3,
+        "precision": 0.75,
+        "recall": 0.5,
+        "f1": 0.6,
+        "accuracy": 0.6667
+      },
+      "mode_b": {
+        "n": 12,
+        "tp": 1,
+        "fp": 1,
+        "tn": 5,
+        "fn": 5,
+        "precision": 0.5,
+        "recall": 0.1667,
+        "f1": 0.25,
+        "accuracy": 0.5
+      },
+      "mode_c": {
+        "n": 12,
+        "tp": 2,
+        "fp": 1,
+        "tn": 5,
+        "fn": 4,
+        "precision": 0.6667,
+        "recall": 0.3333,
+        "f1": 0.4444,
+        "accuracy": 0.5833
+      }
+    }
+  },
+  "per_clip": [
+    {
+      "anon_id": "mixed_01",
+      "dataset": "werewolf_youtube",
+      "ground_truth": "deceptive",
+      "is_deceptive": true,
+      "mode_a": false,
+      "mode_b": false,
+      "mode_c": false
+    },
+    {
+      "anon_id": "mixed_02",
+      "dataset": "rldd_test",
+      "ground_truth": "deceptive",
+      "is_deceptive": true,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "anon_id": "mixed_03",
+      "dataset": "werewolf_youtube",
+      "ground_truth": "truthful",
+      "is_deceptive": false,
+      "mode_a": false,
+      "mode_b": false,
+      "mode_c": false
+    },
+    {
+      "anon_id": "mixed_04",
+      "dataset": "werewolf_youtube",
+      "ground_truth": "truthful",
+      "is_deceptive": false,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "anon_id": "mixed_05",
+      "dataset": "werewolf_youtube",
+      "ground_truth": "deceptive",
+      "is_deceptive": true,
+      "mode_a": false,
+      "mode_b": false,
+      "mode_c": false
+    },
+    {
+      "anon_id": "mixed_06",
+      "dataset": "rldd_test",
+      "ground_truth": "truthful",
+      "is_deceptive": false,
+      "mode_a": false,
+      "mode_b": false,
+      "mode_c": false
+    },
+    {
+      "anon_id": "mixed_07",
+      "dataset": "werewolf_youtube",
+      "ground_truth": "deceptive",
+      "is_deceptive": true,
+      "mode_a": false,
+      "mode_b": false,
+      "mode_c": false
+    },
+    {
+      "anon_id": "mixed_08",
+      "dataset": "rldd_test",
+      "ground_truth": "truthful",
+      "is_deceptive": false,
+      "mode_a": true,
+      "mode_b": false,
+      "mode_c": false
+    },
+    {
+      "anon_id": "mixed_09",
+      "dataset": "werewolf_youtube",
+      "ground_truth": "deceptive",
+      "is_deceptive": true,
+      "mode_a": true,
+      "mode_b": false,
+      "mode_c": true
+    },
+    {
+      "anon_id": "mixed_10",
+      "dataset": "werewolf_youtube",
+      "ground_truth": "deceptive",
+      "is_deceptive": true,
+      "mode_a": true,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "anon_id": "mixed_11",
+      "dataset": "rldd_test",
+      "ground_truth": "deceptive",
+      "is_deceptive": true,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "anon_id": "mixed_12",
+      "dataset": "werewolf_youtube",
+      "ground_truth": "deceptive",
+      "is_deceptive": true,
+      "mode_a": true,
+      "mode_b": false,
+      "mode_c": false
+    },
+    {
+      "anon_id": "mixed_13",
+      "dataset": "werewolf_youtube",
+      "ground_truth": "truthful",
+      "is_deceptive": false,
+      "mode_a": false,
+      "mode_b": false,
+      "mode_c": false
+    },
+    {
+      "anon_id": "mixed_14",
+      "dataset": "rldd_test",
+      "ground_truth": "truthful",
+      "is_deceptive": false,
+      "mode_a": false,
+      "mode_b": false,
+      "mode_c": false
+    },
+    {
+      "anon_id": "mixed_15",
+      "dataset": "rldd_test",
+      "ground_truth": "truthful",
+      "is_deceptive": false,
+      "mode_a": false,
+      "mode_b": false,
+      "mode_c": false
+    },
+    {
+      "anon_id": "mixed_16",
+      "dataset": "rldd_test",
+      "ground_truth": "deceptive",
+      "is_deceptive": true,
+      "mode_a": false,
+      "mode_b": false,
+      "mode_c": false
+    },
+    {
+      "anon_id": "mixed_17",
+      "dataset": "werewolf_youtube",
+      "ground_truth": "truthful",
+      "is_deceptive": false,
+      "mode_a": true,
+      "mode_b": false,
+      "mode_c": false
+    },
+    {
+      "anon_id": "mixed_18",
+      "dataset": "rldd_test",
+      "ground_truth": "deceptive",
+      "is_deceptive": true,
+      "mode_a": false,
+      "mode_b": false,
+      "mode_c": false
+    },
+    {
+      "anon_id": "mixed_19",
+      "dataset": "werewolf_youtube",
+      "ground_truth": "truthful",
+      "is_deceptive": false,
+      "mode_a": false,
+      "mode_b": false,
+      "mode_c": false
+    },
+    {
+      "anon_id": "mixed_20",
+      "dataset": "rldd_test",
+      "ground_truth": "truthful",
+      "is_deceptive": false,
+      "mode_a": true,
+      "mode_b": false,
+      "mode_c": false
+    },
+    {
+      "anon_id": "mixed_21",
+      "dataset": "rldd_test",
+      "ground_truth": "truthful",
+      "is_deceptive": false,
+      "mode_a": false,
+      "mode_b": false,
+      "mode_c": false
+    },
+    {
+      "anon_id": "mixed_22",
+      "dataset": "rldd_test",
+      "ground_truth": "deceptive",
+      "is_deceptive": true,
+      "mode_a": false,
+      "mode_b": false,
+      "mode_c": false
+    },
+    {
+      "anon_id": "mixed_23",
+      "dataset": "rldd_test",
+      "ground_truth": "deceptive",
+      "is_deceptive": true,
+      "mode_a": false,
+      "mode_b": false,
+      "mode_c": false
+    },
+    {
+      "anon_id": "mixed_24",
+      "dataset": "werewolf_youtube",
+      "ground_truth": "truthful",
+      "is_deceptive": false,
+      "mode_a": false,
+      "mode_b": false,
+      "mode_c": false
+    }
+  ]
+}

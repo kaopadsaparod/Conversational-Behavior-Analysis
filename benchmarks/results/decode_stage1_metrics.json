@@ -1,0 +1,34 @@
+{
+  "n_samples": 100,
+  "n_positive": 50,
+  "n_negative": 50,
+  "heuristic": {
+    "tp": 13,
+    "fp": 13,
+    "fn": 37,
+    "tn": 37,
+    "precision": 0.5,
+    "recall": 0.26,
+    "f1": 0.3421,
+    "accuracy": 0.5,
+    "llm_calls_saved": 3024,
+    "elapsed_sec": 0.069
+  },
+  "deberta_stage1": {
+    "threshold": 0.72,
+    "same_speaker_only": true,
+    "tp": 48,
+    "fp": 35,
+    "fn": 2,
+    "tn": 15,
+    "precision": 0.5783,
+    "recall": 0.96,
+    "f1": 0.7218,
+    "accuracy": 0.63,
+    "total_same_speaker_pairs": 3135,
+    "flagged_pairs_count": 1348,
+    "flagged_dialogues_count": 83,
+    "llm_calls_saved": 1787,
+    "elapsed_sec": 103.886
+  }
+}

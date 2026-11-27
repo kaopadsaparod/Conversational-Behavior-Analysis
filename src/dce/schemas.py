@@ -366,6 +366,8 @@ class TimingFeatures(DCEBaseModel):
     speech_duration_ms: Optional[float] = None
     total_pause_ms: Optional[float] = None
     pause_count: int = 0
+    max_pre_word_pause_ms: Optional[float] = None
+    hesitation_pause_count: int = 0
 
 
 class TurnFeatures(DCEBaseModel):

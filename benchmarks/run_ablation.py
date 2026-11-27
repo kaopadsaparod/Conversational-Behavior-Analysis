@@ -296,6 +296,42 @@ def load_decode_dataset(path: Path) -> List[DecodeSample]:
             obj = json.loads(raw)
             turns = obj.get("turns") or obj.get("utterances") or []
             norm_turns: List[Dict[str, str]] = []
+
+            # Prepend Turn-0 persona_lines from agents (if present)
+            agents = obj.get("agents")
+            if isinstance(agents, dict):
+                for agent_id, agent_info in agents.items():
+                    if not isinstance(agent_info, dict):
+                        continue
+                    persona = agent_info.get("persona_lines")
+                    if isinstance(persona, str) and persona.strip():
+                        p_lines = [persona.strip()]
+                    elif isinstance(persona, list):
+                        p_lines = [str(p).strip() for p in persona if str(p).strip()]
+                    else:
+                        p_lines = []
+                    for p_line in p_lines:
+                        norm_turns.append(
+                            {
+                                "speaker": f"SPK_{agent_id}",
+                                "text": p_line,
+                            }
+                        )
+
+            # Prepend Turn-0 conversation_contexts (if substantive sentence)
+            conv_ctx = obj.get("conversation_contexts")
+            if isinstance(conv_ctx, str) and conv_ctx.strip():
+                ctx_text = conv_ctx.split("##", 1)[1].strip() if "##" in conv_ctx else conv_ctx.strip()
+                if len(ctx_text.split()) >= 5:
+                    first_spk = "SPK_0"
+                    if turns and isinstance(turns[0], dict):
+                        spk0 = turns[0].get("speaker") or turns[0].get("speaker_id")
+                        if spk0 is not None:
+                            first_spk = str(spk0)
+                        elif "agent_id" in turns[0]:
+                            first_spk = f"SPK_{turns[0]['agent_id']}"
+                    norm_turns.append({"speaker": first_spk, "text": ctx_text})
+
             for t_idx, t in enumerate(turns):
                 if isinstance(t, dict):
                     spk = t.get("speaker") or t.get("speaker_id")

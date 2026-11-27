@@ -1,0 +1,70 @@
+{
+  "heuristic": {
+    "tp": 1,
+    "fp": 0,
+    "fn": 49,
+    "tn": 50,
+    "precision": 1.0,
+    "recall": 0.02,
+    "f1": 0.0392,
+    "accuracy": 0.51,
+    "llm_calls_saved": 1373,
+    "elapsed_sec": 0.028
+  },
+  "deberta_stage1": {
+    "threshold": 0.9,
+    "same_speaker_only": true,
+    "tp": 42,
+    "fp": 25,
+    "fn": 8,
+    "tn": 25,
+    "precision": 0.6269,
+    "recall": 0.84,
+    "f1": 0.7179,
+    "accuracy": 0.67,
+    "total_same_speaker_pairs": 1378,
+    "flagged_pairs_count": 277,
+    "flagged_dialogues_count": 67,
+    "llm_calls_saved": 1101,
+    "elapsed_sec": 152.89
+  },
+  "full_2stage": {
+    "tp": 40,
+    "fp": 0,
+    "fn": 10,
+    "tn": 50,
+    "precision": 1.0,
+    "recall": 0.8,
+    "f1": 0.8889,
+    "accuracy": 0.9,
+    "llm_calls_saved": 1101,
+    "fps": [],
+    "fns": [
+      [
+        "decode_785",
+        {
+          "verdict": "CONSISTENT",
+          "prior_turn_id": null,
+          "source_turn_id": null,
+          "reason": "Job offer in T11 is a timeline update, not a contradiction."
+        }
+      ],
+      [
+        "decode_42",
+        null
+      ],
+      [
+        "decode_1511",
+        null
+      ],
+      [
+        "decode_91",
+        null
+      ],
+      [
+        "decode_713",
+        null
+      ]
+    ]
+  }
+}

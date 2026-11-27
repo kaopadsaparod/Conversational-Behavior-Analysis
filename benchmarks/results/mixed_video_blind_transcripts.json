@@ -1,0 +1,3856 @@
+[
+  {
+    "anon_id": "mixed_01",
+    "session_id": "sess_mixed_01",
+    "turn_count": 4,
+    "turns": [
+      {
+        "turn_id": 1,
+        "speaker_id": "speaker_1",
+        "start_sec": 2.36,
+        "end_sec": 4.045,
+        "annotated_text": "[Go? p=0.07] on, [cause? p=0.25] I saw this werewolf.",
+        "raw_text": "Go on, cause I saw this werewolf.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Go",
+            "probability": 0.07,
+            "alternative": null
+          },
+          {
+            "word": "cause",
+            "probability": 0.25,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 2,
+        "speaker_id": "speaker_0",
+        "start_sec": 5.34,
+        "end_sec": 21.025,
+        "annotated_text": "[specifically? p=0.01] [that? p=0.38] [one.? p=0.66 | alt: won] [I? p=0.59] didn't. [The? p=0.69] werewolf you [were? p=0.34 | alt: weren't] claiming to be this card is actually here.",
+        "raw_text": "specifically that one. I didn't. The werewolf you were claiming to be this card is actually here.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "specifically",
+            "probability": 0.01,
+            "alternative": null
+          },
+          {
+            "word": "that",
+            "probability": 0.38,
+            "alternative": null
+          },
+          {
+            "word": "one.",
+            "probability": 0.66,
+            "alternative": "won"
+          },
+          {
+            "word": "I",
+            "probability": 0.59,
+            "alternative": null
+          },
+          {
+            "word": "The",
+            "probability": 0.69,
+            "alternative": null
+          },
+          {
+            "word": "were",
+            "probability": 0.34,
+            "alternative": "weren't"
+          }
+        ]
+      },
+      {
+        "turn_id": 3,
+        "speaker_id": "speaker_0",
+        "start_sec": 21.62,
+        "end_sec": 23.065,
+        "annotated_text": "[I? p=0.07] can confirm you [were? p=0.82 | alt: weren't] the witch.",
+        "raw_text": "I can confirm you were the witch.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "I",
+            "probability": 0.07,
+            "alternative": null
+          },
+          {
+            "word": "were",
+            "probability": 0.82,
+            "alternative": "weren't"
+          }
+        ]
+      },
+      {
+        "turn_id": 4,
+        "speaker_id": "speaker_1",
+        "start_sec": 24.0,
+        "end_sec": 24.805,
+        "annotated_text": "[Oh,? p=0.57] [sick!? p=0.59]",
+        "raw_text": "Oh, sick!",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Oh,",
+            "probability": 0.57,
+            "alternative": null
+          },
+          {
+            "word": "sick!",
+            "probability": 0.59,
+            "alternative": null
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "anon_id": "mixed_02",
+    "session_id": "sess_mixed_02",
+    "turn_count": 11,
+    "turns": [
+      {
+        "turn_id": 1,
+        "speaker_id": "Q_ASKER",
+        "start_sec": 0.0,
+        "end_sec": 2.1,
+        "annotated_text": "[Do? p=0.58 | alt: don't] you recall telling her that she shouldn't go to the police?",
+        "raw_text": "Do you recall telling her that she shouldn't go to the police?",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Do",
+            "probability": 0.58,
+            "alternative": "don't"
+          }
+        ]
+      },
+      {
+        "turn_id": 2,
+        "speaker_id": "speaker_0",
+        "start_sec": 2.72,
+        "end_sec": 3.165,
+        "annotated_text": "Not at all.",
+        "raw_text": "Not at all.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": []
+      },
+      {
+        "turn_id": 3,
+        "speaker_id": "speaker_1",
+        "start_sec": 3.94,
+        "end_sec": 4.725,
+        "annotated_text": "She says [you? p=0.66] did.",
+        "raw_text": "She says you did.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "you",
+            "probability": 0.66,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 4,
+        "speaker_id": "speaker_0",
+        "start_sec": 5.56,
+        "end_sec": 7.025,
+        "annotated_text": "[Well,? p=0.20] that's her [word? p=0.53] against [fire,? p=0.18] isn't it?",
+        "raw_text": "Well, that's her word against fire, isn't it?",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Well,",
+            "probability": 0.2,
+            "alternative": null
+          },
+          {
+            "word": "word",
+            "probability": 0.53,
+            "alternative": null
+          },
+          {
+            "word": "fire,",
+            "probability": 0.18,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 5,
+        "speaker_id": "Q_ASKER",
+        "start_sec": 7.7,
+        "end_sec": 12.1,
+        "annotated_text": "[I? p=0.01] [mean,? p=0.37] who do you think you are anyway?",
+        "raw_text": "I mean, who do you think you are anyway?",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "I",
+            "probability": 0.01,
+            "alternative": null
+          },
+          {
+            "word": "mean,",
+            "probability": 0.37,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 6,
+        "speaker_id": "speaker_1",
+        "start_sec": 12.72,
+        "end_sec": 13.725,
+        "annotated_text": "[Since? p=0.65] when have you [become...? p=0.58]",
+        "raw_text": "Since when have you become...",
+        "incomplete_sentence": true,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Since",
+            "probability": 0.65,
+            "alternative": null
+          },
+          {
+            "word": "become...",
+            "probability": 0.58,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 7,
+        "speaker_id": "speaker_0",
+        "start_sec": 14.42,
+        "end_sec": 15.685,
+        "annotated_text": "[The? p=0.26] [bee's? p=0.57] knees [are? p=0.69] all of this.",
+        "raw_text": "The bee's knees are all of this.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "The",
+            "probability": 0.26,
+            "alternative": null
+          },
+          {
+            "word": "bee's",
+            "probability": 0.57,
+            "alternative": null
+          },
+          {
+            "word": "are",
+            "probability": 0.69,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 8,
+        "speaker_id": "speaker_0",
+        "start_sec": 16.66,
+        "end_sec": 21.865,
+        "annotated_text": "[Well,? p=0.11] I would like to think so, but that's not for me to judge, is it?",
+        "raw_text": "Well, I would like to think so, but that's not for me to judge, is it?",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Well,",
+            "probability": 0.11,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 9,
+        "speaker_id": "Q_ASKER",
+        "start_sec": 22.7,
+        "end_sec": 24.86,
+        "annotated_text": "I mean, that's between him and his [god,? p=0.51] ultimately, [is? p=0.81 | alt: isn't] it not?",
+        "raw_text": "I mean, that's between him and his god, ultimately, is it not?",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "god,",
+            "probability": 0.51,
+            "alternative": null
+          },
+          {
+            "word": "is",
+            "probability": 0.81,
+            "alternative": "isn't"
+          }
+        ]
+      },
+      {
+        "turn_id": 10,
+        "speaker_id": "speaker_0",
+        "start_sec": 25.46,
+        "end_sec": 27.305,
+        "annotated_text": "Him and his god. Well, don't you think [that...? p=0.59]",
+        "raw_text": "Him and his god. Well, don't you think that...",
+        "incomplete_sentence": true,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "that...",
+            "probability": 0.59,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 11,
+        "speaker_id": "speaker_1",
+        "start_sec": 28.06,
+        "end_sec": 28.985,
+        "annotated_text": "Brothers is [weak.? p=0.72 | alt: week]",
+        "raw_text": "Brothers is weak.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "weak.",
+            "probability": 0.72,
+            "alternative": "week"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "anon_id": "mixed_03",
+    "session_id": "sess_mixed_03",
+    "turn_count": 4,
+    "turns": [
+      {
+        "turn_id": 1,
+        "speaker_id": "speaker_0",
+        "start_sec": 0.66,
+        "end_sec": 7.305,
+        "annotated_text": "Nice trouble [-made.? p=0.53] [Man,? p=0.27] when you grabbed trouble -made at the beginning, I thought you were [gonna? p=0.58] [de? p=0.12] -confirm, like, you were gonna say that, [I? p=0.59] was gonna be like, [Mike's? p=0.20] [fucked.? p=0.31] I [didn't? p=0.57 | alt: did] confirm your story.",
+        "raw_text": "Nice trouble-made. Man, when you grabbed trouble-made at the beginning, I thought you were gonna de-confirm, like, you were gonna say that, I was gonna be like, Mike's fucked. I didn't confirm your story.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "-made.",
+            "probability": 0.53,
+            "alternative": null
+          },
+          {
+            "word": "Man,",
+            "probability": 0.27,
+            "alternative": null
+          },
+          {
+            "word": "gonna",
+            "probability": 0.58,
+            "alternative": null
+          },
+          {
+            "word": "de",
+            "probability": 0.12,
+            "alternative": null
+          },
+          {
+            "word": "I",
+            "probability": 0.59,
+            "alternative": null
+          },
+          {
+            "word": "Mike's",
+            "probability": 0.2,
+            "alternative": null
+          },
+          {
+            "word": "fucked.",
+            "probability": 0.31,
+            "alternative": null
+          },
+          {
+            "word": "didn't",
+            "probability": 0.57,
+            "alternative": "did"
+          }
+        ]
+      },
+      {
+        "turn_id": 2,
+        "speaker_id": "speaker_0",
+        "start_sec": 8.18,
+        "end_sec": 13.305,
+        "annotated_text": "[I? p=0.48] don't believe you as much as I [believe? p=0.66] [the? p=0.11] mic [might? p=0.23] [sound.? p=0.68] [Cause? p=0.07] we just talked about that. [Yeah,? p=0.63] you took it from my hand. Yeah.",
+        "raw_text": "I don't believe you as much as I believe the mic might sound. Cause we just talked about that. Yeah, you took it from my hand. Yeah.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "I",
+            "probability": 0.48,
+            "alternative": null
+          },
+          {
+            "word": "believe",
+            "probability": 0.66,
+            "alternative": null
+          },
+          {
+            "word": "the",
+            "probability": 0.11,
+            "alternative": null
+          },
+          {
+            "word": "might",
+            "probability": 0.23,
+            "alternative": null
+          },
+          {
+            "word": "sound.",
+            "probability": 0.68,
+            "alternative": null
+          },
+          {
+            "word": "Cause",
+            "probability": 0.07,
+            "alternative": null
+          },
+          {
+            "word": "Yeah,",
+            "probability": 0.63,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 3,
+        "speaker_id": "speaker_1",
+        "start_sec": 18.16,
+        "end_sec": 19.025,
+        "annotated_text": "[one? p=0.25 | alt: won] of you is [the...? p=0.25]",
+        "raw_text": "one of you is the...",
+        "incomplete_sentence": true,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "one",
+            "probability": 0.25,
+            "alternative": "won"
+          },
+          {
+            "word": "the...",
+            "probability": 0.25,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 4,
+        "speaker_id": "speaker_0",
+        "start_sec": 20.38,
+        "end_sec": 23.605,
+        "annotated_text": "[Ooh,? p=0.59] I know it was not me. I know it wasn't, [Jessen.? p=0.34]",
+        "raw_text": "Ooh, I know it was not me. I know it wasn't, Jessen.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Ooh,",
+            "probability": 0.59,
+            "alternative": null
+          },
+          {
+            "word": "Jessen.",
+            "probability": 0.34,
+            "alternative": null
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "anon_id": "mixed_04",
+    "session_id": "sess_mixed_04",
+    "turn_count": 8,
+    "turns": [
+      {
+        "turn_id": 1,
+        "speaker_id": "speaker_0",
+        "start_sec": 1.18,
+        "end_sec": 1.605,
+        "annotated_text": "[Heh,? p=0.14] heh, heh.",
+        "raw_text": "Heh, heh, heh.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Heh,",
+            "probability": 0.14,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 2,
+        "speaker_id": "Q_ASKER",
+        "start_sec": 2.34,
+        "end_sec": 2.825,
+        "annotated_text": "[Mike,? p=0.41] what were you?",
+        "raw_text": "Mike, what were you?",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Mike,",
+            "probability": 0.41,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 3,
+        "speaker_id": "speaker_0",
+        "start_sec": 3.72,
+        "end_sec": 6.345,
+        "annotated_text": "[Besides? p=0.49] the tanner, because we know that's what you're [working? p=0.68] [on.? p=0.34]",
+        "raw_text": "Besides the tanner, because we know that's what you're working on.",
+        "incomplete_sentence": true,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Besides",
+            "probability": 0.49,
+            "alternative": null
+          },
+          {
+            "word": "working",
+            "probability": 0.68,
+            "alternative": null
+          },
+          {
+            "word": "on.",
+            "probability": 0.34,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 4,
+        "speaker_id": "speaker_0",
+        "start_sec": 7.18,
+        "end_sec": 11.265,
+        "annotated_text": "Spicy. Oh, you [were? p=0.39 | alt: weren't] [wrong.? p=0.18] I [had? p=0.76 | alt: hadn't] it backwards, sorry. [Yeah,? p=0.68] you [were? p=0.83 | alt: weren't] wrong from Justin.",
+        "raw_text": "Spicy. Oh, you were wrong. I had it backwards, sorry. Yeah, you were wrong from Justin.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "were",
+            "probability": 0.39,
+            "alternative": "weren't"
+          },
+          {
+            "word": "wrong.",
+            "probability": 0.18,
+            "alternative": null
+          },
+          {
+            "word": "had",
+            "probability": 0.76,
+            "alternative": "hadn't"
+          },
+          {
+            "word": "Yeah,",
+            "probability": 0.68,
+            "alternative": null
+          },
+          {
+            "word": "were",
+            "probability": 0.83,
+            "alternative": "weren't"
+          }
+        ]
+      },
+      {
+        "turn_id": 5,
+        "speaker_id": "speaker_0",
+        "start_sec": 11.86,
+        "end_sec": 13.005,
+        "annotated_text": "[Seriously,? p=0.02] but he [was...? p=0.45 | alt: wasn't]",
+        "raw_text": "Seriously, but he was...",
+        "incomplete_sentence": true,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Seriously,",
+            "probability": 0.02,
+            "alternative": null
+          },
+          {
+            "word": "was...",
+            "probability": 0.45,
+            "alternative": "wasn't"
+          }
+        ]
+      },
+      {
+        "turn_id": 6,
+        "speaker_id": "speaker_0",
+        "start_sec": 14.16,
+        "end_sec": 14.285,
+        "annotated_text": "",
+        "raw_text": "",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": []
+      },
+      {
+        "turn_id": 7,
+        "speaker_id": "speaker_0",
+        "start_sec": 15.2,
+        "end_sec": 18.405,
+        "annotated_text": "[Probably? p=0.18] [why.? p=0.46] I saw it, [cause? p=0.21] I [didn't? p=0.76 | alt: did] see it [for? p=0.27 | alt: four] [you.? p=0.49] [I? p=0.67] might be the [team.? p=0.07] Oh, yeah.",
+        "raw_text": "Probably why. I saw it, cause I didn't see it for you. I might be the team. Oh, yeah.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Probably",
+            "probability": 0.18,
+            "alternative": null
+          },
+          {
+            "word": "why.",
+            "probability": 0.46,
+            "alternative": null
+          },
+          {
+            "word": "cause",
+            "probability": 0.21,
+            "alternative": null
+          },
+          {
+            "word": "didn't",
+            "probability": 0.76,
+            "alternative": "did"
+          },
+          {
+            "word": "for",
+            "probability": 0.27,
+            "alternative": "four"
+          },
+          {
+            "word": "you.",
+            "probability": 0.49,
+            "alternative": null
+          },
+          {
+            "word": "I",
+            "probability": 0.67,
+            "alternative": null
+          },
+          {
+            "word": "team.",
+            "probability": 0.07,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 8,
+        "speaker_id": "speaker_0",
+        "start_sec": 19.24,
+        "end_sec": 25.005,
+        "annotated_text": "[A? p=0.22] lot happened, I guess. [You? p=0.33] probably were. I think I might be the [Tanner.? p=0.27] I think you are [too.? p=0.65] I [think? p=0.48] [I've? p=0.60] [just...? p=0.61]",
+        "raw_text": "A lot happened, I guess. You probably were. I think I might be the Tanner. I think you are too. I think I've just...",
+        "incomplete_sentence": true,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "A",
+            "probability": 0.22,
+            "alternative": null
+          },
+          {
+            "word": "You",
+            "probability": 0.33,
+            "alternative": null
+          },
+          {
+            "word": "Tanner.",
+            "probability": 0.27,
+            "alternative": null
+          },
+          {
+            "word": "too.",
+            "probability": 0.65,
+            "alternative": null
+          },
+          {
+            "word": "think",
+            "probability": 0.48,
+            "alternative": null
+          },
+          {
+            "word": "I've",
+            "probability": 0.6,
+            "alternative": null
+          },
+          {
+            "word": "just...",
+            "probability": 0.61,
+            "alternative": null
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "anon_id": "mixed_05",
+    "session_id": "sess_mixed_05",
+    "turn_count": 4,
+    "turns": [
+      {
+        "turn_id": 1,
+        "speaker_id": "speaker_0",
+        "start_sec": 1.04,
+        "end_sec": 9.225,
+        "annotated_text": "[Tread? p=0.67] lightly, because I have information. Tread lightly, because no one trusts each other in this game.",
+        "raw_text": "Tread lightly, because I have information. Tread lightly, because no one trusts each other in this game.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Tread",
+            "probability": 0.67,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 2,
+        "speaker_id": "speaker_1",
+        "start_sec": 11.5,
+        "end_sec": 14.625,
+        "annotated_text": "That's all I'll do for now. Nice! Nice [Julie.? p=0.37]",
+        "raw_text": "That's all I'll do for now. Nice! Nice Julie.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Julie.",
+            "probability": 0.37,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 3,
+        "speaker_id": "Q_ASKER",
+        "start_sec": 17.86,
+        "end_sec": 18.62,
+        "annotated_text": "[Justin?? p=0.17]",
+        "raw_text": "Justin?",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Justin?",
+            "probability": 0.17,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 4,
+        "speaker_id": "speaker_0",
+        "start_sec": 21.18,
+        "end_sec": 24.965,
+        "annotated_text": "[That? p=0.55] means we got [a? p=0.28] bad dude. [Man,? p=0.26] I just didn't do my [wrong.? p=0.58]",
+        "raw_text": "That means we got a bad dude. Man, I just didn't do my wrong.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "That",
+            "probability": 0.55,
+            "alternative": null
+          },
+          {
+            "word": "a",
+            "probability": 0.28,
+            "alternative": null
+          },
+          {
+            "word": "Man,",
+            "probability": 0.26,
+            "alternative": null
+          },
+          {
+            "word": "wrong.",
+            "probability": 0.58,
+            "alternative": null
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "anon_id": "mixed_06",
+    "session_id": "sess_mixed_06",
+    "turn_count": 6,
+    "turns": [
+      {
+        "turn_id": 1,
+        "speaker_id": "speaker_0",
+        "start_sec": 0.06,
+        "end_sec": 7.225,
+        "annotated_text": "[We? p=0.18] were married for two years, and, um, we divorced whenever she was about [ten? p=0.53] months old.",
+        "raw_text": "We were married for two years, and, um, we divorced whenever she was about ten months old.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "We",
+            "probability": 0.18,
+            "alternative": null
+          },
+          {
+            "word": "ten",
+            "probability": 0.53,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 2,
+        "speaker_id": "speaker_0",
+        "start_sec": 8.0,
+        "end_sec": 13.485,
+        "annotated_text": "[And? p=0.40] basically, we were just too young, we didn't really know what marriage was even supposed to be about.",
+        "raw_text": "And basically, we were just too young, we didn't really know what marriage was even supposed to be about.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "And",
+            "probability": 0.4,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 3,
+        "speaker_id": "speaker_0",
+        "start_sec": 14.44,
+        "end_sec": 15.245,
+        "annotated_text": "[and? p=0.43] [so...? p=0.59]",
+        "raw_text": "and so...",
+        "incomplete_sentence": true,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "and",
+            "probability": 0.43,
+            "alternative": null
+          },
+          {
+            "word": "so...",
+            "probability": 0.59,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 4,
+        "speaker_id": "speaker_0",
+        "start_sec": 15.86,
+        "end_sec": 15.905,
+        "annotated_text": "",
+        "raw_text": "",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": []
+      },
+      {
+        "turn_id": 5,
+        "speaker_id": "speaker_0",
+        "start_sec": 16.98,
+        "end_sec": 22.425,
+        "annotated_text": "[You? p=0.43] know, [just,? p=0.58] I, I knew that I wanted to go to school, he was very jealous, [um,? p=0.29] he [really...? p=0.64]",
+        "raw_text": "You know, just, I, I knew that I wanted to go to school, he was very jealous, um, he really...",
+        "incomplete_sentence": true,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "You",
+            "probability": 0.43,
+            "alternative": null
+          },
+          {
+            "word": "just,",
+            "probability": 0.58,
+            "alternative": null
+          },
+          {
+            "word": "um,",
+            "probability": 0.29,
+            "alternative": null
+          },
+          {
+            "word": "really...",
+            "probability": 0.64,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 6,
+        "speaker_id": "speaker_0",
+        "start_sec": 23.32,
+        "end_sec": 26.985,
+        "annotated_text": "[Didn't? p=0.60 | alt: did] want me to work, or go to school, or even to go to the grocery store.",
+        "raw_text": "Didn't want me to work, or go to school, or even to go to the grocery store.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Didn't",
+            "probability": 0.6,
+            "alternative": "did"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "anon_id": "mixed_07",
+    "session_id": "sess_mixed_07",
+    "turn_count": 9,
+    "turns": [
+      {
+        "turn_id": 1,
+        "speaker_id": "speaker_0",
+        "start_sec": 0.0,
+        "end_sec": 8.205,
+        "annotated_text": "[Well,? p=0.62] Shane's [a? p=0.60] werewolf, look at him. [If? p=0.31] I'm not, he's sitting [there? p=0.70 | alt: their] [like...? p=0.57] He's distancing himself from his card. [Not? p=0.27] as much as possible.",
+        "raw_text": "Well, Shane's a werewolf, look at him. If I'm not, he's sitting there like... He's distancing himself from his card. Not as much as possible.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Well,",
+            "probability": 0.62,
+            "alternative": null
+          },
+          {
+            "word": "a",
+            "probability": 0.6,
+            "alternative": null
+          },
+          {
+            "word": "If",
+            "probability": 0.31,
+            "alternative": null
+          },
+          {
+            "word": "there",
+            "probability": 0.7,
+            "alternative": "their"
+          },
+          {
+            "word": "like...",
+            "probability": 0.57,
+            "alternative": null
+          },
+          {
+            "word": "Not",
+            "probability": 0.27,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 2,
+        "speaker_id": "speaker_0",
+        "start_sec": 9.26,
+        "end_sec": 10.465,
+        "annotated_text": "[You? p=0.33] were a villager. [So? p=0.44] was I.",
+        "raw_text": "You were a villager. So was I.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "You",
+            "probability": 0.33,
+            "alternative": null
+          },
+          {
+            "word": "So",
+            "probability": 0.44,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 3,
+        "speaker_id": "speaker_0",
+        "start_sec": 11.26,
+        "end_sec": 12.045,
+        "annotated_text": "[I? p=0.07] mean, and [some...? p=0.38]",
+        "raw_text": "I mean, and some...",
+        "incomplete_sentence": true,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "I",
+            "probability": 0.07,
+            "alternative": null
+          },
+          {
+            "word": "some...",
+            "probability": 0.38,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 4,
+        "speaker_id": "Q_ASKER",
+        "start_sec": 13.08,
+        "end_sec": 13.605,
+        "annotated_text": "Who's [the? p=0.55] seer?",
+        "raw_text": "Who's the seer?",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "the",
+            "probability": 0.55,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 5,
+        "speaker_id": "speaker_0",
+        "start_sec": 14.84,
+        "end_sec": 17.245,
+        "annotated_text": "[It? p=0.10] might [be? p=0.20] in the middle.",
+        "raw_text": "It might be in the middle.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "It",
+            "probability": 0.1,
+            "alternative": null
+          },
+          {
+            "word": "be",
+            "probability": 0.2,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 6,
+        "speaker_id": "speaker_0",
+        "start_sec": 18.58,
+        "end_sec": 19.68,
+        "annotated_text": "Nobody's [copping? p=0.55] [to? p=0.80 | alt: two] it?",
+        "raw_text": "Nobody's copping to it?",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "copping",
+            "probability": 0.55,
+            "alternative": null
+          },
+          {
+            "word": "to",
+            "probability": 0.8,
+            "alternative": "two"
+          }
+        ]
+      },
+      {
+        "turn_id": 7,
+        "speaker_id": "speaker_0",
+        "start_sec": 19.96,
+        "end_sec": 21.04,
+        "annotated_text": "[Anybody? p=0.54] trouble [making?? p=0.66]",
+        "raw_text": "Anybody trouble making?",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Anybody",
+            "probability": 0.54,
+            "alternative": null
+          },
+          {
+            "word": "making?",
+            "probability": 0.66,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 8,
+        "speaker_id": "Q_ASKER",
+        "start_sec": 21.48,
+        "end_sec": 21.74,
+        "annotated_text": "[Or? p=0.42] robbing?",
+        "raw_text": "Or robbing?",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Or",
+            "probability": 0.42,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 9,
+        "speaker_id": "speaker_0",
+        "start_sec": 22.42,
+        "end_sec": 25.005,
+        "annotated_text": "I was a robber, I switched with Eric.",
+        "raw_text": "I was a robber, I switched with Eric.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": []
+      }
+    ]
+  },
+  {
+    "anon_id": "mixed_08",
+    "session_id": "sess_mixed_08",
+    "turn_count": 5,
+    "turns": [
+      {
+        "turn_id": 1,
+        "speaker_id": "speaker_0",
+        "start_sec": 0.54,
+        "end_sec": 3.985,
+        "annotated_text": "Yes, [um,? p=0.18] [Reginald? p=0.52] and I would have, [like...? p=0.61]",
+        "raw_text": "Yes, um, Reginald and I would have, like...",
+        "incomplete_sentence": true,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "um,",
+            "probability": 0.18,
+            "alternative": null
+          },
+          {
+            "word": "Reginald",
+            "probability": 0.52,
+            "alternative": null
+          },
+          {
+            "word": "like...",
+            "probability": 0.61,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 2,
+        "speaker_id": "speaker_0",
+        "start_sec": 5.06,
+        "end_sec": 12.545,
+        "annotated_text": "[long? p=0.36] talks, and [through? p=0.52] one of our long talks, it was, um, late at night, and it was just us, too, [when? p=0.52] I guess we put [ourselves...? p=0.54]",
+        "raw_text": "long talks, and through one of our long talks, it was, um, late at night, and it was just us, too, when I guess we put ourselves...",
+        "incomplete_sentence": true,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "long",
+            "probability": 0.36,
+            "alternative": null
+          },
+          {
+            "word": "through",
+            "probability": 0.52,
+            "alternative": null
+          },
+          {
+            "word": "when",
+            "probability": 0.52,
+            "alternative": null
+          },
+          {
+            "word": "ourselves...",
+            "probability": 0.54,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 3,
+        "speaker_id": "speaker_0",
+        "start_sec": 13.34,
+        "end_sec": 15.865,
+        "annotated_text": "[in? p=0.69] a vulnerable position, and, [um...? p=0.59]",
+        "raw_text": "in a vulnerable position, and, um...",
+        "incomplete_sentence": true,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "in",
+            "probability": 0.69,
+            "alternative": null
+          },
+          {
+            "word": "um...",
+            "probability": 0.59,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 4,
+        "speaker_id": "speaker_0",
+        "start_sec": 16.92,
+        "end_sec": 17.285,
+        "annotated_text": "[We...? p=0.29]",
+        "raw_text": "We...",
+        "incomplete_sentence": true,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "We...",
+            "probability": 0.29,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 5,
+        "speaker_id": "speaker_0",
+        "start_sec": 18.22,
+        "end_sec": 19.825,
+        "annotated_text": "[we,? p=0.63] we slept together.",
+        "raw_text": "we, we slept together.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "we,",
+            "probability": 0.63,
+            "alternative": null
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "anon_id": "mixed_09",
+    "session_id": "sess_mixed_09",
+    "turn_count": 5,
+    "turns": [
+      {
+        "turn_id": 1,
+        "speaker_id": "speaker_0",
+        "start_sec": 0.0,
+        "end_sec": 1.445,
+        "annotated_text": "[Lately,? p=0.48] [cause? p=0.17] I have [information...? p=0.32]",
+        "raw_text": "Lately, cause I have information...",
+        "incomplete_sentence": true,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Lately,",
+            "probability": 0.48,
+            "alternative": null
+          },
+          {
+            "word": "cause",
+            "probability": 0.17,
+            "alternative": null
+          },
+          {
+            "word": "information...",
+            "probability": 0.32,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 2,
+        "speaker_id": "speaker_0",
+        "start_sec": 2.1,
+        "end_sec": 6.225,
+        "annotated_text": "[We? p=0.11] [tread? p=0.41] lightly because no one trusts each other in this [game.? p=0.62]",
+        "raw_text": "We tread lightly because no one trusts each other in this game.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "We",
+            "probability": 0.11,
+            "alternative": null
+          },
+          {
+            "word": "tread",
+            "probability": 0.41,
+            "alternative": null
+          },
+          {
+            "word": "game.",
+            "probability": 0.62,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 3,
+        "speaker_id": "speaker_0",
+        "start_sec": 8.5,
+        "end_sec": 11.625,
+        "annotated_text": "That's all I'll do for now. Nice! Nice [Julie.? p=0.44]",
+        "raw_text": "That's all I'll do for now. Nice! Nice Julie.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Julie.",
+            "probability": 0.44,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 4,
+        "speaker_id": "Q_ASKER",
+        "start_sec": 14.86,
+        "end_sec": 15.6,
+        "annotated_text": "[Right? p=0.08 | alt: write] on. Justin?",
+        "raw_text": "Right on. Justin?",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Right",
+            "probability": 0.08,
+            "alternative": "write"
+          }
+        ]
+      },
+      {
+        "turn_id": 5,
+        "speaker_id": "speaker_0",
+        "start_sec": 17.06,
+        "end_sec": 24.885,
+        "annotated_text": "[Whoa!? p=0.51] That means we got [a? p=0.38] bad dude. [Man,? p=0.36] I just didn't do my [role.? p=0.51] No, I didn't [do? p=0.71 | alt: don't] my role.",
+        "raw_text": "Whoa! That means we got a bad dude. Man, I just didn't do my role. No, I didn't do my role.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Whoa!",
+            "probability": 0.51,
+            "alternative": null
+          },
+          {
+            "word": "a",
+            "probability": 0.38,
+            "alternative": null
+          },
+          {
+            "word": "Man,",
+            "probability": 0.36,
+            "alternative": null
+          },
+          {
+            "word": "role.",
+            "probability": 0.51,
+            "alternative": null
+          },
+          {
+            "word": "do",
+            "probability": 0.71,
+            "alternative": "don't"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "anon_id": "mixed_10",
+    "session_id": "sess_mixed_10",
+    "turn_count": 10,
+    "turns": [
+      {
+        "turn_id": 1,
+        "speaker_id": "Q_ASKER",
+        "start_sec": 0.0,
+        "end_sec": 1.02,
+        "annotated_text": "[Be? p=0.08] a werewolf [or? p=0.42] [anything?? p=0.56]",
+        "raw_text": "Be a werewolf or anything?",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Be",
+            "probability": 0.08,
+            "alternative": null
+          },
+          {
+            "word": "or",
+            "probability": 0.42,
+            "alternative": null
+          },
+          {
+            "word": "anything?",
+            "probability": 0.56,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 2,
+        "speaker_id": "Q_ASKER",
+        "start_sec": 1.1,
+        "end_sec": 1.86,
+        "annotated_text": "What [did? p=0.71 | alt: didn't] you see in the center?",
+        "raw_text": "What did you see in the center?",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "did",
+            "probability": 0.71,
+            "alternative": "didn't"
+          }
+        ]
+      },
+      {
+        "turn_id": 3,
+        "speaker_id": "speaker_1",
+        "start_sec": 2.04,
+        "end_sec": 4.105,
+        "annotated_text": "Oh, I'm not [telling? p=0.61] you my information.",
+        "raw_text": "Oh, I'm not telling you my information.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "telling",
+            "probability": 0.61,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 4,
+        "speaker_id": "speaker_0",
+        "start_sec": 4.92,
+        "end_sec": 4.965,
+        "annotated_text": "",
+        "raw_text": "",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": []
+      },
+      {
+        "turn_id": 5,
+        "speaker_id": "speaker_0",
+        "start_sec": 5.96,
+        "end_sec": 11.08,
+        "annotated_text": "[Okay,? p=0.47] please. [Oh,? p=0.43] how are we [gonna? p=0.66] kill one of them?",
+        "raw_text": "Okay, please. Oh, how are we gonna kill one of them?",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Okay,",
+            "probability": 0.47,
+            "alternative": null
+          },
+          {
+            "word": "Oh,",
+            "probability": 0.43,
+            "alternative": null
+          },
+          {
+            "word": "gonna",
+            "probability": 0.66,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 6,
+        "speaker_id": "Q_ASKER",
+        "start_sec": 11.62,
+        "end_sec": 12.6,
+        "annotated_text": "[Oh.? p=0.44] [Who'd? p=0.59] you rob from?",
+        "raw_text": "Oh. Who'd you rob from?",
+        "incomplete_sentence": true,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Oh.",
+            "probability": 0.44,
+            "alternative": null
+          },
+          {
+            "word": "Who'd",
+            "probability": 0.59,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 7,
+        "speaker_id": "speaker_1",
+        "start_sec": 13.08,
+        "end_sec": 14.705,
+        "annotated_text": "I didn't rob anybody!",
+        "raw_text": "I didn't rob anybody!",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": []
+      },
+      {
+        "turn_id": 8,
+        "speaker_id": "speaker_0",
+        "start_sec": 15.36,
+        "end_sec": 15.54,
+        "annotated_text": "[What?? p=0.43]",
+        "raw_text": "What?",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "What?",
+            "probability": 0.43,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 9,
+        "speaker_id": "speaker_0",
+        "start_sec": 15.86,
+        "end_sec": 21.845,
+        "annotated_text": "[Justin? p=0.55] [was...? p=0.42 | alt: wasn't] [I? p=0.66] was the witch. [He? p=0.59] robbed from me, but I [witched? p=0.56] him into a werewolf. Which card was it?",
+        "raw_text": "Justin was... I was the witch. He robbed from me, but I witched him into a werewolf. Which card was it?",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Justin",
+            "probability": 0.55,
+            "alternative": null
+          },
+          {
+            "word": "was...",
+            "probability": 0.42,
+            "alternative": "wasn't"
+          },
+          {
+            "word": "I",
+            "probability": 0.66,
+            "alternative": null
+          },
+          {
+            "word": "He",
+            "probability": 0.59,
+            "alternative": null
+          },
+          {
+            "word": "witched",
+            "probability": 0.56,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 10,
+        "speaker_id": "Q_ASKER",
+        "start_sec": 22.46,
+        "end_sec": 24.805,
+        "annotated_text": "[And? p=0.28] Paul said he looked at this one?",
+        "raw_text": "And Paul said he looked at this one?",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "And",
+            "probability": 0.28,
+            "alternative": null
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "anon_id": "mixed_11",
+    "session_id": "sess_mixed_11",
+    "turn_count": 3,
+    "turns": [
+      {
+        "turn_id": 1,
+        "speaker_id": "speaker_0",
+        "start_sec": 0.0,
+        "end_sec": 1.66,
+        "annotated_text": "[Is? p=0.65 | alt: isn't] that word stalking?",
+        "raw_text": "Is that word stalking?",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Is",
+            "probability": 0.65,
+            "alternative": "isn't"
+          }
+        ]
+      },
+      {
+        "turn_id": 2,
+        "speaker_id": "Q_ASKER",
+        "start_sec": 2.02,
+        "end_sec": 2.465,
+        "annotated_text": "Yes or [no?? p=0.74 | alt: know]",
+        "raw_text": "Yes or no?",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "no?",
+            "probability": 0.74,
+            "alternative": "know"
+          }
+        ]
+      },
+      {
+        "turn_id": 3,
+        "speaker_id": "speaker_0",
+        "start_sec": 4.02,
+        "end_sec": 18.825,
+        "annotated_text": "[that? p=0.39] word has a definition, and you're not using it. You're not using the definition that I apply in this continuum. So if you want me to talk about what stalking means, I will talk about it.",
+        "raw_text": "that word has a definition, and you're not using it. You're not using the definition that I apply in this continuum. So if you want me to talk about what stalking means, I will talk about it.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "that",
+            "probability": 0.39,
+            "alternative": null
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "anon_id": "mixed_12",
+    "session_id": "sess_mixed_12",
+    "turn_count": 11,
+    "turns": [
+      {
+        "turn_id": 1,
+        "speaker_id": "Q_ASKER",
+        "start_sec": 0.24,
+        "end_sec": 0.785,
+        "annotated_text": "[So? p=0.17] who [can? p=0.29 | alt: can't] we kill?",
+        "raw_text": "So who can we kill?",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "So",
+            "probability": 0.17,
+            "alternative": null
+          },
+          {
+            "word": "can",
+            "probability": 0.29,
+            "alternative": "can't"
+          }
+        ]
+      },
+      {
+        "turn_id": 2,
+        "speaker_id": "speaker_0",
+        "start_sec": 2.22,
+        "end_sec": 2.445,
+        "annotated_text": "[I? p=0.01] [don't? p=0.51 | alt: do] [know,? p=0.36 | alt: no] [I? p=0.22] [don't? p=0.60 | alt: do] [know,? p=0.62 | alt: no] [I? p=0.50] [don't? p=0.81 | alt: do] know.",
+        "raw_text": "I don't know, I don't know, I don't know.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "I",
+            "probability": 0.01,
+            "alternative": null
+          },
+          {
+            "word": "don't",
+            "probability": 0.51,
+            "alternative": "do"
+          },
+          {
+            "word": "know,",
+            "probability": 0.36,
+            "alternative": "no"
+          },
+          {
+            "word": "I",
+            "probability": 0.22,
+            "alternative": null
+          },
+          {
+            "word": "don't",
+            "probability": 0.6,
+            "alternative": "do"
+          },
+          {
+            "word": "know,",
+            "probability": 0.62,
+            "alternative": "no"
+          },
+          {
+            "word": "I",
+            "probability": 0.5,
+            "alternative": null
+          },
+          {
+            "word": "don't",
+            "probability": 0.81,
+            "alternative": "do"
+          }
+        ]
+      },
+      {
+        "turn_id": 3,
+        "speaker_id": "speaker_0",
+        "start_sec": 4.58,
+        "end_sec": 6.7,
+        "annotated_text": "[Oh,? p=0.21] [I? p=0.54] think that's true. Can you confirm any of it?",
+        "raw_text": "Oh, I think that's true. Can you confirm any of it?",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Oh,",
+            "probability": 0.21,
+            "alternative": null
+          },
+          {
+            "word": "I",
+            "probability": 0.54,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 4,
+        "speaker_id": "Q_ASKER",
+        "start_sec": 6.96,
+        "end_sec": 8.08,
+        "annotated_text": "[Were? p=0.42 | alt: weren't] you actually the troublemaker?",
+        "raw_text": "Were you actually the troublemaker?",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Were",
+            "probability": 0.42,
+            "alternative": "weren't"
+          }
+        ]
+      },
+      {
+        "turn_id": 5,
+        "speaker_id": "speaker_0",
+        "start_sec": 8.38,
+        "end_sec": 10.425,
+        "annotated_text": "Yeah. And you switched them, too. Yeah.",
+        "raw_text": "Yeah. And you switched them, too. Yeah.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": []
+      },
+      {
+        "turn_id": 6,
+        "speaker_id": "speaker_0",
+        "start_sec": 11.22,
+        "end_sec": 11.605,
+        "annotated_text": "[Okay.? p=0.11]",
+        "raw_text": "Okay.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Okay.",
+            "probability": 0.11,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 7,
+        "speaker_id": "speaker_0",
+        "start_sec": 12.42,
+        "end_sec": 12.865,
+        "annotated_text": "[6? p=0.11] [-6? p=0.51] -6.",
+        "raw_text": "6-6-6.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "6",
+            "probability": 0.11,
+            "alternative": null
+          },
+          {
+            "word": "-6",
+            "probability": 0.51,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 8,
+        "speaker_id": "speaker_0",
+        "start_sec": 14.28,
+        "end_sec": 14.525,
+        "annotated_text": "[Ahem.? p=0.14]",
+        "raw_text": "Ahem.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Ahem.",
+            "probability": 0.14,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 9,
+        "speaker_id": "speaker_0",
+        "start_sec": 15.16,
+        "end_sec": 15.685,
+        "annotated_text": "[Sorry,? p=0.25] [I? p=0.56] [was? p=0.62 | alt: wasn't] just [here? p=0.75 | alt: hear] [-? p=0.07]",
+        "raw_text": "Sorry, I was just here-",
+        "incomplete_sentence": true,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Sorry,",
+            "probability": 0.25,
+            "alternative": null
+          },
+          {
+            "word": "I",
+            "probability": 0.56,
+            "alternative": null
+          },
+          {
+            "word": "was",
+            "probability": 0.62,
+            "alternative": "wasn't"
+          },
+          {
+            "word": "here",
+            "probability": 0.75,
+            "alternative": "hear"
+          },
+          {
+            "word": "-",
+            "probability": 0.07,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 10,
+        "speaker_id": "speaker_0",
+        "start_sec": 17.24,
+        "end_sec": 18.425,
+        "annotated_text": "[I? p=0.09] was not the robber.",
+        "raw_text": "I was not the robber.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "I",
+            "probability": 0.09,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 11,
+        "speaker_id": "speaker_0",
+        "start_sec": 19.4,
+        "end_sec": 22.905,
+        "annotated_text": "[I? p=0.44] [saw? p=0.56] that I [wasn't? p=0.63 | alt: was] [off? p=0.50] the road. I looked at [myself...? p=0.57]",
+        "raw_text": "I saw that I wasn't off the road. I looked at myself...",
+        "incomplete_sentence": true,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "I",
+            "probability": 0.44,
+            "alternative": null
+          },
+          {
+            "word": "saw",
+            "probability": 0.56,
+            "alternative": null
+          },
+          {
+            "word": "wasn't",
+            "probability": 0.63,
+            "alternative": "was"
+          },
+          {
+            "word": "off",
+            "probability": 0.5,
+            "alternative": null
+          },
+          {
+            "word": "myself...",
+            "probability": 0.57,
+            "alternative": null
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "anon_id": "mixed_13",
+    "session_id": "sess_mixed_13",
+    "turn_count": 5,
+    "turns": [
+      {
+        "turn_id": 1,
+        "speaker_id": "speaker_0",
+        "start_sec": 0.0,
+        "end_sec": 4.205,
+        "annotated_text": "That's sick. I [say? p=0.20] [I? p=0.25] agreed with you. [I? p=0.57] [had? p=0.48 | alt: hadn't] to do [stuff.? p=0.07] [Do? p=0.35 | alt: don't] you agree with me?",
+        "raw_text": "That's sick. I say I agreed with you. I had to do stuff. Do you agree with me?",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "say",
+            "probability": 0.2,
+            "alternative": null
+          },
+          {
+            "word": "I",
+            "probability": 0.25,
+            "alternative": null
+          },
+          {
+            "word": "I",
+            "probability": 0.57,
+            "alternative": null
+          },
+          {
+            "word": "had",
+            "probability": 0.48,
+            "alternative": "hadn't"
+          },
+          {
+            "word": "stuff.",
+            "probability": 0.07,
+            "alternative": null
+          },
+          {
+            "word": "Do",
+            "probability": 0.35,
+            "alternative": "don't"
+          }
+        ]
+      },
+      {
+        "turn_id": 2,
+        "speaker_id": "Q_ASKER",
+        "start_sec": 5.38,
+        "end_sec": 9.08,
+        "annotated_text": "[If? p=0.61] you sell, you also agree with me. [No,? p=0.07 | alt: know] [why?? p=0.36]",
+        "raw_text": "If you sell, you also agree with me. No, why?",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "If",
+            "probability": 0.61,
+            "alternative": null
+          },
+          {
+            "word": "No,",
+            "probability": 0.07,
+            "alternative": "know"
+          },
+          {
+            "word": "why?",
+            "probability": 0.36,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 3,
+        "speaker_id": "speaker_0",
+        "start_sec": 9.94,
+        "end_sec": 13.125,
+        "annotated_text": "If you sell, you also agree with me.",
+        "raw_text": "If you sell, you also agree with me.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": []
+      },
+      {
+        "turn_id": 4,
+        "speaker_id": "speaker_0",
+        "start_sec": 13.8,
+        "end_sec": 17.665,
+        "annotated_text": "Well, you don't need to say that yet, but I think deep down, I know [where? p=0.53 | alt: wear] you're [at.? p=0.47]",
+        "raw_text": "Well, you don't need to say that yet, but I think deep down, I know where you're at.",
+        "incomplete_sentence": true,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "where",
+            "probability": 0.53,
+            "alternative": "wear"
+          },
+          {
+            "word": "at.",
+            "probability": 0.47,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 5,
+        "speaker_id": "speaker_0",
+        "start_sec": 18.38,
+        "end_sec": 23.465,
+        "annotated_text": "[HAHAHAHA!? p=0.12] [Fuck!? p=0.14] [Cool,? p=0.69] I'll just go. [Cool!? p=0.49]",
+        "raw_text": "HAHAHAHA! Fuck! Cool, I'll just go. Cool!",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "HAHAHAHA!",
+            "probability": 0.12,
+            "alternative": null
+          },
+          {
+            "word": "Fuck!",
+            "probability": 0.14,
+            "alternative": null
+          },
+          {
+            "word": "Cool,",
+            "probability": 0.69,
+            "alternative": null
+          },
+          {
+            "word": "Cool!",
+            "probability": 0.49,
+            "alternative": null
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "anon_id": "mixed_14",
+    "session_id": "sess_mixed_14",
+    "turn_count": 8,
+    "turns": [
+      {
+        "turn_id": 1,
+        "speaker_id": "speaker_0",
+        "start_sec": 0.38,
+        "end_sec": 1.245,
+        "annotated_text": "[nothing? p=0.45] [that...? p=0.59]",
+        "raw_text": "nothing that...",
+        "incomplete_sentence": true,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "nothing",
+            "probability": 0.45,
+            "alternative": null
+          },
+          {
+            "word": "that...",
+            "probability": 0.59,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 2,
+        "speaker_id": "speaker_0",
+        "start_sec": 2.88,
+        "end_sec": 5.865,
+        "annotated_text": "is what you typically see in a case like this, such [as...? p=0.56]",
+        "raw_text": "is what you typically see in a case like this, such as...",
+        "incomplete_sentence": true,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "as...",
+            "probability": 0.56,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 3,
+        "speaker_id": "speaker_0",
+        "start_sec": 7.12,
+        "end_sec": 10.625,
+        "annotated_text": "[um,? p=0.01] a childhood where there was drugs, alcoholism.",
+        "raw_text": "um, a childhood where there was drugs, alcoholism.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "um,",
+            "probability": 0.01,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 4,
+        "speaker_id": "speaker_0",
+        "start_sec": 11.6,
+        "end_sec": 14.705,
+        "annotated_text": "[molestation,? p=0.60] things like that. None of those things occurred in my family.",
+        "raw_text": "molestation, things like that. None of those things occurred in my family.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "molestation,",
+            "probability": 0.6,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 5,
+        "speaker_id": "speaker_1",
+        "start_sec": 15.48,
+        "end_sec": 15.885,
+        "annotated_text": "[Um...? p=0.23]",
+        "raw_text": "Um...",
+        "incomplete_sentence": true,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Um...",
+            "probability": 0.23,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 6,
+        "speaker_id": "speaker_1",
+        "start_sec": 18.1,
+        "end_sec": 18.605,
+        "annotated_text": "[So...? p=0.30]",
+        "raw_text": "So...",
+        "incomplete_sentence": true,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "So...",
+            "probability": 0.3,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 7,
+        "speaker_id": "speaker_0",
+        "start_sec": 20.26,
+        "end_sec": 27.305,
+        "annotated_text": "I [don't? p=0.82 | alt: do] know. I guess we would sort of joke that my mom didn't beat me hard enough, so I don't really have [mitigation.? p=0.33]",
+        "raw_text": "I don't know. I guess we would sort of joke that my mom didn't beat me hard enough, so I don't really have mitigation.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "don't",
+            "probability": 0.82,
+            "alternative": "do"
+          },
+          {
+            "word": "mitigation.",
+            "probability": 0.33,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 8,
+        "speaker_id": "Q_ASKER",
+        "start_sec": 28.52,
+        "end_sec": 28.985,
+        "annotated_text": "[So? p=0.28] what [do? p=0.77 | alt: don't] you [mean?? p=0.28]",
+        "raw_text": "So what do you mean?",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "So",
+            "probability": 0.28,
+            "alternative": null
+          },
+          {
+            "word": "do",
+            "probability": 0.77,
+            "alternative": "don't"
+          },
+          {
+            "word": "mean?",
+            "probability": 0.28,
+            "alternative": null
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "anon_id": "mixed_15",
+    "session_id": "sess_mixed_15",
+    "turn_count": 3,
+    "turns": [
+      {
+        "turn_id": 1,
+        "speaker_id": "speaker_0",
+        "start_sec": 0.32,
+        "end_sec": 9.405,
+        "annotated_text": "[Um,? p=0.02] whenever I was little, [um,? p=0.54] my oldest nephew is, um, two years younger than I am, and so he and I were always very close.",
+        "raw_text": "Um, whenever I was little, um, my oldest nephew is, um, two years younger than I am, and so he and I were always very close.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Um,",
+            "probability": 0.02,
+            "alternative": null
+          },
+          {
+            "word": "um,",
+            "probability": 0.54,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 2,
+        "speaker_id": "speaker_0",
+        "start_sec": 10.3,
+        "end_sec": 17.745,
+        "annotated_text": "And so, whenever I was really little, I spent a lot of time with her [and? p=0.15] then whenever I [was...? p=0.38 | alt: wasn't]",
+        "raw_text": "And so, whenever I was really little, I spent a lot of time with her and then whenever I was...",
+        "incomplete_sentence": true,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "and",
+            "probability": 0.15,
+            "alternative": null
+          },
+          {
+            "word": "was...",
+            "probability": 0.38,
+            "alternative": "wasn't"
+          }
+        ]
+      },
+      {
+        "turn_id": 3,
+        "speaker_id": "speaker_1",
+        "start_sec": 18.54,
+        "end_sec": 20.845,
+        "annotated_text": "[a? p=0.42] freshman in high school, I went and lived with her.",
+        "raw_text": "a freshman in high school, I went and lived with her.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "a",
+            "probability": 0.42,
+            "alternative": null
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "anon_id": "mixed_16",
+    "session_id": "sess_mixed_16",
+    "turn_count": 10,
+    "turns": [
+      {
+        "turn_id": 1,
+        "speaker_id": "speaker_0",
+        "start_sec": 0.0,
+        "end_sec": 5.385,
+        "annotated_text": "[Is? p=0.01 | alt: isn't] it your testimony that Mr. Andrew was [also...? p=0.60]",
+        "raw_text": "Is it your testimony that Mr. Andrew was also...",
+        "incomplete_sentence": true,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Is",
+            "probability": 0.01,
+            "alternative": "isn't"
+          },
+          {
+            "word": "also...",
+            "probability": 0.6,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 2,
+        "speaker_id": "speaker_0",
+        "start_sec": 5.98,
+        "end_sec": 7.545,
+        "annotated_text": "[line? p=0.38] [what? p=0.18] he said.",
+        "raw_text": "line what he said.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "line",
+            "probability": 0.38,
+            "alternative": null
+          },
+          {
+            "word": "what",
+            "probability": 0.18,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 3,
+        "speaker_id": "speaker_0",
+        "start_sec": 8.32,
+        "end_sec": 11.265,
+        "annotated_text": "[that? p=0.63] he heard you say those things regarding your priorities. [One? p=0.07 | alt: won] hundred percent.",
+        "raw_text": "that he heard you say those things regarding your priorities. One hundred percent.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "that",
+            "probability": 0.63,
+            "alternative": null
+          },
+          {
+            "word": "One",
+            "probability": 0.07,
+            "alternative": "won"
+          }
+        ]
+      },
+      {
+        "turn_id": 4,
+        "speaker_id": "speaker_0",
+        "start_sec": 12.28,
+        "end_sec": 15.54,
+        "annotated_text": "[Do? p=0.42 | alt: don't] you also deny what Mr. Andrews said regarding those statements?",
+        "raw_text": "Do you also deny what Mr. Andrews said regarding those statements?",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Do",
+            "probability": 0.42,
+            "alternative": "don't"
+          }
+        ]
+      },
+      {
+        "turn_id": 5,
+        "speaker_id": "speaker_0",
+        "start_sec": 16.3,
+        "end_sec": 17.86,
+        "annotated_text": "[100%.? p=0.58] Did he just make that up, too?",
+        "raw_text": "100%. Did he just make that up, too?",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "100%.",
+            "probability": 0.58,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 6,
+        "speaker_id": "Q_ASKER",
+        "start_sec": 17.98,
+        "end_sec": 18.5,
+        "annotated_text": "Is that not true?",
+        "raw_text": "Is that not true?",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": []
+      },
+      {
+        "turn_id": 7,
+        "speaker_id": "speaker_0",
+        "start_sec": 19.04,
+        "end_sec": 19.225,
+        "annotated_text": "Totally [fine.? p=0.13]",
+        "raw_text": "Totally fine.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "fine.",
+            "probability": 0.13,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 8,
+        "speaker_id": "speaker_0",
+        "start_sec": 19.9,
+        "end_sec": 19.945,
+        "annotated_text": "",
+        "raw_text": "",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": []
+      },
+      {
+        "turn_id": 9,
+        "speaker_id": "Q_ASKER",
+        "start_sec": 20.64,
+        "end_sec": 21.3,
+        "annotated_text": "[Do? p=0.40 | alt: don't] I have remorse?",
+        "raw_text": "Do I have remorse?",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Do",
+            "probability": 0.4,
+            "alternative": "don't"
+          }
+        ]
+      },
+      {
+        "turn_id": 10,
+        "speaker_id": "speaker_0",
+        "start_sec": 21.68,
+        "end_sec": 21.965,
+        "annotated_text": "[Absolutely.? p=0.60]",
+        "raw_text": "Absolutely.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Absolutely.",
+            "probability": 0.6,
+            "alternative": null
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "anon_id": "mixed_17",
+    "session_id": "sess_mixed_17",
+    "turn_count": 11,
+    "turns": [
+      {
+        "turn_id": 1,
+        "speaker_id": "speaker_0",
+        "start_sec": 0.0,
+        "end_sec": 0.105,
+        "annotated_text": "[I? p=0.00] [mean...? p=0.09]",
+        "raw_text": "I mean...",
+        "incomplete_sentence": true,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "I",
+            "probability": 0.0,
+            "alternative": null
+          },
+          {
+            "word": "mean...",
+            "probability": 0.09,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 2,
+        "speaker_id": "speaker_0",
+        "start_sec": 0.88,
+        "end_sec": 3.025,
+        "annotated_text": "[I? p=0.64] trouble [-made? p=0.56] you both back.",
+        "raw_text": "I trouble-made you both back.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "I",
+            "probability": 0.64,
+            "alternative": null
+          },
+          {
+            "word": "-made",
+            "probability": 0.56,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 3,
+        "speaker_id": "speaker_0",
+        "start_sec": 3.8,
+        "end_sec": 5.26,
+        "annotated_text": "[Should? p=0.49 | alt: shouldn't] we go to a vote?",
+        "raw_text": "Should we go to a vote?",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Should",
+            "probability": 0.49,
+            "alternative": "shouldn't"
+          }
+        ]
+      },
+      {
+        "turn_id": 4,
+        "speaker_id": "Q_ASKER",
+        "start_sec": 6.08,
+        "end_sec": 7.58,
+        "annotated_text": "[Sure,? p=0.40] can you confirm any of it?",
+        "raw_text": "Sure, can you confirm any of it?",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Sure,",
+            "probability": 0.4,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 5,
+        "speaker_id": "speaker_0",
+        "start_sec": 7.72,
+        "end_sec": 8.965,
+        "annotated_text": "[That? p=0.63] [was? p=0.74 | alt: wasn't] [a? p=0.52] werewolf [who? p=0.38] got cold feet.",
+        "raw_text": "That was a werewolf who got cold feet.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "That",
+            "probability": 0.63,
+            "alternative": null
+          },
+          {
+            "word": "was",
+            "probability": 0.74,
+            "alternative": "wasn't"
+          },
+          {
+            "word": "a",
+            "probability": 0.52,
+            "alternative": null
+          },
+          {
+            "word": "who",
+            "probability": 0.38,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 6,
+        "speaker_id": "speaker_0",
+        "start_sec": 10.84,
+        "end_sec": 10.965,
+        "annotated_text": "",
+        "raw_text": "",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": []
+      },
+      {
+        "turn_id": 7,
+        "speaker_id": "Q_ASKER",
+        "start_sec": 14.0,
+        "end_sec": 14.92,
+        "annotated_text": "[Mike,? p=0.61] any [contribution?? p=0.54]",
+        "raw_text": "Mike, any contribution?",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Mike,",
+            "probability": 0.61,
+            "alternative": null
+          },
+          {
+            "word": "contribution?",
+            "probability": 0.54,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 8,
+        "speaker_id": "speaker_0",
+        "start_sec": 15.32,
+        "end_sec": 18.725,
+        "annotated_text": "[Tanner.? p=0.63] Okay, I called it all. Calling it now. We can go to [vote.? p=0.47]",
+        "raw_text": "Tanner. Okay, I called it all. Calling it now. We can go to vote.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Tanner.",
+            "probability": 0.63,
+            "alternative": null
+          },
+          {
+            "word": "vote.",
+            "probability": 0.47,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 9,
+        "speaker_id": "Q_ASKER",
+        "start_sec": 20.22,
+        "end_sec": 20.765,
+        "annotated_text": "[So? p=0.26] who [did? p=0.16 | alt: didn't] we kill?",
+        "raw_text": "So who did we kill?",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "So",
+            "probability": 0.26,
+            "alternative": null
+          },
+          {
+            "word": "did",
+            "probability": 0.16,
+            "alternative": "didn't"
+          }
+        ]
+      },
+      {
+        "turn_id": 10,
+        "speaker_id": "speaker_0",
+        "start_sec": 22.2,
+        "end_sec": 22.445,
+        "annotated_text": "",
+        "raw_text": "",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": []
+      },
+      {
+        "turn_id": 11,
+        "speaker_id": "speaker_1",
+        "start_sec": 24.58,
+        "end_sec": 24.945,
+        "annotated_text": "[Oh,? p=0.52] they're [go? p=0.16] [-? p=0.15]",
+        "raw_text": "Oh, they're go-",
+        "incomplete_sentence": true,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Oh,",
+            "probability": 0.52,
+            "alternative": null
+          },
+          {
+            "word": "go",
+            "probability": 0.16,
+            "alternative": null
+          },
+          {
+            "word": "-",
+            "probability": 0.15,
+            "alternative": null
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "anon_id": "mixed_18",
+    "session_id": "sess_mixed_18",
+    "turn_count": 4,
+    "turns": [
+      {
+        "turn_id": 1,
+        "speaker_id": "speaker_0",
+        "start_sec": 0.0,
+        "end_sec": 9.38,
+        "annotated_text": "[My? p=0.59] statement is this. I've never been alone with Candace Conti. [I've? p=0.60] never molested Candace Conti. [You? p=0.47] really think she's just making this up?",
+        "raw_text": "My statement is this. I've never been alone with Candace Conti. I've never molested Candace Conti. You really think she's just making this up?",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "My",
+            "probability": 0.59,
+            "alternative": null
+          },
+          {
+            "word": "I've",
+            "probability": 0.6,
+            "alternative": null
+          },
+          {
+            "word": "You",
+            "probability": 0.47,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 2,
+        "speaker_id": "Q_ASKER",
+        "start_sec": 9.76,
+        "end_sec": 10.6,
+        "annotated_text": "What do you mean, [think?? p=0.22]",
+        "raw_text": "What do you mean, think?",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "think?",
+            "probability": 0.22,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 3,
+        "speaker_id": "Q_ASKER",
+        "start_sec": 11.08,
+        "end_sec": 14.66,
+        "annotated_text": "I just told you. You never did any field service with her alone?",
+        "raw_text": "I just told you. You never did any field service with her alone?",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": []
+      },
+      {
+        "turn_id": 4,
+        "speaker_id": "speaker_0",
+        "start_sec": 15.04,
+        "end_sec": 24.725,
+        "annotated_text": "Never! I've [never...? p=0.67] Okay, get this right. I've never been alone with Candace Conti. Ever. Never have I been alone with Candace Conti. [Kendrick.? p=0.44]",
+        "raw_text": "Never! I've never... Okay, get this right. I've never been alone with Candace Conti. Ever. Never have I been alone with Candace Conti. Kendrick.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "never...",
+            "probability": 0.67,
+            "alternative": null
+          },
+          {
+            "word": "Kendrick.",
+            "probability": 0.44,
+            "alternative": null
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "anon_id": "mixed_19",
+    "session_id": "sess_mixed_19",
+    "turn_count": 6,
+    "turns": [
+      {
+        "turn_id": 1,
+        "speaker_id": "Q_ASKER",
+        "start_sec": 0.0,
+        "end_sec": 1.56,
+        "annotated_text": "[I? p=0.11] [had? p=0.08 | alt: hadn't] [to,? p=0.84 | alt: two] like, [de? p=0.47] -confirm, like, you were [gonna? p=0.68] say that?",
+        "raw_text": "I had to, like, de -confirm, like, you were gonna say that?",
+        "incomplete_sentence": true,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "I",
+            "probability": 0.11,
+            "alternative": null
+          },
+          {
+            "word": "had",
+            "probability": 0.08,
+            "alternative": "hadn't"
+          },
+          {
+            "word": "to,",
+            "probability": 0.84,
+            "alternative": "two"
+          },
+          {
+            "word": "de",
+            "probability": 0.47,
+            "alternative": null
+          },
+          {
+            "word": "gonna",
+            "probability": 0.68,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 2,
+        "speaker_id": "speaker_0",
+        "start_sec": 1.66,
+        "end_sec": 3.305,
+        "annotated_text": "I [was? p=0.83 | alt: wasn't] gonna be like, [like,? p=0.02] [mike's? p=0.48] [f***ing...? p=0.24] [I? p=0.32] [am? p=0.46] [confirm? p=0.50] your story.",
+        "raw_text": "I was gonna be like, like, mike's f***ing... I am confirm your story.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "was",
+            "probability": 0.83,
+            "alternative": "wasn't"
+          },
+          {
+            "word": "like,",
+            "probability": 0.02,
+            "alternative": null
+          },
+          {
+            "word": "mike's",
+            "probability": 0.48,
+            "alternative": null
+          },
+          {
+            "word": "f***ing...",
+            "probability": 0.24,
+            "alternative": null
+          },
+          {
+            "word": "I",
+            "probability": 0.32,
+            "alternative": null
+          },
+          {
+            "word": "am",
+            "probability": 0.46,
+            "alternative": null
+          },
+          {
+            "word": "confirm",
+            "probability": 0.5,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 3,
+        "speaker_id": "speaker_0",
+        "start_sec": 4.16,
+        "end_sec": 9.305,
+        "annotated_text": "[I? p=0.48] don't believe you as much as I believe [the? p=0.09] mic [might? p=0.18] sound. [Cause? p=0.06] we just talked about that. [Yeah,? p=0.58] you took it from my hand. Yeah.",
+        "raw_text": "I don't believe you as much as I believe the mic might sound. Cause we just talked about that. Yeah, you took it from my hand. Yeah.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "I",
+            "probability": 0.48,
+            "alternative": null
+          },
+          {
+            "word": "the",
+            "probability": 0.09,
+            "alternative": null
+          },
+          {
+            "word": "might",
+            "probability": 0.18,
+            "alternative": null
+          },
+          {
+            "word": "Cause",
+            "probability": 0.06,
+            "alternative": null
+          },
+          {
+            "word": "Yeah,",
+            "probability": 0.58,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 4,
+        "speaker_id": "speaker_1",
+        "start_sec": 14.12,
+        "end_sec": 15.125,
+        "annotated_text": "[One? p=0.63 | alt: won] of you is the [one? p=0.74 | alt: won] [-? p=0.06]",
+        "raw_text": "One of you is the one-",
+        "incomplete_sentence": true,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "One",
+            "probability": 0.63,
+            "alternative": "won"
+          },
+          {
+            "word": "one",
+            "probability": 0.74,
+            "alternative": "won"
+          },
+          {
+            "word": "-",
+            "probability": 0.06,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 5,
+        "speaker_id": "speaker_0",
+        "start_sec": 16.36,
+        "end_sec": 19.605,
+        "annotated_text": "[Ooh,? p=0.60] I know it was not me. I know it wasn't, [Jessen.? p=0.31]",
+        "raw_text": "Ooh, I know it was not me. I know it wasn't, Jessen.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Ooh,",
+            "probability": 0.6,
+            "alternative": null
+          },
+          {
+            "word": "Jessen.",
+            "probability": 0.31,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 6,
+        "speaker_id": "speaker_0",
+        "start_sec": 21.56,
+        "end_sec": 24.965,
+        "annotated_text": "[It? p=0.26] [wasn't? p=0.60 | alt: was] me, it [wasn't? p=0.61 | alt: was] me, [I? p=0.37] [should? p=0.40 | alt: shouldn't] say.",
+        "raw_text": "It wasn't me, it wasn't me, I should say.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "It",
+            "probability": 0.26,
+            "alternative": null
+          },
+          {
+            "word": "wasn't",
+            "probability": 0.6,
+            "alternative": "was"
+          },
+          {
+            "word": "wasn't",
+            "probability": 0.61,
+            "alternative": "was"
+          },
+          {
+            "word": "I",
+            "probability": 0.37,
+            "alternative": null
+          },
+          {
+            "word": "should",
+            "probability": 0.4,
+            "alternative": "shouldn't"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "anon_id": "mixed_20",
+    "session_id": "sess_mixed_20",
+    "turn_count": 11,
+    "turns": [
+      {
+        "turn_id": 1,
+        "speaker_id": "speaker_1",
+        "start_sec": 0.0,
+        "end_sec": 0.365,
+        "annotated_text": "[Mmm.? p=0.08]",
+        "raw_text": "Mmm.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Mmm.",
+            "probability": 0.08,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 2,
+        "speaker_id": "speaker_0",
+        "start_sec": 1.14,
+        "end_sec": 2.965,
+        "annotated_text": "[Initially...? p=0.18]",
+        "raw_text": "Initially...",
+        "incomplete_sentence": true,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Initially...",
+            "probability": 0.18,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 3,
+        "speaker_id": "speaker_0",
+        "start_sec": 4.24,
+        "end_sec": 9.865,
+        "annotated_text": "I've never been on Twitter, I don't even know what it looks like, I just have heard about it through other people.",
+        "raw_text": "I've never been on Twitter, I don't even know what it looks like, I just have heard about it through other people.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": []
+      },
+      {
+        "turn_id": 4,
+        "speaker_id": "speaker_0",
+        "start_sec": 10.46,
+        "end_sec": 11.685,
+        "annotated_text": "reading about it in magazines.",
+        "raw_text": "reading about it in magazines.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": []
+      },
+      {
+        "turn_id": 5,
+        "speaker_id": "speaker_0",
+        "start_sec": 12.96,
+        "end_sec": 13.445,
+        "annotated_text": "[Umm...? p=0.33]",
+        "raw_text": "Umm...",
+        "incomplete_sentence": true,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Umm...",
+            "probability": 0.33,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 6,
+        "speaker_id": "speaker_0",
+        "start_sec": 14.56,
+        "end_sec": 20.025,
+        "annotated_text": "In 2009, somebody started a false Twitter account in my name and began tweeting, pretending they were me, [so...? p=0.57]",
+        "raw_text": "In 2009, somebody started a false Twitter account in my name and began tweeting, pretending they were me, so...",
+        "incomplete_sentence": true,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "so...",
+            "probability": 0.57,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 7,
+        "speaker_id": "speaker_0",
+        "start_sec": 20.9,
+        "end_sec": 21.705,
+        "annotated_text": "I had that shut down.",
+        "raw_text": "I had that shut down.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": []
+      },
+      {
+        "turn_id": 8,
+        "speaker_id": "speaker_0",
+        "start_sec": 22.66,
+        "end_sec": 23.665,
+        "annotated_text": "[Um,? p=0.05] and then [it...? p=0.47]",
+        "raw_text": "Um, and then it...",
+        "incomplete_sentence": true,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Um,",
+            "probability": 0.05,
+            "alternative": null
+          },
+          {
+            "word": "it...",
+            "probability": 0.47,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 9,
+        "speaker_id": "speaker_0",
+        "start_sec": 25.68,
+        "end_sec": 26.765,
+        "annotated_text": "[it? p=0.45] just became sort [of...? p=0.62]",
+        "raw_text": "it just became sort of...",
+        "incomplete_sentence": true,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "it",
+            "probability": 0.45,
+            "alternative": null
+          },
+          {
+            "word": "of...",
+            "probability": 0.62,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 10,
+        "speaker_id": "speaker_1",
+        "start_sec": 28.86,
+        "end_sec": 32.605,
+        "annotated_text": "[an? p=0.50] idea that I thought of in February, and we decided to go [for? p=0.71 | alt: four] it.",
+        "raw_text": "an idea that I thought of in February, and we decided to go for it.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "an",
+            "probability": 0.5,
+            "alternative": null
+          },
+          {
+            "word": "for",
+            "probability": 0.71,
+            "alternative": "four"
+          }
+        ]
+      },
+      {
+        "turn_id": 11,
+        "speaker_id": "speaker_1",
+        "start_sec": 33.52,
+        "end_sec": 33.985,
+        "annotated_text": "",
+        "raw_text": "",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": []
+      }
+    ]
+  },
+  {
+    "anon_id": "mixed_21",
+    "session_id": "sess_mixed_21",
+    "turn_count": 5,
+    "turns": [
+      {
+        "turn_id": 1,
+        "speaker_id": "speaker_0",
+        "start_sec": 0.54,
+        "end_sec": 9.565,
+        "annotated_text": "[Umm,? p=0.29] I was born in Durango, Colorado. My mother was a single mother. I have two older sisters, Karen Berry.",
+        "raw_text": "Umm, I was born in Durango, Colorado. My mother was a single mother. I have two older sisters, Karen Berry.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Umm,",
+            "probability": 0.29,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 2,
+        "speaker_id": "speaker_0",
+        "start_sec": 10.26,
+        "end_sec": 20.225,
+        "annotated_text": "[And? p=0.23] [Dory? p=0.62] Garner, I have one older brother. I was, um, quite a bit younger than all of them, so I primarily grew up by myself.",
+        "raw_text": "And Dory Garner, I have one older brother. I was, um, quite a bit younger than all of them, so I primarily grew up by myself.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "And",
+            "probability": 0.23,
+            "alternative": null
+          },
+          {
+            "word": "Dory",
+            "probability": 0.62,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 3,
+        "speaker_id": "speaker_0",
+        "start_sec": 21.08,
+        "end_sec": 27.745,
+        "annotated_text": "[Um,? p=0.19] I lived back and forth from Texas [and? p=0.55] New Mexico until I was about six years old.",
+        "raw_text": "Um, I lived back and forth from Texas and New Mexico until I was about six years old.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Um,",
+            "probability": 0.19,
+            "alternative": null
+          },
+          {
+            "word": "and",
+            "probability": 0.55,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 4,
+        "speaker_id": "speaker_0",
+        "start_sec": 28.5,
+        "end_sec": 31.665,
+        "annotated_text": "At that point, my mother married my stepfather.",
+        "raw_text": "At that point, my mother married my stepfather.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": []
+      },
+      {
+        "turn_id": 5,
+        "speaker_id": "speaker_0",
+        "start_sec": 32.34,
+        "end_sec": 37.765,
+        "annotated_text": "[Um,? p=0.08] I lived, we lived in New Mexico until I was approximately in fifth grade.",
+        "raw_text": "Um, I lived, we lived in New Mexico until I was approximately in fifth grade.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Um,",
+            "probability": 0.08,
+            "alternative": null
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "anon_id": "mixed_22",
+    "session_id": "sess_mixed_22",
+    "turn_count": 7,
+    "turns": [
+      {
+        "turn_id": 1,
+        "speaker_id": "Q_ASKER",
+        "start_sec": 0.0,
+        "end_sec": 8.56,
+        "annotated_text": "[Yes,? p=0.21] I believe she was in [a,? p=0.23] [ah,? p=0.02] an abusive relationship. And [do? p=0.70 | alt: don't] you believe, in your expert opinion, that Jodi was a battered woman?",
+        "raw_text": "Yes, I believe she was in a, ah, an abusive relationship. And do you believe, in your expert opinion, that Jodi was a battered woman?",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Yes,",
+            "probability": 0.21,
+            "alternative": null
+          },
+          {
+            "word": "a,",
+            "probability": 0.23,
+            "alternative": null
+          },
+          {
+            "word": "ah,",
+            "probability": 0.02,
+            "alternative": null
+          },
+          {
+            "word": "do",
+            "probability": 0.7,
+            "alternative": "don't"
+          }
+        ]
+      },
+      {
+        "turn_id": 2,
+        "speaker_id": "Q_ASKER",
+        "start_sec": 8.86,
+        "end_sec": 9.92,
+        "annotated_text": "Or is a battered woman?",
+        "raw_text": "Or is a battered woman?",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": []
+      },
+      {
+        "turn_id": 3,
+        "speaker_id": "Q_ASKER",
+        "start_sec": 10.16,
+        "end_sec": 12.36,
+        "annotated_text": "Yes, I do. I [want? p=0.60 | alt: won't] to ask you, why?",
+        "raw_text": "Yes, I do. I want to ask you, why?",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "want",
+            "probability": 0.6,
+            "alternative": "won't"
+          }
+        ]
+      },
+      {
+        "turn_id": 4,
+        "speaker_id": "Q_ASKER",
+        "start_sec": 12.94,
+        "end_sec": 15.225,
+        "annotated_text": "Why do you say that Jodi [is? p=0.50 | alt: isn't] a battered woman?",
+        "raw_text": "Why do you say that Jodi is a battered woman?",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "is",
+            "probability": 0.5,
+            "alternative": "isn't"
+          }
+        ]
+      },
+      {
+        "turn_id": 5,
+        "speaker_id": "speaker_0",
+        "start_sec": 17.02,
+        "end_sec": 19.745,
+        "annotated_text": "[uh,? p=0.06] certainly putting down friends and family.",
+        "raw_text": "uh, certainly putting down friends and family.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "uh,",
+            "probability": 0.06,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 6,
+        "speaker_id": "speaker_0",
+        "start_sec": 20.4,
+        "end_sec": 20.605,
+        "annotated_text": "[uh...? p=0.14]",
+        "raw_text": "uh...",
+        "incomplete_sentence": true,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "uh...",
+            "probability": 0.14,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 7,
+        "speaker_id": "speaker_0",
+        "start_sec": 22.12,
+        "end_sec": 28.985,
+        "annotated_text": "There's some destruction of property, but, [uh,? p=0.12] it seems minimal at this point. Um, a change in the victim's [pers...? p=0.17]",
+        "raw_text": "There's some destruction of property, but, uh, it seems minimal at this point. Um, a change in the victim's pers...",
+        "incomplete_sentence": true,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "uh,",
+            "probability": 0.12,
+            "alternative": null
+          },
+          {
+            "word": "pers...",
+            "probability": 0.17,
+            "alternative": null
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "anon_id": "mixed_23",
+    "session_id": "sess_mixed_23",
+    "turn_count": 4,
+    "turns": [
+      {
+        "turn_id": 1,
+        "speaker_id": "speaker_0",
+        "start_sec": 0.0,
+        "end_sec": 9.305,
+        "annotated_text": "If a person in the congregation was involved in activities like that, the elders would sit down with the individual and try to determine what's going on.",
+        "raw_text": "If a person in the congregation was involved in activities like that, the elders would sit down with the individual and try to determine what's going on.",
+        "incomplete_sentence": true,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": []
+      },
+      {
+        "turn_id": 2,
+        "speaker_id": "speaker_0",
+        "start_sec": 10.12,
+        "end_sec": 14.545,
+        "annotated_text": "The objective is, as Jesus said, if you have [a? p=0.41] hundred sheep and [one's? p=0.59] [lost...? p=0.60]",
+        "raw_text": "The objective is, as Jesus said, if you have a hundred sheep and one's lost...",
+        "incomplete_sentence": true,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "a",
+            "probability": 0.41,
+            "alternative": null
+          },
+          {
+            "word": "one's",
+            "probability": 0.59,
+            "alternative": null
+          },
+          {
+            "word": "lost...",
+            "probability": 0.6,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 3,
+        "speaker_id": "speaker_0",
+        "start_sec": 15.14,
+        "end_sec": 30.805,
+        "annotated_text": "[leave? p=0.49 | alt: live] the 99 and go find the one. So the objective is to help that individual. Whether it's, [uh,? p=0.57] [worshipping,? p=0.66] uh, something like that, [or...? p=0.52] [or? p=0.58] Christmas, celebrating Christmas, or fornication, or whatever it happens to be.",
+        "raw_text": "leave the 99 and go find the one. So the objective is to help that individual. Whether it's, uh, worshipping, uh, something like that, or... or Christmas, celebrating Christmas, or fornication, or whatever it happens to be.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "leave",
+            "probability": 0.49,
+            "alternative": "live"
+          },
+          {
+            "word": "uh,",
+            "probability": 0.57,
+            "alternative": null
+          },
+          {
+            "word": "worshipping,",
+            "probability": 0.66,
+            "alternative": null
+          },
+          {
+            "word": "or...",
+            "probability": 0.52,
+            "alternative": null
+          },
+          {
+            "word": "or",
+            "probability": 0.58,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 4,
+        "speaker_id": "speaker_0",
+        "start_sec": 31.98,
+        "end_sec": 39.985,
+        "annotated_text": "[the? p=0.33] elders will meet with that individual based on the person's, [erm,? p=0.42] attitude at that time [will? p=0.47] have a direct relevance to what they do.",
+        "raw_text": "the elders will meet with that individual based on the person's, erm, attitude at that time will have a direct relevance to what they do.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "the",
+            "probability": 0.33,
+            "alternative": null
+          },
+          {
+            "word": "erm,",
+            "probability": 0.42,
+            "alternative": null
+          },
+          {
+            "word": "will",
+            "probability": 0.47,
+            "alternative": null
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "anon_id": "mixed_24",
+    "session_id": "sess_mixed_24",
+    "turn_count": 5,
+    "turns": [
+      {
+        "turn_id": 1,
+        "speaker_id": "speaker_0",
+        "start_sec": 0.04,
+        "end_sec": 4.285,
+        "annotated_text": "[Yeah,? p=0.05] [you? p=0.53] took it from my hand. [Yeah.? p=0.59]",
+        "raw_text": "Yeah, you took it from my hand. Yeah.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Yeah,",
+            "probability": 0.05,
+            "alternative": null
+          },
+          {
+            "word": "you",
+            "probability": 0.53,
+            "alternative": null
+          },
+          {
+            "word": "Yeah.",
+            "probability": 0.59,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 2,
+        "speaker_id": "speaker_1",
+        "start_sec": 9.14,
+        "end_sec": 10.005,
+        "annotated_text": "[One? p=0.57 | alt: won] of you is [the? p=0.38] [-? p=0.13]",
+        "raw_text": "One of you is the-",
+        "incomplete_sentence": true,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "One",
+            "probability": 0.57,
+            "alternative": "won"
+          },
+          {
+            "word": "the",
+            "probability": 0.38,
+            "alternative": null
+          },
+          {
+            "word": "-",
+            "probability": 0.13,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 3,
+        "speaker_id": "speaker_0",
+        "start_sec": 11.46,
+        "end_sec": 14.605,
+        "annotated_text": "[Ooh,? p=0.52] I know it was not me. [I? p=0.50] know it wasn't [Jessen.? p=0.31]",
+        "raw_text": "Ooh, I know it was not me. I know it wasn't Jessen.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "Ooh,",
+            "probability": 0.52,
+            "alternative": null
+          },
+          {
+            "word": "I",
+            "probability": 0.5,
+            "alternative": null
+          },
+          {
+            "word": "Jessen.",
+            "probability": 0.31,
+            "alternative": null
+          }
+        ]
+      },
+      {
+        "turn_id": 4,
+        "speaker_id": "speaker_0",
+        "start_sec": 16.56,
+        "end_sec": 23.185,
+        "annotated_text": "[It? p=0.52] [wasn't,? p=0.72 | alt: was] it ain't me. [I? p=0.39] [just? p=0.26] [didn't? p=0.72 | alt: did] know that. So we know it's Mike.",
+        "raw_text": "It wasn't, it ain't me. I just didn't know that. So we know it's Mike.",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": [
+          {
+            "word": "It",
+            "probability": 0.52,
+            "alternative": null
+          },
+          {
+            "word": "wasn't,",
+            "probability": 0.72,
+            "alternative": "was"
+          },
+          {
+            "word": "I",
+            "probability": 0.39,
+            "alternative": null
+          },
+          {
+            "word": "just",
+            "probability": 0.26,
+            "alternative": null
+          },
+          {
+            "word": "didn't",
+            "probability": 0.72,
+            "alternative": "did"
+          }
+        ]
+      },
+      {
+        "turn_id": 5,
+        "speaker_id": "Q_ASKER",
+        "start_sec": 24.14,
+        "end_sec": 25.005,
+        "annotated_text": "Oh, so there's no tanner?",
+        "raw_text": "Oh, so there's no tanner?",
+        "incomplete_sentence": false,
+        "forced_split": false,
+        "overlap_flag": false,
+        "low_confidence_words": []
+      }
+    ]
+  }
+]

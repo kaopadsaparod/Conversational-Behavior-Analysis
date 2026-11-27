@@ -712,3 +712,39 @@ def test_is_speculative_result_valid_reconciliation() -> None:
     assert pipeline._mailbox.peek() is None
     pipeline.close()
 
+
+def test_mcp_ingest_media_allows_spoken_firewall_words(tmp_path: Path, monkeypatch) -> None:
+    """Verify DCESessionStore.ingest_media allows spoken 'anomaly'/'stress' in transcript text."""
+    import wave
+    from dce.mcp_server import DCESessionStore
+
+    wav_path = tmp_path / "spoken_anomaly.wav"
+    sr = 16000
+    t = np.linspace(0.0, 2.0, 2 * sr, endpoint=False)
+    sig = (0.2 * np.sin(2.0 * np.pi * 180.0 * t) * 32767.0).astype(np.int16)
+    with wave.open(str(wav_path), "wb") as wf:
+        wf.setnchannels(1)
+        wf.setsampwidth(2)
+        wf.setframerate(sr)
+        wf.writeframes(sig.tobytes())
+
+    store = DCESessionStore()
+    res = store.ingest_media(
+        media_path=str(wav_path),
+        session_id="test_spoken_firewall_words",
+        use_asr=False,
+        transcript_override=[
+            {
+                "text": "June 4th is an anomaly and caused stress.",
+                "words": [
+                    {"word": "anomaly", "start": 0.5, "end": 0.9, "probability": 0.45},
+                    {"word": "stress", "start": 1.2, "end": 1.6, "probability": 0.50},
+                ],
+            }
+        ],
+    )
+    assert res["turn_count"] >= 1
+    combined_text = " ".join(t["raw_text"] for t in res["turns"])
+    assert "anomaly" in combined_text.lower()
+
+

@@ -1,0 +1,392 @@
+{
+  "anon_clip_01": {
+    "session_id": "anon_clip_01",
+    "verdicts": [
+      {
+        "verdict": "CONSISTENT",
+        "source_turn_id": 11,
+        "prior_turn_id": 1,
+        "explanation": "No internal semantic contradiction or evasion detected in transcript window.",
+        "confidence": 0.8
+      }
+    ],
+    "claims": []
+  },
+  "anon_clip_02": {
+    "session_id": "anon_clip_02",
+    "verdicts": [
+      {
+        "verdict": "UNVERIFIABLE",
+        "source_turn_id": 4,
+        "prior_turn_id": 2,
+        "explanation": "[EVASION] Deflects direct cross-examination question with rhetorical counter-questions.",
+        "confidence": 0.85
+      }
+    ],
+    "claims": []
+  },
+  "anon_clip_03": {
+    "session_id": "anon_clip_03",
+    "verdicts": [
+      {
+        "verdict": "CONSISTENT",
+        "source_turn_id": 6,
+        "prior_turn_id": 1,
+        "explanation": "No internal semantic contradiction or evasion detected in transcript window.",
+        "confidence": 0.8
+      }
+    ],
+    "claims": []
+  },
+  "anon_clip_04": {
+    "session_id": "anon_clip_04",
+    "verdicts": [
+      {
+        "verdict": "CONSISTENT",
+        "source_turn_id": 5,
+        "prior_turn_id": 1,
+        "explanation": "No internal semantic contradiction or evasion detected in transcript window.",
+        "confidence": 0.8
+      }
+    ],
+    "claims": []
+  },
+  "anon_clip_05": {
+    "session_id": "anon_clip_05",
+    "verdicts": [
+      {
+        "verdict": "CONSISTENT",
+        "source_turn_id": 3,
+        "prior_turn_id": 1,
+        "explanation": "No internal semantic contradiction or evasion detected in transcript window.",
+        "confidence": 0.8
+      }
+    ],
+    "claims": []
+  },
+  "anon_clip_06": {
+    "session_id": "anon_clip_06",
+    "verdicts": [
+      {
+        "verdict": "CONSISTENT",
+        "source_turn_id": 8,
+        "prior_turn_id": 1,
+        "explanation": "No internal semantic contradiction or evasion detected in transcript window.",
+        "confidence": 0.8
+      }
+    ],
+    "claims": []
+  },
+  "anon_clip_07": {
+    "session_id": "anon_clip_07",
+    "verdicts": [
+      {
+        "verdict": "CONSISTENT",
+        "source_turn_id": 5,
+        "prior_turn_id": 1,
+        "explanation": "No internal semantic contradiction or evasion detected in transcript window.",
+        "confidence": 0.8
+      }
+    ],
+    "claims": []
+  },
+  "anon_clip_08": {
+    "session_id": "anon_clip_08",
+    "verdicts": [
+      {
+        "verdict": "CONSISTENT",
+        "source_turn_id": 4,
+        "prior_turn_id": 1,
+        "explanation": "No internal semantic contradiction or evasion detected in transcript window.",
+        "confidence": 0.8
+      }
+    ],
+    "claims": []
+  },
+  "anon_clip_09": {
+    "session_id": "anon_clip_09",
+    "verdicts": [
+      {
+        "verdict": "CONSISTENT",
+        "source_turn_id": 1,
+        "prior_turn_id": null,
+        "explanation": "No internal semantic contradiction or evasion detected in transcript window.",
+        "confidence": 0.8
+      }
+    ],
+    "claims": []
+  },
+  "anon_clip_10": {
+    "session_id": "anon_clip_10",
+    "verdicts": [
+      {
+        "verdict": "CONSISTENT",
+        "source_turn_id": 4,
+        "prior_turn_id": 1,
+        "explanation": "No internal semantic contradiction or evasion detected in transcript window.",
+        "confidence": 0.8
+      }
+    ],
+    "claims": []
+  },
+  "anon_clip_11": {
+    "session_id": "anon_clip_11",
+    "verdicts": [
+      {
+        "verdict": "UNVERIFIABLE",
+        "source_turn_id": 2,
+        "prior_turn_id": 1,
+        "explanation": "[EVASION] Evades yes/no question by disputing the definition of stalking.",
+        "confidence": 0.85
+      }
+    ],
+    "claims": []
+  },
+  "anon_clip_12": {
+    "session_id": "anon_clip_12",
+    "verdicts": [
+      {
+        "verdict": "CONSISTENT",
+        "source_turn_id": 6,
+        "prior_turn_id": 1,
+        "explanation": "No internal semantic contradiction or evasion detected in transcript window.",
+        "confidence": 0.8
+      }
+    ],
+    "claims": []
+  },
+  "anon_ext_01": {
+    "session_id": "anon_ext_01",
+    "verdicts": [
+      {
+        "verdict": "CONSISTENT",
+        "source_turn_id": 3,
+        "prior_turn_id": 1,
+        "explanation": "No internal semantic contradiction or evasion detected in transcript window.",
+        "confidence": 0.8
+      }
+    ],
+    "claims": []
+  },
+  "anon_ext_02": {
+    "session_id": "anon_ext_02",
+    "verdicts": [
+      {
+        "verdict": "CONSISTENT",
+        "source_turn_id": 8,
+        "prior_turn_id": 1,
+        "explanation": "No internal semantic contradiction or evasion detected in transcript window.",
+        "confidence": 0.8
+      }
+    ],
+    "claims": []
+  },
+  "anon_ext_03": {
+    "session_id": "anon_ext_03",
+    "verdicts": [
+      {
+        "verdict": "CONSISTENT",
+        "source_turn_id": 9,
+        "prior_turn_id": 1,
+        "explanation": "No internal semantic contradiction or evasion detected in transcript window.",
+        "confidence": 0.8
+      }
+    ],
+    "claims": []
+  },
+  "anon_ext_04": {
+    "session_id": "anon_ext_04",
+    "verdicts": [
+      {
+        "verdict": "CONSISTENT",
+        "source_turn_id": 7,
+        "prior_turn_id": 1,
+        "explanation": "No internal semantic contradiction or evasion detected in transcript window.",
+        "confidence": 0.8
+      }
+    ],
+    "claims": []
+  },
+  "anon_ext_05": {
+    "session_id": "anon_ext_05",
+    "verdicts": [
+      {
+        "verdict": "CONSISTENT",
+        "source_turn_id": 2,
+        "prior_turn_id": 1,
+        "explanation": "No internal semantic contradiction or evasion detected in transcript window.",
+        "confidence": 0.8
+      }
+    ],
+    "claims": []
+  },
+  "anon_ext_06": {
+    "session_id": "anon_ext_06",
+    "verdicts": [
+      {
+        "verdict": "UNVERIFIABLE",
+        "source_turn_id": 7,
+        "prior_turn_id": 1,
+        "explanation": "[MODIFIER_EROSION] Claims good memory overall while claiming entire day of June 4th is a blank.",
+        "confidence": 0.85
+      }
+    ],
+    "claims": []
+  },
+  "anon_ext_07": {
+    "session_id": "anon_ext_07",
+    "verdicts": [
+      {
+        "verdict": "CONSISTENT",
+        "source_turn_id": 10,
+        "prior_turn_id": 1,
+        "explanation": "No internal semantic contradiction or evasion detected in transcript window.",
+        "confidence": 0.8
+      }
+    ],
+    "claims": []
+  },
+  "anon_ext_08": {
+    "session_id": "anon_ext_08",
+    "verdicts": [
+      {
+        "verdict": "CONSISTENT",
+        "source_turn_id": 8,
+        "prior_turn_id": 1,
+        "explanation": "No internal semantic contradiction or evasion detected in transcript window.",
+        "confidence": 0.8
+      }
+    ],
+    "claims": []
+  },
+  "anon_ext_09": {
+    "session_id": "anon_ext_09",
+    "verdicts": [
+      {
+        "verdict": "DIRECT_CONTRADICTION",
+        "source_turn_id": 8,
+        "prior_turn_id": 5,
+        "explanation": "[DIRECT_CONTRADICTION] Claims not remembering putting gun/rope in car (T5) then claims solid memories of disposing of them (T8).",
+        "confidence": 0.85
+      }
+    ],
+    "claims": []
+  },
+  "anon_ext_10": {
+    "session_id": "anon_ext_10",
+    "verdicts": [
+      {
+        "verdict": "CONSISTENT",
+        "source_turn_id": 6,
+        "prior_turn_id": 1,
+        "explanation": "No internal semantic contradiction or evasion detected in transcript window.",
+        "confidence": 0.8
+      }
+    ],
+    "claims": []
+  },
+  "anon_ext_11": {
+    "session_id": "anon_ext_11",
+    "verdicts": [
+      {
+        "verdict": "CONSISTENT",
+        "source_turn_id": 6,
+        "prior_turn_id": 1,
+        "explanation": "No internal semantic contradiction or evasion detected in transcript window.",
+        "confidence": 0.8
+      }
+    ],
+    "claims": []
+  },
+  "anon_ext_12": {
+    "session_id": "anon_ext_12",
+    "verdicts": [
+      {
+        "verdict": "CONSISTENT",
+        "source_turn_id": 11,
+        "prior_turn_id": 1,
+        "explanation": "No internal semantic contradiction or evasion detected in transcript window.",
+        "confidence": 0.8
+      }
+    ],
+    "claims": []
+  },
+  "anon_ext_13": {
+    "session_id": "anon_ext_13",
+    "verdicts": [
+      {
+        "verdict": "CONSISTENT",
+        "source_turn_id": 3,
+        "prior_turn_id": 1,
+        "explanation": "No internal semantic contradiction or evasion detected in transcript window.",
+        "confidence": 0.8
+      }
+    ],
+    "claims": []
+  },
+  "anon_ext_14": {
+    "session_id": "anon_ext_14",
+    "verdicts": [
+      {
+        "verdict": "CONSISTENT",
+        "source_turn_id": 6,
+        "prior_turn_id": 1,
+        "explanation": "No internal semantic contradiction or evasion detected in transcript window.",
+        "confidence": 0.8
+      }
+    ],
+    "claims": []
+  },
+  "anon_ext_15": {
+    "session_id": "anon_ext_15",
+    "verdicts": [
+      {
+        "verdict": "CONSISTENT",
+        "source_turn_id": 5,
+        "prior_turn_id": 1,
+        "explanation": "No internal semantic contradiction or evasion detected in transcript window.",
+        "confidence": 0.8
+      }
+    ],
+    "claims": []
+  },
+  "anon_ext_16": {
+    "session_id": "anon_ext_16",
+    "verdicts": [
+      {
+        "verdict": "CONSISTENT",
+        "source_turn_id": 2,
+        "prior_turn_id": 1,
+        "explanation": "No internal semantic contradiction or evasion detected in transcript window.",
+        "confidence": 0.8
+      }
+    ],
+    "claims": []
+  },
+  "anon_ext_17": {
+    "session_id": "anon_ext_17",
+    "verdicts": [
+      {
+        "verdict": "CONSISTENT",
+        "source_turn_id": 16,
+        "prior_turn_id": 1,
+        "explanation": "No internal semantic contradiction or evasion detected in transcript window.",
+        "confidence": 0.8
+      }
+    ],
+    "claims": []
+  },
+  "anon_ext_18": {
+    "session_id": "anon_ext_18",
+    "verdicts": [
+      {
+        "verdict": "CONSISTENT",
+        "source_turn_id": 14,
+        "prior_turn_id": 1,
+        "explanation": "No internal semantic contradiction or evasion detected in transcript window.",
+        "confidence": 0.8
+      }
+    ],
+    "claims": []
+  }
+}

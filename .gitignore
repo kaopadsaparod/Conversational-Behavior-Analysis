@@ -94,3 +94,7 @@ data/models/
 *.wav
 *.avi
 *.jsonl
+*.pkl
+benchmarks/results/_mixed_blind_clips/
+benchmarks/results/audio_slices/
+benchmarks/results/replays/

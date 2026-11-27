@@ -1,0 +1,738 @@
+=== 0: decode_785 ===
+  T1 (SPK_0): I applied to a few jobs, and I was interviewed for the one I was most interested in. I haven't heard back from them though, so I don't think I got the jobl
+  T2 (SPK_1): Stay positive, you never know. Maybe send them a polite email saying thank you for the interview and things you liked about the company.
+  T3 (SPK_0): good idea i will do it..
+  T4 (SPK_1): Yeah no problem. Just remember to be positive as things tend to always work out in the end.
+  T5 (SPK_0): yeah..i should relax and never lose hope..
+  T6 (SPK_1): Never give up hope. I like the way your thinking. Just relax and take your mind of it for now. Maybe watch a TV show like rick and morty.
+  T7 (SPK_0): k i never watched that program....
+  T8 (SPK_1): You should check it out , if you have time. Its actually one of my favourite shows.
+  T9 (SPK_0): game of thrones is my favorite show
+  T10 (SPK_1): Rick and Morty is different from Game of Thrones, but I think you will enjoy it anyway.
+  T11 (SPK_0): I don't think I'll have much time for TV anyway now that I was just offered a new job.
+  FLAGGED: T1->T5(0.9626), T3->T5(0.9922), T2->T6(0.9827), T1->T7(0.9779), T3->T7(0.9959), T5->T7(0.9811), T5->T9(0.9682), T7->T9(0.9892)
+=== 1: decode_3886 ===
+  T1 (SPK_0): i am . i live in colorado . how about you ?
+  T2 (SPK_1): cool ! i live in chicago . i hate it . my dad is an advertiser .
+  T3 (SPK_0): Advertiser great!, Okay Why you hate?
+  T4 (SPK_1): ive always lived here. just need a change of scenery 
+  T5 (SPK_0): Native place is great thing once u moved to some-other!, then u come to know
+  T6 (SPK_1): i am considering colorado when i move
+  T7 (SPK_0): Yeah!, whats your hobby
+  T8 (SPK_1): i love playing basketball. you?
+  T9 (SPK_0): Tennis
+  T10 (SPK_1): who is your favorite player
+  T11 (SPK_0): Rafael Nadal, do u like tennis
+  T12 (SPK_1): I do, I used to play growing up.
+  FLAGGED: T1->T3(0.9951), T3->T7(0.9626), T5->T7(0.9032), T2->T8(0.9969), T4->T8(0.9951), T6->T8(0.9665), T1->T9(0.9644), T3->T9(0.994), T5->T9(0.9297), T7->T9(0.9276), T4->T10(0.9389), T1->T11(0.9832), T3->T11(0.9934), T7->T11(0.9467)
+=== 2: decode_1168 ===
+  T1 (SPK_0): Well, then maybe I like Heavy metal, because I like Van Halen.  What is acid rock?
+  T2 (SPK_1): It grew out of 196's drug culture.  Think of Jimi Hendrix and his distorted guitar solos and long improvised jams.
+  T3 (SPK_0): That's so interesting. I like listening to all genres of music, except country music.
+  T4 (SPK_1): Same! More of a metal guy. Always blasting it in my black car!
+  T5 (SPK_0): Very cool :) I like to listen to music and podcasts while I drive, it helps pass the time
+  T6 (SPK_1): Me too.  It really helps get me going on the drive in.
+  T7 (SPK_0): Yep, gotta do something to pass the time. Audiobooks are fun too
+  T8 (SPK_1): Yes, audiobooks are great. Have you heard about Carrier language?
+  T9 (SPK_0): I've never heard of that, what is it?
+  T10 (SPK_1): It's a Northern Athabaskan dialect, named after the Daketh people.
+  T11 (SPK_0): That's really cool! Are you listening to an audiobook about that?
+  T12 (SPK_1): No, I don't enjoy audiobooks. They tend to put me to sleep.
+  FLAGGED: T2->T4(0.994), T1->T5(0.988), T1->T7(0.9718), T2->T8(0.9958), T1->T9(0.998), T3->T9(0.9937), T5->T9(0.9996), T7->T9(0.9985), T1->T11(0.9912), T8->T12(0.9995)
+=== 3: decode_1378 ===
+  T1 (SPK_0): I moved to tornado alley a few years ago. I'm not used to large tornadoes so I was pretty scared when it started storming.
+  T2 (SPK_1): Oh man,  I can't even imagine. I lived in Kansas for a while and we had a storm that did a lot of damage. Took out the power all day and stuff. Nature can be so devastating sometimes.
+  T3 (SPK_0): We aren't too far south of Kansas in Oklahoma. We have had to spend a few evenings in the storm shelter. I guess stuff can be replaced. 
+  T4 (SPK_1): Jeeeze,  yea,  it's totally understandable to be afraid. Has it been good there otherwise?
+  T5 (SPK_0): I love it here,  except for the tornadoes and snakes. 
+  T6 (SPK_1): I can imagine. Tornado scare me to death
+  T7 (SPK_0): Oh me too! That's why I just live in California. Earthquakes I can deal with.
+  FLAGGED: T2->T6(0.9886)
+=== 4: decode_122 ===
+  T1 (SPK_0): thanks . i just got braces and do not like them .
+  T2 (SPK_1): oh you have braces do you love cheesecake squares i love cheesecake
+  T3 (SPK_0): I do like cheese cake squares but they stick to my braces
+  T4 (SPK_1): Aww. Does it hurt as well?
+  T5 (SPK_0): Well a little since I just got them.  But it is getting better.
+  T6 (SPK_1): Do you have a favorite movie? Mine is 16 candles.
+  T7 (SPK_0): I kind of like The Breafast club.
+  T8 (SPK_1): Iv'e never seen that movie. What's it about?
+  T9 (SPK_0): It about these high schoolers thrown together on a Saturday morning in detention.  Kind of neat.
+  T10 (SPK_1): Sounds interesting. I will have to check it out.
+  T11 (SPK_0): You should. I think it is better than 16 Candles.
+  T12 (SPK_1): Probably, I don't like 16 candles very much.
+  FLAGGED: T2->T6(0.9838), T4->T6(0.985), T2->T8(0.9892), T6->T8(0.9602)
+=== 5: decode_2342 ===
+  T1 (SPK_0): I walked into the room while she was cooking and was very quiet. I felt bad about what I did. 
+  T2 (SPK_1): What did you do?
+  T3 (SPK_0): Well I went out with old college buds and got trashed and slept with another woman. 
+  T4 (SPK_1): Man! That's pretty bad.
+  FLAGGED: T1->T3(0.9966)
+=== 6: decode_1903 ===
+  T1 (SPK_0): Red is the color at the end of the visible spectrum of light.
+  T2 (SPK_1): I love the color red!
+  T3 (SPK_0): Reds range from scarlet and vermillion to crimson, and vary in shade from pink to burgundy.
+  T4 (SPK_1): I wonder how they obtain red dye.
+  T5 (SPK_0): In the Renaissance, red costumes for the wealthy were dyed with kermes and cochineal.
+  T6 (SPK_1): I wonder what other meanings red takes on.
+  T7 (SPK_0): Roman generals had their bodies colored red to celebrate victories.
+  T8 (SPK_1): Why do you think a stop sign is red?
+  T9 (SPK_0): It used to be yellow, but was changed to red to go along with the color-coding system used with railroads.
+  T10 (SPK_1): Thats a good fact, yellow is a lovely color
+  T11 (SPK_0): It is and yellow is also the color at the end of the visible light spectrum
+  FLAGGED: T2->T10(0.9845), T4->T10(0.992), T6->T10(0.9955), T8->T10(0.9824)
+=== 7: decode_2384 ===
+  T1 (SPK_0): me and my mom have been feeling blue , ever since my brother moved far away
+  T2 (SPK_1): Why did he move so far away?
+  T3 (SPK_0): for work.  there aren't many jobs where we live
+  T4 (SPK_1): I'm sorry to hear that!  How do you cope?  Painting is something that helps me when I'm sad.
+  T5 (SPK_0): i like to put on headphones and listen to music.  i have a playlist called "makes me happy!"
+  T6 (SPK_1): Gotcha!  What kind of music do you listen to?
+  T7 (SPK_0): i like classic rock!  my mom likes it so i learned to like it too
+  T8 (SPK_1): Big fan of classic rock myself!  Who are some of your favorite artists?
+  T9 (SPK_0): i like queen and the beatles a lot.  what are your favorites?
+  T10 (SPK_1): I love Led Zepplin.  I use their music as inspiration when I start a new painting.
+  T11 (SPK_0): what types of subjects do you paint?
+  T12 (SPK_1): Mainly abstract stuff but I also love anything natural.  Bugs are one of my favorite subjects.
+  T13 (SPK_0): have you painted your favorite scarab?
+  FLAGGED: T2->T6(0.9979), T4->T6(0.9678), T1->T11(0.9058), T5->T11(0.9111), T8->T12(0.9733), T1->T13(0.9726), T3->T13(0.9553)
+=== 8: decode_2834 ===
+  T1 (SPK_0): I love to make fresh pasta by hand, it's quick and cheap and delicious!
+  T2 (SPK_1): That's creative indeed. Whats a pasts if I may ask?
+  T3 (SPK_0): Pasta is a noodle dish made from a dough consisting of eggs and flour (typically semolina, which is what I use). Great in italian cooking!
+  T4 (SPK_1): Thats nice ! How long has pasta of if I may say semolina been eating as food?
+  T5 (SPK_0): How long has it been used? Earliest references show around 1154 in Sicily, at least for italian pasta!
+  T6 (SPK_1): Do you know how its prepared?
+  T7 (SPK_0): Yes, I make it myself! You mix 1 egg per 1 cup of flour for the dough, then slice for delicious fresh noodles!
+  FLAGGED: T5->T7(0.9134)
+=== 9: decode_814 ===
+  T1 (SPK_0): hi i am a fan of brittany spears
+  T2 (SPK_1): hi ! i see things . . . a lot .
+  T3 (SPK_0): i like to take care of myself with expensive things
+  T4 (SPK_1): i'm an alcoholic , but i'm recovering
+  T5 (SPK_0): i love to tan all of the time in special shops
+  T6 (SPK_1): You must have a lot of money to buy expensive things
+  T7 (SPK_0): No,i do not use expensive things
+  FLAGGED: T1->T7(0.9982), T3->T7(0.9985), T5->T7(0.9955)
+=== 10: decode_27 ===
+  T1 (SPK_0): They ran out of my favorite dessert at the restaurant I went to.
+  T2 (SPK_1): what did you do?
+  T3 (SPK_0): I unfortunately had to choose an alternate which was okay, but not as delicious as the usual.
+  T4 (SPK_1): That's always disappointing. You have a certain taste in mind but it's not quite right
+  T5 (SPK_0): Well, you know there's nothing like a great warm apple crisp on these cold winter days.
+  T6 (SPK_1): Mmmmm,thé glacé as they say in France!
+  T7 (SPK_0): Indeed! Hey, you did you see the announcement of when they are taking down the cooling towers at the old power plant?
+  T8 (SPK_1): Yes I do.  That was intense.  I hated to see that happen to such an old, established city.
+  T9 (SPK_0): I know, time marches on. A lot of old timers were upset, Im eager to see what will be put there.
+  T10 (SPK_1): I bet they were. I can't imagine what its like to be a part of all that.
+  T11 (SPK_0): It will be tough to get used to at first, but in time they will come to like the change.
+  T12 (SPK_1): True, I'm glad they are getting rid of the cooling towers.
+  FLAGGED: T2->T6(0.9677), T1->T7(0.9943), T3->T7(0.9922), T5->T7(0.984), T2->T10(0.9704), T2->T12(0.9904), T4->T12(0.9979)
+=== 11: decode_888 ===
+  T1 (SPK_0): MY kid loves her new school and she doesnt like anything!
+  T2 (SPK_1): Don't be daft! Kids should never watch tv!
+  T3 (SPK_0): why not?
+  T4 (SPK_1): depending on their age - you have to monitor what they watch - some are just so inappropriate
+  T5 (SPK_0): Yes, you are right. I prefer Youtube, I get to restrict the inappropriate content 
+  T6 (SPK_1): yes - easier to control
+  T7 (SPK_0): also it is full of cats videos!
+  T8 (SPK_1): I don't watch cat videos - but like the practical jokes ones
+  T9 (SPK_0): What's your job?
+  T10 (SPK_1): I work for an accountant here in town. Are you married.
+  T11 (SPK_0): I am not. I also dont have any children.
+  FLAGGED: T1->T3(0.9892), T1->T9(0.9965), T3->T9(0.9902), T5->T9(0.9563), T7->T9(0.9854), T1->T11(0.9977)
+=== 12: decode_1946 ===
+  T1 (SPK_0): I believe in so many things but fully believe we should want a state of health and well being. I play many sports and believe in my physical fitness as a way of life!
+  T2 (SPK_1): Physical fitness is really important to me too.
+  T3 (SPK_0): I take it easy in though to not be overwhelmed, I say to myelf... it's going to be a good day, fitness is defined as the quality of being fit... and then do my 4 am routine :)
+  T4 (SPK_1): I prefer to work out at night, personally.
+  T5 (SPK_0): Me too, nothing like burning the midnight oil with a good sweat.
+  T6 (SPK_1): I really don't like to work out very much at all.
+  FLAGGED: T1->T5(0.9756), T3->T5(0.983), T2->T6(0.9965), T4->T6(0.9954)
+=== 13: decode_2207 ===
+  T1 (SPK_0): I watched out the window for visitors to my house today,  it was saddening.
+  T2 (SPK_1): Did they not ever come?
+  T3 (SPK_0): No one came to visit.
+  T4 (SPK_1): Man that's a bummer.  I'd visit you but that would be weird.
+  FLAGGED: T1->T3(0.9844)
+=== 14: decode_2710 ===
+  T1 (SPK_0): I love rap music. I'm a fan of Snoop Dogg.
+  T2 (SPK_1): Yeah, he is a popular rapper, songwriter, Television personality, and actor. I like him too.
+  T3 (SPK_0): I didn't know he was an actor. What kind of acting has Snoop Dogg done? 
+  T4 (SPK_1): He was the voice in the movie Turbo.
+  T5 (SPK_0): I actually didn't see that movie. Is that about a car or something? 
+  T6 (SPK_1): It's a Dreamworks Animation in 2013 as the voice of Smoove Move the snail, lol.
+  T7 (SPK_0): That sounds a cute character. I like dreamworks animation movies. What is that one popular one they made? 
+  FLAGGED: T1->T7(0.9859)
+=== 15: decode_2650 ===
+  T1 (SPK_0): I am helping a friend that has lost his job recently.
+  T2 (SPK_1): That's very kind of you. How long has he lost his job?
+  T3 (SPK_0): he has been out of work for about 2 months now
+  T4 (SPK_1): That is tough. It is nice of you to help him out.
+  T5 (SPK_0): have you ever lost your job?
+  T6 (SPK_1): No I haven't. But I'm sure it is a trying time.
+  T7 (SPK_0): What do you like to do when you aren
+  T8 (SPK_1): I like to cook. I eat a vegan diet so it is easy to fix things at home versus eating out. You?
+  T9 (SPK_0): i meant to say arent at work. i love to cook as well! 
+  T10 (SPK_1): What kind of food do you cook?
+  T11 (SPK_0): i love to make asian foods and chicken dishes
+  T12 (SPK_1): Oh cool. Sounds healthy. I also like to clean and organize like a good ocd person.
+  FLAGGED: T3->T5(0.9298), T4->T8(0.939), T2->T10(0.998), T4->T10(0.9852), T5->T11(0.9402), T7->T11(0.9283), T4->T12(0.9635), T6->T12(0.9628)
+=== 16: decode_1229 ===
+  T1 (SPK_0): hello . i'm trying to get photos of the moon .
+  T2 (SPK_1): i'm sorry , i cannot help you there .
+  T3 (SPK_0): not a fellow photographer then ? what do you do ?
+  T4 (SPK_1): no . i work in a shipyard .
+  T5 (SPK_0): cool ! i teach history to kiddos . we are doing christopher columbus .
+  T6 (SPK_1): that's cool , you must like kids .
+  T7 (SPK_0): i sure do . my boyfriend and i are moving in together next weekend .
+  T8 (SPK_1): how exciting ! i do not have time for a boyfriend , between my full time job and volunteering .
+  T9 (SPK_0): That's understandable, relationships aren't for everyone.
+  T10 (SPK_1): True, I'm really hopeful to find a boyfriend soon though, especially since I have a lot of free time these days.
+  FLAGGED: T1->T3(0.9883), T2->T6(0.9995), T3->T7(0.9905)
+=== 17: decode_3803 ===
+  T1 (SPK_0): Seven is my all time favorite number, it comes in between 6 and 8.
+  T2 (SPK_1): I hear it's a pretty lucky number too! Is that true?
+  T3 (SPK_0): I am not sure. I find it interesting that the Hindus used to write the number and it looked like an uppercase J.
+  T4 (SPK_1): What other interesting facts about seven do you have? I'm quite curious.
+  T5 (SPK_0): The Ghubar Arabs' made the longer line diagonal over stragiht.
+  T6 (SPK_1): That's pretty neat. Do you know the roman numeral for 7? 
+  T7 (SPK_0): I am unsure but the Arabs influenced the European form.
+  T8 (SPK_1): Oh? Well that's pretty nice of them. I'm interested in more obscure facts about the number if you've got any.
+  FLAGGED: T3->T5(0.9837), T3->T7(0.9657)
+=== 18: decode_3859 ===
+  T1 (SPK_0): hello ! how are you doing today ?
+  T2 (SPK_1): i just reached the age of majority , i can vote !
+  T3 (SPK_0): that is awesome ! what kind of music do you like ?
+  T4 (SPK_1): every kind . what about you ?
+  T5 (SPK_0): i like classical and gospel . i sing at church .
+  T6 (SPK_1): my favorite gospel singer is elvis presley . he looks like my pet fish
+  T7 (SPK_0): that is funny ! my sister is an entertainer . she dances on poles .
+  T8 (SPK_1): that must hurt . how old are you ?
+  T9 (SPK_0): i am 25 . i live on a farm and drive a red tractor .
+  FLAGGED: T1->T3(0.9378), T3->T7(0.9553), T2->T8(0.9497), T6->T8(0.9911), T7->T9(0.9246)
+=== 19: decode_575 ===
+  T1 (SPK_0): hi how are you doing
+  T2 (SPK_1): i am doing very fine this afternoon . how about you ?
+  T3 (SPK_0): i'm good getting ready for school
+  T4 (SPK_1): what are you going to school for ?
+  T5 (SPK_0): high school i'm so ready to graduate
+  T6 (SPK_1): I was going to school for my friend
+  T7 (SPK_0): I was already graduate.
+  FLAGGED: T1->T7(0.9632), T3->T7(0.9945), T5->T7(0.9847)
+=== 20: decode_2069 ===
+  T1 (SPK_0): My favorite food is pasta, its the staple of traditional italian cuisine, i like carbonara the most
+  T2 (SPK_1): I love pasta, what is Carbonara, is it the type of noodle itself?
+  T3 (SPK_0): Carbonara is a pasta dish from rome, its made with an egg, hard cheese, bacon and pepper, its really grat!
+  T4 (SPK_1): What is hard cheese? Like a block cheese like cheddar? I love eggs, I can see myself liking eggs and noodles together.
+  T5 (SPK_0): Its really tasty you should try it..Hard cheese is Parmesan, usually for this dish Pecorino Romano cheese.
+  T6 (SPK_1): I would have never thought of Parmesan as a hard cheese, you've blown my preconceptions of cheese out the window!
+  T7 (SPK_0): Well american parmesan is not so hard, but real italian one is really hard, granular cheese, full of taste also
+  T8 (SPK_1): You're making me hungry for some Italian food now, I'm not sure if risotto rice is italian but that stuff is bomb. 
+  T9 (SPK_0): Italian cuisine is awesome, italian food is the best food in the world for me, italian cuisine got its roots from antiquity!
+  FLAGGED: T2->T4(0.9934), T4->T6(0.9348)
+=== 21: decode_304 ===
+  T1 (SPK_0): I was packing up my house to move,  and found my old yearbooks! It's so weird to look back and see how far everyone I knew in high school has come.
+  T2 (SPK_1): Aww,  that sounds interesting!  Are you in touch with many people from high school?
+  T3 (SPK_0): A couple people. Fewer as the years go by,  unfortunately. 
+  T4 (SPK_1): I get that.  It's weird when I forget the name of someone I knew for years.
+  T5 (SPK_0): That's quite normal as times goes on you forget many names
+  T6 (SPK_1): i have a big memory ,hardly do i forget things,especially names of people that i come across
+  FLAGGED: T1->T3(0.9269), T1->T5(0.9977), T4->T6(0.9696)
+=== 22: decode_997 ===
+  T1 (SPK_0): Oh wow, so he's actually done a lot. No wonder people talk about him a lot. What are some of his biggest hits?
+  T2 (SPK_1): Really, everything he's done musically has been successful. His next albums, 2011's "Take Care" and 2013's "Nothing Was the Same," went quadruple platinum and triple platinum, respectively, in the U.S. His second album earned a Grammy for best rap album. You hear about him because of his wide audience and success.
+  T3 (SPK_0): Looks like a very popular figure.
+  T4 (SPK_1): I saw him in concert last year for my birthday. Do you like concerts?
+  T5 (SPK_0): I have never been to a concert.
+  T6 (SPK_1): I have never been to a concert either, but I like watching Youtube videos of singers singing live.
+  FLAGGED: T1->T5(0.9671), T4->T6(0.9978)
+=== 23: decode_721 ===
+  T1 (SPK_0): hi names trish and i am 12 and a girl
+  T2 (SPK_1): hi my parents named me george and i farm bees .
+  T3 (SPK_0): that is awesome . i do not like school and have blue eyes
+  T4 (SPK_1): that is okay i'm not close to any family .
+  T5 (SPK_0): but i do have a lot of friends
+  T6 (SPK_1): that's great . what do you guys do together ?
+  T7 (SPK_0): we have all sorts of fun and go out and play .
+  T8 (SPK_1): do you go out to eat together ?
+  T9 (SPK_0): yes we do . my hair also goes down to my waist
+  T10 (SPK_1): Does everyone in your family have long hair?
+  T11 (SPK_0): I have short hair.  I look like a boy
+  FLAGGED: T2->T4(0.9994), T2->T8(0.952), T6->T10(0.9324), T8->T10(0.9879)
+=== 24: decode_1115 ===
+  T1 (SPK_0): i'm thinking about having mexican or italian .
+  T2 (SPK_1): either sounds great do you like the outdoors
+  T3 (SPK_0): haiii
+  T4 (SPK_1): Have you ever had the Mexican street food?
+  T5 (SPK_0): yes i will eating in braek fast
+  T6 (SPK_1): what do you think you will have for dinner?
+  T7 (SPK_0): yes i eating dinner
+  T8 (SPK_1): What will you eat?
+  T9 (SPK_0): I think I will skip dinner
+  FLAGGED: T2->T6(0.9835), T2->T8(0.9965), T4->T8(0.9416), T1->T9(0.995), T5->T9(0.908), T7->T9(0.9949)
+=== 25: decode_1486 ===
+  T1 (SPK_0): Hi, the color red, which is at the end of the visible spectrum of light, is my favorite color. 
+  T2 (SPK_1): I like red too. What other colors do you enjoy?
+  T3 (SPK_0): I also like purple, which is a color intermediate between blue and red. it reminds me of the sunset.
+  T4 (SPK_1): That's beautiful. What color is at the beginning  of the spectrum?
+  T5 (SPK_0): Indigo is a deep and rich color close to the color wheel blue and it lies somewhere at the beginning of the spectrum.
+  T6 (SPK_1): Okay how many colors are on the spectrum?
+  T7 (SPK_0): There are numerous variations of the color along the spectrum. Potentially thousands!
+  T8 (SPK_1): That's incredible! What's your least favorite color on the spectrum?
+  T9 (SPK_0): My least favorite color on the spectrum is red.
+  FLAGGED: T2->T8(0.9835), T4->T8(0.95), T6->T8(0.98), T1->T9(0.9951)
+=== 26: decode_2657 ===
+  T1 (SPK_0): I like to dye my hair blonde to cover my gray
+  T2 (SPK_1): I see. Why do you do that?
+  T3 (SPK_0): To cover my gray hair and have more blond
+  T4 (SPK_1): Oh okay, what is a blonde color?
+  T5 (SPK_0): Low levels of the dark pigment eumelanin
+  T6 (SPK_1): What exactly is eumelanin?
+  T7 (SPK_0): Eumelanin is a type of melanin found in hair follicles
+  FLAGGED: T2->T4(0.991), T2->T6(0.9657), T4->T6(0.9125)
+=== 27: decode_485 ===
+  T1 (SPK_0): hey tell me about yourself ?
+  T2 (SPK_1): hello ! i'm a super fun girl and i love everything disney . how about you ?
+  T3 (SPK_0): i work at a elementary school and love going to the beach on holiday !
+  T4 (SPK_1): cool ! i love to go to disney world instead of the beach . i attend an elementary school .
+  T5 (SPK_0): that's neat ? which one ? my parents also teach elementary schools .
+  T6 (SPK_1): cook elementary . what is your favorite character from frozen ?
+  T7 (SPK_0): i love elsa ! and yours ?
+  T8 (SPK_1): i love anna the best ! she has really cool hair and gets to kiss kristoff lol .
+  T9 (SPK_0): yep very fun ! what do you like music wise ? i adore up !
+  T10 (SPK_1): i like the frozen songs best . how old are you ?
+  T11 (SPK_0): I'm 12, can't you tell?
+  T12 (SPK_1): I thought that I could but wasn't sure.  My favorite songs are from UP! also.
+  FLAGGED: T2->T6(0.9801), T3->T7(0.9769), T3->T9(0.915)
+=== 28: decode_1662 ===
+  T1 (SPK_0): My husband cooked me my favorite food today! He never cooks!
+  T2 (SPK_1): that is awesome. what did he make you?
+  T3 (SPK_0): Bacon egg and cheese on toast! It was amazing! He makes the best fried eggs.
+  T4 (SPK_1): that sounds yummy. i'm glad you had that special treat.
+  T5 (SPK_0): It was yummy! I hope i get it again sometime soon
+  T6 (SPK_1): That meal sounded disgusting honestly, he should've made you something better
+  FLAGGED: T1->T3(0.9223), T1->T5(0.9711), T2->T6(0.997), T4->T6(0.9991)
+=== 29: decode_3281 ===
+  T1 (SPK_0): I love exercising, it really gets me into a state of health and well-being. Do you exercise
+  T2 (SPK_1): Me too, I think excersising is the best. I like to run on the treadmill. What kinda workouts do you do? 
+  T3 (SPK_0): Nothing beats going outside for a jog, getting that good sunlight and fresh air. But physical fitness isn't achieved through exercise alone,  fitness is generally achieved through proper nutrition. Do you eat healthily?
+  T4 (SPK_1): I do eat healthy, I try and drink a fruit smoothie every morning and in the evening I drink a protein shake. Do you think protein shakes are good for workouts? 
+  T5 (SPK_0): Oh defineatly, getting enough protein in your diet is essential to good muscle health and the bodies ability to function efficiently and effectively 
+  T6 (SPK_1): Indeed, I hear it helps build up your muscles too. What type of workouts would you recommend for some serious weight loss? Ive been wanting to up my game lately. 
+  T7 (SPK_0): For weight loss, anything that gets the heart rate up works. You don't need to build muscle to lose weight, simple jumping jacks or high knees will suffice and also helps your body to resist hypokinetic diseases
+  T8 (SPK_1): Oh ok thanks for the tips, Ill have to try some of those. I am a pretty big guy so I guess ill have to start light and then work my way up. What about dietary supplements, Any you would recommend? 
+  T9 (SPK_0): Personally, I just take a multi-vitamin, usually they include vitamins, minerals, fiber, fatty acids, or amino acids. But you don't really need these as long as you have a good diet with lots of variety!
+  FLAGGED: T5->T7(0.9986)
+=== 30: decode_944 ===
+  T1 (SPK_0): hello , how are you ? i am taking a break from studying for a test .
+  T2 (SPK_1): hi ! i am doing fine . what are you studying ?
+  T3 (SPK_0): i studying spanish right now , i just learned a new word . want to see it ?
+  T4 (SPK_1): sure ! show me what you have learned .
+  T5 (SPK_0): trabajo , it is my new favorite word , it means masculine work .
+  T6 (SPK_1): great ! what else do you know in spanish ?
+  T7 (SPK_0): ii can almost speak it fluently . studying languages is a hobby for me .
+  T8 (SPK_1): you are gifted . i want to go to college too someday .
+  T9 (SPK_0): i want to learn french next . what do you want to study in college ?
+  T10 (SPK_1): I don't want to go to college. It's boring.
+  T11 (SPK_0): I wish I knew a word of spanish
+  FLAGGED: T1->T3(0.9401), T6->T10(0.9407), T8->T10(0.9984), T1->T11(0.9489), T3->T11(0.9809), T5->T11(0.9868), T9->T11(0.986)
+=== 31: decode_2478 ===
+  T1 (SPK_0): Have you ever been to Six flags?
+  T2 (SPK_1): I have been to Six Flags as a matter of fact.  I cant say that I enjoyed it much, as I hate to ride rides.  WHat about you?
+  T3 (SPK_0): I love rides.  Not as much as I did when I was a kid, but my kids love them and want me to go on rides with them. 
+  T4 (SPK_1): What is your favorite ride?
+  T5 (SPK_0): Goliath
+  T6 (SPK_1): OH! That's a big one. I think I read somewhere that it goes nearly 90mph!
+  T7 (SPK_0): yes and it has  (at one point) the longest drop of 75m. I also like any water ride. 
+  T8 (SPK_1): Water rides are pretty cool most of them don't have as steep of drops so they tend to be easier on me.
+  T9 (SPK_0): I get a headache on most roller coasters because of the banging around. 
+  T10 (SPK_1): yeah they can definitely be strenuous. I would much rather be at home playing video games
+  T11 (SPK_0): I love the sights and sounds of an amusement park, and the food. 
+  FLAGGED: T1->T5(0.9949), T8->T10(0.9345), T9->T11(0.9572)
+=== 32: decode_2432 ===
+  T1 (SPK_0): Alien invasion movies are terrifying for me. Have you ever seen Alien?
+  T2 (SPK_1): Hard of it, harvest people for food, steal the planet's resource
+  T3 (SPK_0): Yes basically. Do you like the alien sci fi genre?
+  T4 (SPK_1): No, i prefer Stargate SG-1
+  T5 (SPK_0): Did Stargate ever win any Emmys? I know it went on for a really long time
+  T6 (SPK_1): yes it did, but the show, created by Brad Wright and Jonathan Glassner, is based on the 1994 science fiction film
+  T7 (SPK_0): The tv channel syfy has had a lot of success, so I am not surprised that Stargate had won.
+  FLAGGED: T1->T5(0.9967), T3->T5(0.9665), T1->T7(0.9493)
+=== 33: decode_2274 ===
+  T1 (SPK_0): Yes he was, he was an amazing singer!
+  T2 (SPK_1): Yes. His names are Prince Rogers Nelson
+  T3 (SPK_0): Prince was my favorite artist of all time. Purple Rain is my anthem.
+  T4 (SPK_1): i love his songs and also drawing
+  T5 (SPK_0): You are an artist? What do you draw?
+  T6 (SPK_1): mostly comics! what are you into
+  T7 (SPK_0): I'm studying to be a linguist. I'm fluent in English and Spanish, and working on French, Russian, and Italian.
+  T8 (SPK_1): thats very impressive, I wish i could speak more language! I put my efforts into drawing
+  T9 (SPK_0): What kind of comics do you draw?
+  T10 (SPK_1): I like to draw batman and justice league characters
+  FLAGGED: T3->T5(0.9933), T2->T6(0.935), T4->T6(0.9843), T1->T9(0.9796), T3->T9(0.9958), T7->T9(0.9977)
+=== 34: decode_2919 ===
+  T1 (SPK_0): My emu ran away last night. I was quite distraught.
+  T2 (SPK_1): Not sure what an emu is. I hope you find him/her!
+  T3 (SPK_0): It is similar to an Ostrich!
+  T4 (SPK_1): Oh, wow, they're big then. Any leads yet?
+  T5 (SPK_0): Unfortunately not. Have you ever lost a pet?
+  T6 (SPK_1): When I was a kid, my dog went missing for two days. Thank God someone called and found her. 
+  T7 (SPK_0): I hope that is the case for me! I love this Emu so much, I even have a tattoo of her on my arm!
+  T8 (SPK_1): Please have faith. Someone is bound to see her. Annie is a cute name. 
+  T9 (SPK_0): Thanks! I appreciate the support!
+  T10 (SPK_1): Anytime, I mean people like us who love our pets know how hard it is when they're missing. Did you call the police?
+  T11 (SPK_0): I did. And I also put up pictures and a post on a facebook group!
+  FLAGGED: T1->T5(0.9471), T3->T5(0.9773), T1->T7(0.9905), T5->T9(0.9913)
+=== 35: decode_908 ===
+  T1 (SPK_0): I really miss living in the city
+  T2 (SPK_1): I can understand that. Everything is right at your doorsteps. 
+  T3 (SPK_0): At the same time, I really enjoy the stars in the country. With less city lights they really pop.
+  T4 (SPK_1): I understand that. I look at the sky a lot at night when I am walking back home after college
+  T5 (SPK_0): Do you have any class trips scheduled? We are planning a trip to Japan.
+  T6 (SPK_1): Not that I know of. What you plan to visit in Japan?
+  T7 (SPK_0): We are studying small scale farming. They are limited in space so planning is key. So, lot of farms. 
+  T8 (SPK_1): Oh that's interesting, how many farms are there in Japan like that?
+  T9 (SPK_0): Japan doesn't have any small scale farms.
+  FLAGGED: T2->T6(0.9977), T4->T6(0.9984), T2->T8(0.9952), T4->T8(0.9971), T6->T8(0.9768), T3->T9(0.935), T5->T9(0.9737), T7->T9(0.9285)
+=== 36: decode_2062 ===
+  T1 (SPK_0): Hey! I like shopping at target.
+  T2 (SPK_1): I love Target! Its crazy to think that the very first Target store opened in Roseville, Minnesota way back in 1962, at the same time the parent company was renamed the Dayton Corporation in the year 1967.
+  T3 (SPK_0): Wow, i didn't know they have been around so long. I wonder if they lost any value after the data breach a few years back.
+  T4 (SPK_1): Im not really sure, I think their stocks are doing well though. Target was actually Founded by George Dayton and headquartered in Minneapolis, Minnesota, the company was originally named Goodfellow Dry Goods in June 1902 before being renamed the Dayton's Dry Goods Company in 1903 and some time later the Dayton Company in the year 1910.
+  T5 (SPK_0): Interesting stuff, i wonder if there is any significance to the name target, and why they chose it.
+  T6 (SPK_1): I guess it was named on just an idea the creators had, fun fact It was named the Dayton-Hudson Corporation after merging with the J.L.
+  T7 (SPK_0): what is the J.L?
+  FLAGGED: T1->T7(0.9934), T3->T7(0.985), T5->T7(0.9532)
+=== 37: decode_187 ===
+  T1 (SPK_0): i am employed at mcdonald ! food is good .
+  T2 (SPK_1): i can't eat meat only veggies
+  T3 (SPK_0): Oh really? Why is that?
+  T4 (SPK_1): i love animals so that is why and i have been vegatarian for 6 years now
+  T5 (SPK_0): That's cool. I love animals too. Especially my iguana.
+  T6 (SPK_1): You have one as a pet? When'd you get it?
+  T7 (SPK_0): He has been with me for about two years now
+  T8 (SPK_1): oh I see, but you are not a vegetarian?
+  T9 (SPK_0): No. All food is bad to my tastes, I just eat whatever.
+  FLAGGED: T3->T5(0.9403), T1->T9(0.999), T3->T9(0.9944), T5->T9(0.9989), T7->T9(0.9956)
+=== 38: decode_69 ===
+  T1 (SPK_0): Isaw the most amazing sports play yesterday! I was shocked.
+  T2 (SPK_1): Oh really, what was the play?
+  T3 (SPK_0): It was in the Warriors basketball game, did you see it?
+  T4 (SPK_1): No I have not, must be exciting to watch it though.
+  T5 (SPK_0): I love basketball, I used to play in high school but I don't play much anymore.
+  T6 (SPK_1): You must be tall, if you played basketball in high school.
+  T7 (SPK_0): I never played sports in high school. I was in the marching band though.
+  FLAGGED: T5->T7(0.9908)
+=== 39: decode_266 ===
+  T1 (SPK_0): i'm not in school are you
+  T2 (SPK_1): yes , full time studying radiology on top of my office job . very busy
+  T3 (SPK_0): wow, impressive.  did you decide to change careers?
+  T4 (SPK_1): No, the office job is just to get me through my radiology studies. What do you do?
+  T5 (SPK_0): I am a lawyer
+  T6 (SPK_1): Wow, mister big bucks here!
+  T7 (SPK_0): I wish I had gone to school for something.
+  FLAGGED: T2->T4(0.9958), T4->T6(0.9805)
+=== 40: decode_3171 ===
+  T1 (SPK_0): hello what are you up to this evening ?
+  T2 (SPK_1): hi ! i'm hanging out with my dog trooper . you ?
+  T3 (SPK_0): i am packing for my big move in with my boyfriend next week
+  T4 (SPK_1): sounds awesome ! you must be busy .
+  T5 (SPK_0): so busy since i also teach first grade . what do you do ?
+  T6 (SPK_1): i work as a mechanical engineer . the hours can be long sometimes .
+  T7 (SPK_0): sounds complicated ! what do you do for fun ?
+  T8 (SPK_1): i love hiking and rock climbing ! what about you ?
+  T9 (SPK_0): i enjoy taking pictures and studying photography
+  T10 (SPK_1): you should visit colorado where i live . it is very pretty here .
+  FLAGGED: T2->T8(0.9886), T6->T8(0.9989)
+=== 41: decode_1791 ===
+  T1 (SPK_0): Man I can't believe I almost bought that thing!
+  T2 (SPK_1): What did you almost buy?
+  T3 (SPK_0): I saw this great used car in a print ad,  and went to the dealership,  but when I got there,  it was all ratty and crappy looking!
+  T4 (SPK_1): Ah,  yea,  I've had the once or twice. When you buy used you have to go in with the mindset of haggle down,  find a decent one,  or leave
+  T5 (SPK_0): Yeah,that was what i was expecting.But the car was in good shape. 
+  T6 (SPK_1): Really,i have not had the experience of buying used stuff before.
+  FLAGGED: T3->T5(0.9948), T4->T6(0.9496)
+=== 42: decode_1267 ===
+  T1 (SPK_0): hey ! how are you doing today ?
+  T2 (SPK_1): hi ! doing great . where are you from ?
+  T3 (SPK_0): i am from the south in the us . what about you ?
+  T4 (SPK_1): i live in hawaii and i work from home .
+  T5 (SPK_0): beautiful place . i've a dog walking business . do you have pets ?
+  T6 (SPK_1): it is . i love it here . i've 2 dogs they love it here too .
+  T7 (SPK_0): good to talk to a fellow dog lover ! we have three .
+  T8 (SPK_1): wow thats good, but am sad i need something to cheer me up.
+  FLAGGED: T1->T5(0.9758)
+=== 43: decode_3805 ===
+  T1 (SPK_0): I felt very sad recently when i found out that my mother has cancer 
+  T2 (SPK_1): Oh my gosh,  I am so sorry for your family.
+  T3 (SPK_0): Thank you .  Shes a fighter i hope she can push through 
+  FLAGGED: T1->T3(0.9933)
+=== 44: decode_804 ===
+  T1 (SPK_0): Really I don't know much about their community programs.  what are those?
+  T2 (SPK_1): They provide job training, employment placement services, CNA courses, and programs for those who have barriers that would prevent them from getting jobs elsewhere
+  T3 (SPK_0): Interesting. That's very helpful. Have you ever shopped at goodwill?
+  T4 (SPK_1): Of course yes!. I like them because  they are  retail establishments run by a charitable organization to raise money.
+  T5 (SPK_0): Yea. It's extremely affordable and you find so many neat items.
+  T6 (SPK_1): right ! it beats the high priced boutiques any day !
+  T7 (SPK_0): In-line with with doing things that are good for society i also think recycling is extremely important
+  T8 (SPK_1): very true . i feel very strongly about recycling .
+  T9 (SPK_0): Yes, recycling will go a long way in helping the country.
+  T10 (SPK_1): I don't think recycling will be a good thing though.
+  FLAGGED: T1->T5(0.9907), T2->T8(0.9743)
+=== 45: decode_3856 ===
+  T1 (SPK_0): I like jazz. Do you?
+  T2 (SPK_1): I do like jazz.  I do not get to hear a lot of it but I enjoy it,
+  T3 (SPK_0): It originated in New Orleans in the 19th century, but it's been a staple since. I listen to it in the car while going to work
+  T4 (SPK_1): That is nice - I have mainly only heard it in clubs or restaurants.
+  T5 (SPK_0): Jazz is mainly associated with classical music, but it can also mix into other genres a bit.
+  T6 (SPK_1): What other genres is it part of?
+  T7 (SPK_0): Jazz is recognized as a major form of musical expression, and you could say it's ragtime, swing, or another
+  T8 (SPK_1): Oh yes - there were some great ragtime artists!
+  T9 (SPK_0): It's characterized by swing and blue notes, but it's the way it changes rhythm that I like
+  FLAGGED: T6->T8(0.9172)
+=== 46: decode_1119 ===
+  T1 (SPK_0): hello . how are you today friend ?
+  T2 (SPK_1): hello , i'm george , i'm doing well . how are you ?
+  T3 (SPK_0): i am well also . do you like music ?
+  T4 (SPK_1): i do ! what kind do you like ?
+  T5 (SPK_0): my parents do not support me but i want to be a musician .
+  T6 (SPK_1): oh that is too bad . i am not close to any of my family either .
+  T7 (SPK_0): i want to make it big . i sing folk music and play piano and guitar
+  T8 (SPK_1): i like isolation , which is why i became a bee farmer .
+  T9 (SPK_0): that's interesting . i've a custodian job . it pays the bills i guess
+  T10 (SPK_1): my wife is the bill payer . as an italian super model she makes the big money .
+  T11 (SPK_0): wow that's awesome ! do you like music ?
+  T12 (SPK_1): yes, I love music - I actually play the harmonica pretty well.
+  T13 (SPK_0): That's cool, I wish I knew how to play an instrument. 
+  FLAGGED: T2->T6(0.9991), T4->T6(0.9968), T7->T9(0.9598), T7->T11(0.9065), T1->T13(0.9456), T3->T13(0.9023), T5->T13(0.947), T7->T13(0.9933)
+=== 47: decode_894 ===
+  T1 (SPK_0): So I lost 20 lbs onmy diet and last night I ate a whole large pizza!
+  T2 (SPK_1): Wow! Well a cheat day here and there might be okay! Haha
+  T3 (SPK_0): I agree. I feel bad for doing so!
+  T4 (SPK_1): Right,  but I'd say once isn't too bad as long you stay on track.
+  T5 (SPK_0): At least it was a tasty pizza.
+  T6 (SPK_1): I am totally against cheat days, so my recommendation is never do this again.
+  FLAGGED: T2->T6(0.9971)
+=== 48: decode_2773 ===
+  T1 (SPK_0): i also like watching mystery movies
+  T2 (SPK_1): those are great . i watch them at times .
+  T3 (SPK_0): I like to drink green tea while watching the films!
+  T4 (SPK_1): Same, whats your favorite type?
+  T5 (SPK_0): Macha green tea! its sweet yet smooth! try it sometime!
+  T6 (SPK_1): O I had that alot over the summer while on vacation in Italy!
+  T7 (SPK_0): Thats awesome, I want to go on vacation to the countryside! I love to run to clear my head and it'd be great to do that in peace.
+  T8 (SPK_1): Awesome! I'm also an avid runner and I have olive skin so I never get burns haha!
+  T9 (SPK_0): Wow, I am so jealous, I get sunburns all the time. All of my friends and family say I have olive color'd eyes!
+  T10 (SPK_1): I've never heard of olive colored eyes haha! Speaking of green tea I have green eyes
+  FLAGGED: T3->T7(0.9672), T2->T10(0.934), T4->T10(0.9626), T6->T10(0.9948), T8->T10(0.9957)
+=== 49: decode_802 ===
+  T1 (SPK_0): hello ! how are you tonight ?
+  T2 (SPK_1): hello . my pet fish and i are fine . you ?
+  T3 (SPK_0): what do you call your fish ? i am drinking fancy tea
+  T4 (SPK_1): his name is nemo ! what fancy tea are you drinking ?
+  T5 (SPK_0): nemo , i love him already . its a tea mix , green and black .
+  T6 (SPK_1): the tea sounds cool . is there honey in it ?
+  T7 (SPK_0): i add honey to it , yes . i drink it while running museum tours .
+  T8 (SPK_1): museum tours ? sounds exciting ! i used to visit museums with my ex .
+  T9 (SPK_0): yes , i am a little deaf but can still do them .
+  T10 (SPK_1): Oh I see thats really cool. What kind of tea do you recommend? 
+  T11 (SPK_0): I dont recommend any. I hate tea. I drink coffee though.
+  FLAGGED: T1->T3(0.9954), T2->T4(0.9981), T1->T5(0.9891), T2->T6(0.9883), T2->T10(0.9924), T3->T11(0.9725)
+=== 50: decode_1544 ===
+  T1 (SPK_0): My wife and I are going out to one of my favorite restaurants tonight.
+  T2 (SPK_1): That sounds fun. Is it a special occasion?
+  T3 (SPK_0): Not really,  just felt like going out. I'm thinking about ordering something I haven't had before,  but.... I don't know. I'm weird about trying new foods.
+  T4 (SPK_1): I understand. Sticking with what you know seems safer.
+  T5 (SPK_0): I enjoy trying new foods during special occasions.
+  T6 (SPK_1): Trying new foods is a safe option.
+  FLAGGED: T2->T4(0.9785)
+=== 51: decode_823 ===
+  T1 (SPK_0): I have been alone for almost 5 years now. 
+  T2 (SPK_1): As in living alone or single?
+  T3 (SPK_0): living alone
+  T4 (SPK_1): Do you like living alone or would you like a roommate?
+  T5 (SPK_0): I like living alone is quiet 
+  T6 (SPK_1): It's never quiet around my house.  Do you have any pets?
+  T7 (SPK_0): yes I do
+  T8 (SPK_1): I have a cat and dog.  What pet do you have?
+  T9 (SPK_0): I have a dog and a pig
+  T10 (SPK_1): Do you keep the pig in the house? 
+  T11 (SPK_0): yes she is really tiny
+  T12 (SPK_1): What is her name?
+  T13 (SPK_0): chona and she only eats veggies
+  T14 (SPK_1): That's sweet, I wish I had a pet.
+  FLAGGED: T4->T6(0.9465), T4->T10(0.9967), T6->T10(0.9911), T8->T10(0.9962), T2->T12(0.9901), T6->T12(0.9918), T10->T12(0.9911), T9->T13(0.9934), T4->T14(0.9831), T6->T14(0.9848), T8->T14(0.9933), T10->T14(0.9754), T12->T14(0.9522)
+=== 52: decode_1420 ===
+  T1 (SPK_0): Have you ever changed the color of your hair?
+  T2 (SPK_1): No, that is something i have never done and i don't know much about it.
+  T3 (SPK_0): The main reason it's done is to cover grey or to change the color for fashion or to restore the original color after the sun.
+  T4 (SPK_1): Then i could definitely use a color change.  Can i change my color to any color, or are there a few choices?
+  T5 (SPK_0): It can be done at home if you only want to go a few shades darker or lighter, but anything more you really need a hairdresser.
+  T6 (SPK_1): i would also need a toupee maker.  Can't i just use peroxide at home and burn my hair till it is blond?
+  T7 (SPK_0): Bleaching blond hair, if not done professionally, results in a lot of damage.
+  T8 (SPK_1): I seen youtube videos of people doing it at home.
+  T9 (SPK_0): Yeah go ahead and bleach your hair at home it's so easy to do by yourself.
+  FLAGGED: T1->T9(0.9925), T5->T9(0.9978), T7->T9(0.998)
+=== 53: decode_1942 ===
+  T1 (SPK_0): im getting stoked for the weekend
+  T2 (SPK_1): What you you have planned?
+  T3 (SPK_0): nothing! thats why im excited lol
+  T4 (SPK_1): Really?? It sounds like there was something going on.
+  T5 (SPK_0): Yeah i'm so excited.
+  T6 (SPK_1): I think there was nothing going on.
+  FLAGGED: T1->T3(0.9891), T2->T6(0.997), T4->T6(0.9979)
+=== 54: decode_3008 ===
+  T1 (SPK_0): I love to exercise. How often is recommended?
+  T2 (SPK_1): It is recommended to get 150 minutes of moderate exercise a week or 75 minutes of intense exercise. 
+  T3 (SPK_0): What kind of exercises are good?
+  T4 (SPK_1): Weight training is great!  It is training for developing size and strength of skeletal muscles!
+  T5 (SPK_0): Cool, how about nutrition?
+  T6 (SPK_1): Nutrition is very important to good health.  Not just strength, but also immune system.
+  T7 (SPK_0): Is sleep important too?
+  T8 (SPK_1): Big time. Especially REM sleep.  REM is known as the restorative part of our sleep cycle.
+  T9 (SPK_0): What is REM sleep?
+  FLAGGED: T1->T5(0.9976), T3->T5(0.9966), T1->T7(0.981), T3->T7(0.9927), T5->T7(0.9732), T1->T9(0.9963), T3->T9(0.999), T5->T9(0.9994)
+=== 55: decode_253 ===
+  T1 (SPK_0): I missed the sale on wool socks. They are pretty pricey.
+  T2 (SPK_1): Are those the 20 dollar socks why are they so expensive? 
+  T3 (SPK_0): They are real wool and great quality. They are pricey but last a long time.
+  T4 (SPK_1): i bet you can make nice things from their wool,it could give some fittings
+  T5 (SPK_0): It would probably be cheaper to make it yourself too.
+  T6 (SPK_1): Yeah I didn't think about that,its good you suggested that, Could see some benefit there..
+  T7 (SPK_0): Do you own any wool items?
+  T8 (SPK_1): yeah, i do own some
+  T9 (SPK_0): I honestly think it would cost more to make them yourself
+  FLAGGED: T2->T6(0.9067), T5->T9(0.9962)
+=== 56: decode_2392 ===
+  T1 (SPK_0): I like it too. But i am wondering where it originated from
+  T2 (SPK_1): The norms of the tradition were codified between 1550 and 1900, also known as the common-practice period.
+  T3 (SPK_0): Interesting, do you have a favorite composer?
+  T4 (SPK_1): I love lots of classical music artists of course, but my favorite has to be none other than Beethoven!
+  T5 (SPK_0): Can't go wrong with that. Some of my fondest memories were traveling with my dad and grandpa in the circus and them introducing me to Beethoven.
+  T6 (SPK_1): We have that in common then. I can't say the same for my wife and three kids. They get tired of hearing me play classical lol.
+  T7 (SPK_0): Haha, I only live with my two golden retrievers, so they don't have much say in the matter.
+  T8 (SPK_1): Ah, I love dogs. Used to have a golden retriever. Now we have a miniature dachshund. If they howl at the music, they like it!
+  T9 (SPK_0): Haha, if that's the case then I guess a dogs favorite genre is "emergency vehicle sirens"
+  T10 (SPK_1): lol, maybe so. My dog seems to love the sound of a loud nearby train on that note.
+  T11 (SPK_0): I'm pretty fond of trains myself, I traveled on them with my family circus growing up.
+  FLAGGED: T3->T7(0.9949), T5->T7(0.9884)
+=== 57: decode_401 ===
+  T1 (SPK_0): jazz music is a very interesting sound and interesting genre. what can you tell me about it
+  T2 (SPK_1): I like jazz too. It originated in the African-American communities of New Orleans in the late 19th and 20th centuries
+  T3 (SPK_0): awesome im from there. i basically invented jazz then. but anyways where is jazz famous like countries?
+  T4 (SPK_1): It is popular around the world. As it spread across the globe, it drew on different national, regional, and local musical cultures, giving rise to many distinctive styles
+  T5 (SPK_0): Jazz
+  T6 (SPK_1): It's been hailed as "one of America's original art forms"
+  T7 (SPK_0): interesting. who is a famous jazz artist?
+  T8 (SPK_1): Miles Davis is one of the most famous Jazz musicians. As a jazz artist, Davis' music is characterized by swing and blue notes, polyrhythms and improvisation
+  T9 (SPK_0): awesome! what else can you tellme a lot of people dont know about the genre?
+  T10 (SPK_1): Actually I don't care much for jazz. I would rather listen to rock.
+  FLAGGED: T2->T10(0.9966)
+=== 58: decode_1147 ===
+  T1 (SPK_0): That's just it, she wasn't when we had a cat!  So I don't understand it - her eyes swelled shut almost and itched horribly.
+  T2 (SPK_1): oh wow! It sounds like it was a reaction that progressed rapidly. Did it require medical attention?
+  T3 (SPK_0): Yes it did. Nearly scrubbed the skin off in the shower. The allergy is horrible
+  T4 (SPK_1): How long did it take to improve?
+  T5 (SPK_0): Difference was seen in 5 days but lots of topical ointment and scratching and puffy eyes. It was horrible
+  T6 (SPK_1): How has she been doing since then?
+  T7 (SPK_0): Great! We have learned how to deal with the allergies better and keep it under control for less outbreaks
+  T8 (SPK_1): Do you have any other pets?
+  T9 (SPK_0): I have two dogs. German Shepard and Chihuahua. 
+  T10 (SPK_1): Awesome. What are their names?
+  T11 (SPK_0): Smoke is my German Shepard and Cadillac is my chihuahua! Do you have dogs?
+  T12 (SPK_1): Yea, I have two also. 
+  T13 (SPK_0): That's cool, what are your pet's names?
+  T14 (SPK_1): I have a cat named Mittens and 1 dog named Cali.
+  FLAGGED: T5->T7(0.9957), T4->T8(0.9693), T2->T10(0.996), T4->T10(0.9993), T6->T10(0.9983), T8->T10(0.9035), T1->T11(0.9224), T5->T11(0.9487), T7->T11(0.9076), T1->T13(0.9968), T3->T13(0.9963), T5->T13(0.9997), T9->T13(0.9434), T4->T14(0.9936), T6->T14(0.9935)
+=== 59: decode_533 ===
+  T1 (SPK_0): that sounds interesting , what are your hobbies
+  T2 (SPK_1): you aren't reading what i type
+  T3 (SPK_0): I am reading everything you type lol
+  T4 (SPK_1): Well how do you feel about history then?
+  T5 (SPK_0): I enjoy it very much. I find it fascinating that everything that we are able to read about happened and in certain forms begins to repeat itself
+  T6 (SPK_1): See, that's better! History is my favorite as well, my father didn't care much for it though
+  T7 (SPK_0): I think it is harder for some because they see it as a boring subject. But it is supposed to be understood with one's perception as well as their intellect.
+  T8 (SPK_1): Yes I totally agree. There are many facets to history 
+  T9 (SPK_0): I understand that, but to me, history is just not enjoyable at all.
+  FLAGGED: T1->T3(0.9873), T5->T9(0.9974)
+=== 60: decode_580 ===
+  T1 (SPK_0): hi there ! i am eating tofu while running around the park .
+  T2 (SPK_1): hi . that is an interesting combo ! i love cars .
+  T3 (SPK_0): awesome , my husband has a blue car . that's my favorite color .
+  T4 (SPK_1): that's neat . where do you work ? i have a great work at home job .
+  T5 (SPK_0): i work for the vegetarians with vaginas organization .
+  T6 (SPK_1): that's cool ! i go to the gym a lot with my girl friends . they're great !
+  T7 (SPK_0): What kind of workouts do you like to do at the gym?
+  T8 (SPK_1): I hate any kind of physical activity. I rarely do sports or workouts, I prefer to play video games.
+  FLAGGED: T1->T7(0.988), T6->T8(0.9997)
+=== 61: decode_1150 ===
+  T1 (SPK_0): hi how are you doing
+  T2 (SPK_1): hello i'm well . where are you from ?
+  T3 (SPK_0): i am from the midwest what about you
+  T4 (SPK_1): i am from north carolina . what do you do for work ?
+  T5 (SPK_0): i am currently looking for a restaurant job
+  T6 (SPK_1): my wife and i are both doctors . do you have a family
+  T7 (SPK_0): not yet i do have an sister though
+  T8 (SPK_1): siblings are nice . our family keeps growing . three kids and counting
+  T9 (SPK_0): I wanted a sister sibling but only got a brother
+  FLAGGED: T4->T6(0.9303)
+=== 62: decode_1049 ===
+  T1 (SPK_0): Oh me either! It seems like such a long time ago. I wonder when Internet was first created?
+  T2 (SPK_1): It used to be restricted, but around 1995, the restricted were lifted and commercial use of it began
+  T3 (SPK_0): That's interesting. I can imagine having the restrictions lifted helped artists and collectors share their work. I love huge paintings!
+  T4 (SPK_1): I'm an art lover too, I have a house full of it!
+  T5 (SPK_0): Oh how wonderful! Who are your favorite artists?
+  T6 (SPK_1): I really like Albrecht Durer
+  T7 (SPK_0): Oh a German renaissance painter! I like abstract works, personally.
+  T8 (SPK_1): I never got into abstract works, who are your favorites?
+  T9 (SPK_0): Abstract works are not things that I like actually so I don't have any.
+  FLAGGED: T1->T5(0.958), T2->T8(0.9338), T4->T8(0.9982), T6->T8(0.9958), T5->T9(0.9407), T7->T9(0.9982)
+=== 63: decode_1213 ===
+  T1 (SPK_0): hey there , jefferson here , i have a bmw
+  T2 (SPK_1): hi jefferson , i love bmws i have one too .
+  T3 (SPK_0): are your parents bankers as well ?
+  T4 (SPK_1): no they aren't , they like playing golf .
+  T5 (SPK_0): oh . we cannot play much gulf here in manhattan
+  T6 (SPK_1): i would love to visit manhattan .
+  T7 (SPK_0): it is fun , i want to go to business school next year .
+  T8 (SPK_1): that sounds nice . i enjoy stocks .
+  T9 (SPK_0): really . we learned about stocks in yale .
+  T10 (SPK_1): Really? i went to Yale as well.
+  T11 (SPK_0): I know nothing about stocks its all gibberish to me.
+  FLAGGED: T2->T4(0.9979), T4->T8(0.995), T1->T11(0.9968), T3->T11(0.9819), T7->T11(0.9874), T9->T11(0.9981)
+=== 64: decode_1114 ===
+  T1 (SPK_0): hi how are you doing ?
+  T2 (SPK_1): hi , tracy here , my children and i leaving for out house in florida .
+  T3 (SPK_0): cool , for a vacation or are you a snowbird ?
+  T4 (SPK_1): vacation ! today is football sunday . my dog name is snowbird .
+  T5 (SPK_0): that's an unusual name , not much on traveling myself spend too much time working .
+  T6 (SPK_1): great ! it work wears me out . thank god for my chidren and my dog .
+  T7 (SPK_0): i could use some it help at the moment , my protools isn't syncing with the mics .
+  T8 (SPK_1): wow . all work and no travel huh ? you like sports ? i do .
+  T9 (SPK_0): i do , but no time to keep up with work and being a single dad
+  T10 (SPK_1): i see . can i help with it ? what is your name ? you like dogs and children ?
+  T11 (SPK_0): love kids , they are my life . more of a cat person , dogs are too needy ;
+  T12 (SPK_1): Oh I see, my best friend has a cat named Ginger that's actually pretty sweet and is great with kids.
+  T13 (SPK_0): I would never let a cat into my home. They are just too independent and soulless. I would much rather have a dog around my kids.
+  FLAGGED: T2->T6(0.9964), T4->T6(0.9788), T2->T8(0.9995), T4->T8(0.999), T6->T10(0.9717), T8->T10(0.9954), T1->T11(0.9961), T3->T11(0.9979), T5->T11(0.9907), T7->T11(0.9732), T9->T11(0.9225), T4->T12(0.9726), T8->T12(0.9181), T11->T13(0.9943)
+=== 65: decode_3148 ===
+  T1 (SPK_0): I need to lose some weight.  Obesity is a condition where excess body fat is stored in the body
+  T2 (SPK_1): It can be pretty hard to lose weight, but I know there are some good diets you can try.  Have you tried any diets?
+  T3 (SPK_0): I have tried some low carb diets that restrict carbohydrate consumption
+  T4 (SPK_1): Do the low carb diets have a name?  Is Atkins a low carb diet?
+  T5 (SPK_0): Yes, the Atkins diet is classified as a low carb diet, developed by Robert Atkins
+  T6 (SPK_1): Has that worked for you at all?
+  T7 (SPK_0): It has, but then I wind up eating excessive food intake and lack of physical activity and i end up back where i was
+  FLAGGED: T4->T6(0.9034)
+=== 66: decode_2758 ===
+  T1 (SPK_0): Hello, Whats you're favorite type of pasta?
+  T2 (SPK_1): I love most pastas, but spaghetti is my favorite. Pasta is a staple in Italian food, so I ate it a lot growing up.
+  T3 (SPK_0): I like the more hearty cuts like  linguini or rigatoni or bucatini 
+  T4 (SPK_1): I like linguini too. Pasta is fairly easy to make, usually just using flour and eggs or water.
+  T5 (SPK_0): I've never really made it fresh but, i should probably give that a try.   I really like to cook.  I can make a pretty mean carbonara
+  T6 (SPK_1): I am an okay cook, but I usually just go with dry pasta, which is also known as pasta secca.
+  T7 (SPK_0): What do you normally sauce your pasta with?  Tomato? oil/garlic?
+  T8 (SPK_1): I will usually pair it with tomato sauce. Lately I've started making my own sauce. Each pasta dish is defined by the type of noodle, sauce, and cooking style.
+  T9 (SPK_0): I used to use the canned stuff too until I realised how easy it is to just make it out right.       I really like carbonara because its fast.
+  FLAGGED: T4->T6(0.9324)

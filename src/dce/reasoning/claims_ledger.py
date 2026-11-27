@@ -372,38 +372,92 @@ class NLIPreFilter:
             self._model = None
             return False
 
+    @staticmethod
+    def split_clauses(text: str) -> List[str]:
+        """Split a multi-sentence turn into individual clauses/sentences for fine-grained NLI."""
+        cleaned = (text or "").strip()
+        if not cleaned:
+            return []
+        parts = re.split(r"(?<=[.!?])\s+|;\s+", cleaned)
+        clauses = [p.strip() for p in parts if len(p.strip()) >= 3]
+        return clauses if clauses else [cleaned]
+
+    def _predict_single_hf(self, premise: str, hypothesis: str) -> Tuple[float, Optional[float]]:
+        """Run HF cross-encoder on a single (premise, hypothesis) pair."""
+        import torch
+
+        inputs = self._tokenizer(
+            premise,
+            hypothesis,
+            return_tensors="pt",
+            truncation=True,
+            max_length=256,
+        )
+        inputs = {k: v.to(self._device) for k, v in inputs.items()}
+        with torch.no_grad():
+            logits = self._model(**inputs).logits
+            probs = torch.softmax(logits, dim=-1).squeeze(0)
+            c_prob = float(probs[self._contradiction_idx].item())
+            e_prob = (
+                float(probs[self._entailment_idx].item())
+                if self._entailment_idx < len(probs)
+                else None
+            )
+            return c_prob, e_prob
+
     def predict_scores(self, premise: str, hypothesis: str) -> Tuple[float, Optional[float]]:
-        """Return (contradiction_prob, entailment_prob_or_none) for (premise, hypothesis)."""
+        """Return (contradiction_prob, entailment_prob_or_none) for (premise, hypothesis).
+
+        Splits multi-sentence turns into clauses (when not using a custom scorer_fn)
+        and returns the strongest clause-level contradiction pair.
+        """
         if self._scorer_fn is not None:
             score = float(self._scorer_fn(premise, hypothesis))
             return max(0.0, min(1.0, score)), None
 
+        p_clauses = self.split_clauses(premise) or [premise]
+        h_clauses = self.split_clauses(hypothesis) or [hypothesis]
+        pairs = [(pc, hc) for pc in p_clauses for hc in h_clauses][:25]
+
         if self._ensure_hf_model():
             try:
+                if len(pairs) == 1:
+                    return self._predict_single_hf(pairs[0][0], pairs[0][1])
+
                 import torch
 
+                p_list = [p for p, _ in pairs]
+                h_list = [h for _, h in pairs]
                 inputs = self._tokenizer(
-                    premise,
-                    hypothesis,
+                    p_list,
+                    h_list,
                     return_tensors="pt",
+                    padding=True,
                     truncation=True,
                     max_length=256,
                 )
                 inputs = {k: v.to(self._device) for k, v in inputs.items()}
                 with torch.no_grad():
                     logits = self._model(**inputs).logits
-                    probs = torch.softmax(logits, dim=-1).squeeze(0)
-                    c_prob = float(probs[self._contradiction_idx].item())
+                    probs = torch.softmax(logits, dim=-1)
+                    c_probs = probs[:, self._contradiction_idx]
+                    best_idx = int(torch.argmax(c_probs).item())
+                    c_prob = float(c_probs[best_idx].item())
                     e_prob = (
-                        float(probs[self._entailment_idx].item())
-                        if self._entailment_idx < len(probs)
+                        float(probs[best_idx, self._entailment_idx].item())
+                        if self._entailment_idx < probs.shape[-1]
                         else None
                     )
                     return c_prob, e_prob
             except Exception as exc:
                 logger.warning("NLI inference failed (%s); falling back to heuristic.", exc)
 
-        return self._heuristic_contradiction_score(premise, hypothesis), None
+        best_c = 0.0
+        for pc, hc in pairs:
+            c_val = self._heuristic_contradiction_score(pc, hc)
+            if c_val > best_c:
+                best_c = c_val
+        return best_c, None
 
     def predict_contradiction_score(self, premise: str, hypothesis: str) -> float:
         """Predict contradiction probability in [0.0, 1.0] for (premise, hypothesis)."""
@@ -735,7 +789,12 @@ class ClaimsLedger:
             f"Target Claim [{current_claim.claim_id}] (Turn {current_claim.turn_id}, Speaker {current_claim.speaker_id}):\n"
             "{claim_body}\n\n"
             "Prior Claims in Ledger:\n{prior_claims_body}\n\n"
-            "Evaluate consistency between the target claim and the prior claims. "
+            "Evaluate consistency between the target claim and the prior claims.\n"
+            "Distinguish carefully:\n"
+            "- CONSISTENT: compatible facts, or a natural progression where an explicit new event/time explains a state change.\n"
+            "- DIRECT_CONTRADICTION: incompatible factual claims about the same static fact, attribute, or current status.\n"
+            "- TIMELINE_SHIFT: conflicting event times/sequences or an unmotivated reversal of prior status without a coherent timeline update.\n"
+            "- UNVERIFIABLE: insufficient factual overlap to judge.\n"
             "Return CONSISTENT, DIRECT_CONTRADICTION, TIMELINE_SHIFT, or UNVERIFIABLE. "
             "Provide the exact prior_turn_id and prior_claim_id referenced."
         )
@@ -751,7 +810,7 @@ class ClaimsLedger:
 
         system_instruction = (
             "You are a strict logical consistency verification auditor. Compare factual propositions. "
-            "Identify direct contradictions or temporal shifts."
+            "Identify direct contradictions and distinguish genuine timeline updates from timeline contradictions/shifts."
         )
 
         assert_firewall_compliance(prompt_framing)

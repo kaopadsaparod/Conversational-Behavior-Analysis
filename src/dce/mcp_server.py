@@ -601,31 +601,75 @@ class DCESessionStore:
             acoustic_location_shrinkage_k=3.0,
         )
         baseline_store = BaselineStore(config=baseline_cfg, priors=resolved_priors)
+        # Expand feature_order & corr_matrix if resolved_priors includes eGeMAPS / AU / gaze features
+        extra_feats = [k for k in baseline_store.priors if k not in feature_order]
+        if extra_feats:
+            old_n = len(feature_order)
+            feature_order = feature_order + extra_feats
+            new_n = len(feature_order)
+            expanded_corr = np.eye(new_n, dtype=np.float64)
+            expanded_corr[:old_n, :old_n] = corr_matrix
+            corr_matrix = expanded_corr
         maha_cfg = MahalanobisConfig()
         prosody_cfg = ProsodyConfig()
 
         # Optional vision summary across sampled 15 FPS video frames (fresh RunningMode.VIDEO per file)
-        vision_feats = VisionFeatures(face_detected=False, quality_flag="no_video")
-        if video_frames:
-            seq_results = extract_vision_sequence(video_frames, fps=15.0)
-            valid_vis = [v for v in seq_results if v.face_detected and v.quality_flag == "ok"]
+        def _aggregate_vision_slice(seq_slice: Sequence[VisionFeatures]) -> VisionFeatures:
+            valid_vis = [v for v in seq_slice if v.face_detected and v.quality_flag == "ok"]
             blink_rates = [v.blink_rate_per_min for v in valid_vis if v.blink_rate_per_min is not None]
             lip_apts = [v.mean_lip_aperture for v in valid_vis if v.mean_lip_aperture is not None]
             yaws = [v.head_pose_yaw_deg for v in valid_vis if v.head_pose_yaw_deg is not None]
             pitches = [v.head_pose_pitch_deg for v in valid_vis if v.head_pose_pitch_deg is not None]
             rolls = [v.head_pose_roll_deg for v in valid_vis if v.head_pose_roll_deg is not None]
-            if yaws or lip_apts or blink_rates:
-                vision_feats = VisionFeatures(
+            gaze_hs = [
+                v.eye_gaze_horizontal
+                for v in valid_vis
+                if v.eye_gaze_horizontal is not None
+                and (v.head_pose_yaw_deg is None or abs(v.head_pose_yaw_deg) <= 20.0)
+            ]
+            gaze_vs = [
+                v.eye_gaze_vertical
+                for v in valid_vis
+                if v.eye_gaze_vertical is not None
+                and (v.head_pose_yaw_deg is None or abs(v.head_pose_yaw_deg) <= 20.0)
+            ]
+            frontal_vis = [
+                v
+                for v in valid_vis
+                if v.head_pose_yaw_deg is None or abs(v.head_pose_yaw_deg) <= 20.0
+            ]
+            agg_aus: Dict[str, float] = {}
+            for au_key in (
+                "AU01_inner_brow_raise",
+                "AU04_brow_lowerer",
+                "AU12_lip_corner_puller",
+                "AU25_lips_part",
+            ):
+                au_vals = [v.action_units[au_key] for v in frontal_vis if au_key in v.action_units]
+                if au_vals:
+                    agg_aus[au_key] = float(np.mean(au_vals))
+            if yaws or lip_apts or blink_rates or agg_aus or gaze_hs:
+                return VisionFeatures(
                     face_detected=True,
                     blink_rate_per_min=float(np.mean(blink_rates)) if blink_rates else None,
                     mean_lip_aperture=float(np.mean(lip_apts)) if lip_apts else None,
                     head_pose_yaw_deg=float(np.mean(yaws)) if yaws else None,
                     head_pose_pitch_deg=float(np.mean(pitches)) if pitches else None,
                     head_pose_roll_deg=float(np.mean(rolls)) if rolls else None,
+                    eye_gaze_horizontal=float(np.mean(gaze_hs)) if gaze_hs else None,
+                    eye_gaze_vertical=float(np.mean(gaze_vs)) if gaze_vs else None,
+                    action_units=agg_aus,
                     quality_flag="ok",
                 )
-            elif any(v.quality_flag == "extreme_head_pose" for v in seq_results):
-                vision_feats = VisionFeatures(face_detected=True, quality_flag="extreme_head_pose")
+            if any(v.quality_flag == "extreme_head_pose" for v in seq_slice):
+                return VisionFeatures(face_detected=True, quality_flag="extreme_head_pose")
+            return VisionFeatures(face_detected=False, quality_flag="no_face")
+
+        seq_results: List[VisionFeatures] = []
+        vision_feats = VisionFeatures(face_detected=False, quality_flag="no_video")
+        if video_frames:
+            seq_results = extract_vision_sequence(video_frames, fps=15.0)
+            vision_feats = _aggregate_vision_slice(seq_results)
 
         # Build turn boundaries
         turn_specs: List[Dict[str, Any]] = []
@@ -653,22 +697,148 @@ class DCESessionStore:
             raw_segs = _segment_audio_energy(audio, sample_rate=sr)
             if not raw_segs:
                 raw_segs = [(0, len(audio), False)]
-            for idx, (s_idx, e_idx, f_split) in enumerate(raw_segs):
+            pre_specs: List[Dict[str, Any]] = []
+            for s_idx, e_idx, f_split in raw_segs:
+                seg_audio = audio[s_idx:e_idx].copy() if e_idx > s_idx else np.zeros(0, dtype=np.float32)
+                if use_asr and len(seg_audio) > 0:
+                    asr_res = transcribe_audio(
+                        seg_audio,
+                        sample_rate=sr,
+                        model_size=asr_model,
+                        device=asr_device,
+                    )
+                    seg_text = asr_res.text.strip()
+                    seg_words = list(asr_res.words)
+                else:
+                    seg_text = ""
+                    seg_words = []
+
+                # Split Q&A boundaries at '?' when followed by additional words
+                split_done = False
+                if seg_words and "?" in seg_text:
+                    q_word_indices = [
+                        wi for wi, wobj in enumerate(seg_words)
+                        if "?" in str(wobj.word) and wi < len(seg_words) - 1
+                    ]
+                    if q_word_indices:
+                        split_done = True
+                        prev_wi = 0
+                        prev_sample = s_idx
+                        for qi in q_word_indices:
+                            q_end_rel = float(seg_words[qi].end)
+                            next_start_rel = float(seg_words[qi + 1].start)
+                            sub_words = [
+                                WordTimestamp(
+                                    word=w.word,
+                                    start=max(0.0, float(w.start) - (prev_sample - s_idx) / float(sr)),
+                                    end=max(0.0, float(w.end) - (prev_sample - s_idx) / float(sr)),
+                                    probability=w.probability,
+                                )
+                                for w in seg_words[prev_wi : qi + 1]
+                            ]
+                            q_end_sample = min(e_idx, max(prev_sample, s_idx + int(round(q_end_rel * sr))))
+                            pre_specs.append(
+                                {
+                                    "start_sample": prev_sample,
+                                    "end_sample": q_end_sample,
+                                    "forced_split": False,
+                                    "overlap_flag": False,
+                                    "pre_text": " ".join(w.word.strip() for w in sub_words).strip(),
+                                    "pre_words": sub_words,
+                                }
+                            )
+                            prev_wi = qi + 1
+                            prev_sample = min(e_idx, max(q_end_sample, s_idx + int(round(next_start_rel * sr))))
+                        # Remainder after last '?'
+                        rem_words = [
+                            WordTimestamp(
+                                word=w.word,
+                                start=max(0.0, float(w.start) - (prev_sample - s_idx) / float(sr)),
+                                end=max(0.0, float(w.end) - (prev_sample - s_idx) / float(sr)),
+                                probability=w.probability,
+                            )
+                            for w in seg_words[prev_wi:]
+                        ]
+                        if rem_words and e_idx > prev_sample:
+                            pre_specs.append(
+                                {
+                                    "start_sample": prev_sample,
+                                    "end_sample": e_idx,
+                                    "forced_split": f_split,
+                                    "overlap_flag": False,
+                                    "pre_text": " ".join(w.word.strip() for w in rem_words).strip(),
+                                    "pre_words": rem_words,
+                                }
+                            )
+
+                if not split_done:
+                    pre_specs.append(
+                        {
+                            "start_sample": s_idx,
+                            "end_sample": e_idx,
+                            "forced_split": f_split,
+                            "overlap_flag": False,
+                            "pre_text": seg_text,
+                            "pre_words": seg_words,
+                        }
+                    )
+
+            # Lightweight Q&A / Pitch Speaker Diarization
+            turn_f0s: List[Optional[float]] = []
+            for ps in pre_specs:
+                sub_a = audio[ps["start_sample"] : ps["end_sample"]]
+                if len(sub_a) >= int(0.3 * sr):
+                    p_quick = extract_prosody(sub_a, sample_rate=sr, config=prosody_cfg)
+                    turn_f0s.append(p_quick.f0_median_hz)
+                else:
+                    turn_f0s.append(None)
+
+            # Determine witness reference pitch from non-question turns (or all turns)
+            ans_f0s = [
+                f0 for ps, f0 in zip(pre_specs, turn_f0s)
+                if f0 is not None and not ps["pre_text"].strip().endswith("?")
+            ]
+            ref_f0 = float(np.median(ans_f0s)) if ans_f0s else None
+
+            for idx, ps in enumerate(pre_specs):
+                t_txt = ps["pre_text"].strip()
+                is_q = t_txt.endswith("?")
+                has_next_ans = (idx + 1 < len(pre_specs)) and not pre_specs[idx + 1]["pre_text"].strip().endswith("?")
+                f0_val = turn_f0s[idx]
+                pitch_diff_st = (
+                    abs(12.0 * math.log2(f0_val / ref_f0))
+                    if (f0_val is not None and ref_f0 is not None and ref_f0 > 0.0 and f0_val > 0.0)
+                    else 0.0
+                )
+                if (is_q and has_next_ans) or (is_q and pitch_diff_st >= 3.5):
+                    spk_id = "Q_ASKER"
+                elif not is_q and pitch_diff_st >= 4.5 and len(pre_specs) >= 3:
+                    spk_id = "speaker_1"
+                else:
+                    spk_id = "speaker_0"
                 turn_specs.append(
                     {
                         "turn_id": idx + 1,
-                        "speaker_id": "speaker_0",
-                        "start_sample": s_idx,
-                        "end_sample": e_idx,
-                        "forced_split": f_split,
-                        "overlap_flag": False,
+                        "speaker_id": spk_id,
+                        "start_sample": ps["start_sample"],
+                        "end_sample": ps["end_sample"],
+                        "forced_split": ps["forced_split"],
+                        "overlap_flag": ps["overlap_flag"],
                         "override": None,
+                        "pre_text": t_txt,
+                        "pre_words": ps["pre_words"],
                     }
                 )
 
         stored_turns: Dict[int, _StoredTurn] = {}
         turn_order: List[int] = []
         firewall_turns_out: List[Dict[str, Any]] = []
+        _closed_q_prefixes = {
+            "is", "are", "was", "were", "do", "does", "did", "have", "has", "had",
+            "can", "could", "will", "would", "should", "may", "might", "shall",
+        }
+        prev_q_end_sec: Optional[float] = None
+        prev_q_is_closed: bool = False
 
         for spec in turn_specs:
             tid = spec["turn_id"]
@@ -700,6 +870,9 @@ class DCESessionStore:
                     )
                     if w.get("alternative"):
                         word_alts[w_text.lower()] = str(w["alternative"])
+            elif "pre_text" in spec:
+                raw_text = str(spec["pre_text"]).strip()
+                word_objs = list(spec.get("pre_words") or [])
             elif use_asr and len(turn_audio) > 0:
                 asr_res = transcribe_audio(
                     turn_audio,
@@ -735,13 +908,54 @@ class DCESessionStore:
             if prosody_feats.acoustic_snr_db is None:
                 prosody_feats.acoustic_snr_db = egemaps.get("acoustic_snr_db")
 
+            # Compute pre-word hesitation pauses (> 400 ms) from WordTimestamp gaps
+            word_gaps_ms = [
+                max(0.0, (float(word_objs[wi].start) - float(word_objs[wi - 1].end)) * 1000.0)
+                for wi in range(1, len(word_objs))
+            ]
+            hesitation_gaps_ms = [g for g in word_gaps_ms if g > 400.0]
+            max_pre_word_pause_ms = max(word_gaps_ms) if word_gaps_ms else None
+            hesitation_pause_count = len(hesitation_gaps_ms)
+
+            # Compute Q&A response latency if this turn answers a preceding question
+            resp_lat_open: Optional[float] = None
+            resp_lat_closed: Optional[float] = None
+            curr_turn_start_sec = s_idx / float(sr)
+            curr_turn_end_sec = e_idx / float(sr)
+            if prev_q_end_sec is not None and speaker_id != "Q_ASKER" and not raw_text.endswith("?"):
+                ans_onset_sec = curr_turn_start_sec + (float(word_objs[0].start) if word_objs else 0.0)
+                gap_sec = max(0.0, ans_onset_sec - prev_q_end_sec)
+                if prev_q_is_closed:
+                    resp_lat_closed = gap_sec
+                else:
+                    resp_lat_open = gap_sec
+                prev_q_end_sec = None
+
+            if raw_text.endswith("?") or speaker_id == "Q_ASKER":
+                prev_q_end_sec = curr_turn_start_sec + (float(word_objs[-1].end) if word_objs else (curr_turn_end_sec - curr_turn_start_sec))
+                first_tok = re.findall(r"[a-zA-Z']+", raw_text.lower())
+                prev_q_is_closed = bool(first_tok and first_tok[0] in _closed_q_prefixes)
+
             turn_dur_ms = (end_ns - start_ns) / 1e6
+            total_hes_ms = float(sum(hesitation_gaps_ms))
             timing_feats = TimingFeatures(
+                response_latency_open=resp_lat_open,
+                response_latency_closed=resp_lat_closed,
                 turn_duration_ms=turn_dur_ms,
-                speech_duration_ms=turn_dur_ms,
-                total_pause_ms=0.0,
-                pause_count=0,
+                speech_duration_ms=max(0.0, turn_dur_ms - total_hes_ms),
+                total_pause_ms=total_hes_ms,
+                pause_count=hesitation_pause_count,
+                max_pre_word_pause_ms=max_pre_word_pause_ms,
+                hesitation_pause_count=hesitation_pause_count,
             )
+            turn_vision_feats = vision_feats
+            if seq_results:
+                f_start = max(0, int(round((s_idx / float(sr)) * 15.0)))
+                f_end = min(len(seq_results), max(f_start + 1, int(round((e_idx / float(sr)) * 15.0))))
+                turn_slice = seq_results[f_start:f_end]
+                if sum(1 for v in turn_slice if v.face_detected and v.quality_flag == "ok") >= 3:
+                    turn_vision_feats = _aggregate_vision_slice(turn_slice)
+
             turn_features = TurnFeatures(
                 turn_id=tid,
                 speaker_id=speaker_id,
@@ -749,7 +963,7 @@ class DCESessionStore:
                 end_ns=end_ns,
                 timing=timing_feats,
                 prosody=prosody_feats,
-                vision=vision_feats,
+                vision=turn_vision_feats,
             )
 
             # Score & update BaselineStore (k_mu = shrinkage_k, default 0.0)
@@ -758,8 +972,34 @@ class DCESessionStore:
                 turn_features=turn_features,
                 word_count=word_count if word_count > 0 else None,
             )
+            # One-sided cognitive load clamping:
+            # - f0_semitone_sd (stress_polarity == -1): emotional expressiveness (z > 0) does not inflate d_sq.
+            # - response_latency_open/closed (stress_polarity == +1): immediate answers (z < 0) do not inflate d_sq.
+            maha_scores = dict(feature_scores)
+            f0_prior = baseline_store.priors.get("f0_semitone_sd")
+            f0_fs = maha_scores.get("f0_semitone_sd")
+            if (
+                f0_prior is not None
+                and f0_prior.stress_polarity == -1
+                and f0_fs is not None
+                and f0_fs.z_score is not None
+                and f0_fs.z_score > 0.0
+            ):
+                maha_scores["f0_semitone_sd"] = f0_fs.model_copy(update={"z_score": 0.0})
+            for lat_feat in ("response_latency_open", "response_latency_closed"):
+                lat_prior = baseline_store.priors.get(lat_feat)
+                lat_fs = maha_scores.get(lat_feat)
+                if (
+                    lat_prior is not None
+                    and lat_prior.stress_polarity == 1
+                    and lat_fs is not None
+                    and lat_fs.z_score is not None
+                    and lat_fs.z_score < 0.0
+                ):
+                    maha_scores[lat_feat] = lat_fs.model_copy(update={"z_score": 0.0})
+
             maha_res = compute_mahalanobis(
-                feature_scores=feature_scores,
+                feature_scores=maha_scores,
                 correlation_matrix=corr_matrix,
                 feature_order=feature_order,
                 priors=baseline_store.priors,
@@ -846,8 +1086,21 @@ class DCESessionStore:
                 "then call dce_submit_verdicts."
             ),
         }
-        # Hard Neuro-Symbolic Firewall invariant check before returning to LLM
-        assert_firewall_compliance(json.dumps(response, ensure_ascii=False))
+        # Hard Neuro-Symbolic Firewall invariant check on response keys and metadata
+        # (exclude spoken transcript text so natural speech containing words like
+        # "stress", "blink", or "anomaly" does not trigger a false firewall block).
+        sanitized_for_firewall = {
+            **response,
+            "turns": [
+                {
+                    k: v
+                    for k, v in t.items()
+                    if k not in ("annotated_text", "raw_text", "low_confidence_words")
+                }
+                for t in firewall_turns_out
+            ],
+        }
+        assert_firewall_compliance(json.dumps(sanitized_for_firewall, ensure_ascii=False))
         return response
 
     def submit_verdicts(
