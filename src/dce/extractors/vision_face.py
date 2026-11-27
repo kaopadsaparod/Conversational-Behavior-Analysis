@@ -554,20 +554,26 @@ def extract_vision_sequence(
     )
 
     out_features: List[VisionFeatures] = []
-    blink_events = 0
+    valid_flags: List[bool] = []
+    blink_onsets: List[int] = []
     prev_blinking = False
-    valid_frames = 0
-    step_ms = max(1, int(round(1000.0 / max(fps, 1.0))))
+    eff_fps = max(fps, 1.0)
+    step_ms = max(1, int(round(1000.0 / eff_fps)))
+    win_frames = max(1, int(round(10.0 * eff_fps)))
 
     with vision.FaceLandmarker.create_from_options(options) as landmarker:
         for idx, raw_frame in enumerate(frames_rgb):
             if raw_frame is None or raw_frame.size == 0:
                 out_features.append(VisionFeatures(face_detected=False, quality_flag="empty_frame"))
+                valid_flags.append(False)
+                blink_onsets.append(0)
                 continue
             if float(np.mean(raw_frame)) < min_luma:
                 out_features.append(
                     VisionFeatures(face_detected=False, low_light_flag=True, quality_flag="low_light")
                 )
+                valid_flags.append(False)
+                blink_onsets.append(0)
                 continue
 
             frame = np.stack([raw_frame, raw_frame, raw_frame], axis=-1) if raw_frame.ndim == 2 else raw_frame
@@ -578,6 +584,8 @@ def extract_vision_sequence(
             results = landmarker.detect_for_video(mp_image, idx * step_ms)
             if not getattr(results, "face_landmarks", None):
                 out_features.append(VisionFeatures(face_detected=False, quality_flag="no_face"))
+                valid_flags.append(False)
+                blink_onsets.append(0)
                 continue
 
             coords = np.array([[lm.x * w, lm.y * h] for lm in results.face_landmarks[0]], dtype=np.float64)
@@ -605,19 +613,22 @@ def extract_vision_sequence(
                 blendshapes_map=blendshapes_map,
                 transform_matrix=transform_matrix,
             )
-            if vf.quality_flag == "ok":
-                valid_frames += 1
+            is_valid = vf.quality_flag == "ok"
+            onset = 0
+            if is_valid:
                 is_blinking = vf.action_units.get("AU45_blink", 0.0) >= 0.5
                 if is_blinking and not prev_blinking:
-                    blink_events += 1
+                    onset = 1
                 prev_blinking = is_blinking
+            valid_flags.append(is_valid)
+            blink_onsets.append(onset)
+            if is_valid:
+                lo = max(0, len(valid_flags) - win_frames)
+                win_valid = sum(valid_flags[lo:])
+                win_valid_sec = float(win_valid) / eff_fps
+                if win_valid_sec >= 6.0:
+                    win_blinks = sum(blink_onsets[lo:])
+                    vf = vf.model_copy(update={"blink_rate_per_min": float(win_blinks) / (win_valid_sec / 60.0)})
             out_features.append(vf)
 
-    valid_sec = float(valid_frames) / max(fps, 1.0)
-    blink_rate = float(blink_events) / (valid_sec / 60.0) if valid_sec >= 8.0 else None
-    if blink_rate is not None:
-        out_features = [
-            vf.model_copy(update={"blink_rate_per_min": blink_rate}) if vf.quality_flag == "ok" else vf
-            for vf in out_features
-        ]
     return out_features

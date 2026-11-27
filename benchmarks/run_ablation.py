@@ -76,7 +76,12 @@ def evaluate_loso(records: Sequence[RecorderTurnRecord]) -> Dict[str, AblationMe
         )
         if any(
             (v.response.verdict if isinstance(v, VerificationResult) else v.verdict)
-            in (VerdictStatus.DIRECT_CONTRADICTION, VerdictStatus.TIMELINE_SHIFT)
+            in (
+                VerdictStatus.DIRECT_CONTRADICTION,
+                VerdictStatus.TIMELINE_SHIFT,
+                VerdictStatus.MODIFIER_EROSION,
+                VerdictStatus.EVASION,
+            )
             for v in verifications_to_check
         ):
             is_llm_contradiction = True
@@ -164,7 +169,12 @@ def _record_is_contradiction(r: RecorderTurnRecord) -> bool:
     )
     return any(
         (v.response.verdict if isinstance(v, VerificationResult) else v.verdict)
-        in (VerdictStatus.DIRECT_CONTRADICTION, VerdictStatus.TIMELINE_SHIFT)
+        in (
+            VerdictStatus.DIRECT_CONTRADICTION,
+            VerdictStatus.TIMELINE_SHIFT,
+            VerdictStatus.MODIFIER_EROSION,
+            VerdictStatus.EVASION,
+        )
         for v in verifications_to_check
     )
 
@@ -427,6 +437,8 @@ def evaluate_decode_benchmark(
                     if res.response.verdict in (
                         VerdictStatus.DIRECT_CONTRADICTION,
                         VerdictStatus.TIMELINE_SHIFT,
+                        VerdictStatus.MODIFIER_EROSION,
+                        VerdictStatus.EVASION,
                     ):
                         predicted_contradiction = True
             prior_claims.append(claim)

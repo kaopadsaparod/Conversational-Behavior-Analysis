@@ -184,6 +184,8 @@ MCP_TOOLS: List[Dict[str, Any]] = [
                                     "CONSISTENT",
                                     "DIRECT_CONTRADICTION",
                                     "TIMELINE_SHIFT",
+                                    "MODIFIER_EROSION",
+                                    "EVASION",
                                     "NEEDS_AUDIO_REVIEW",
                                     "UNVERIFIABLE",
                                 ],
@@ -360,7 +362,7 @@ def _load_media_audio_and_vision(media_path: Path) -> Tuple[Any, int, List[Any]]
         media_path=media_path,
         target_sr=16000,
         video_fps=15.0,
-        max_frames=450,
+        max_frames=9000,
     )
 
 
@@ -508,6 +510,8 @@ def _extract_turn_tokens(text: str) -> List[str]:
 class DCESessionStore:
     """Thread-safe state-locked session store backing the 4 MCP tools."""
 
+    MAX_SESSIONS: int = 16
+
     def __init__(self) -> None:
         self._lock = threading.Lock()
         self._sessions: Dict[str, _DCESession] = {}
@@ -539,7 +543,7 @@ class DCESessionStore:
             transcribe_audio,
         )
         from dce.extractors.vision_face import extract_vision_sequence
-        from dce.math_core import compute_mahalanobis
+        from dce.math_core import compute_mahalanobis, normalized_av_xcorr
         from dce.reasoning.claims_ledger import assert_firewall_compliance
         from dce.reasoning.templates import generate_physical_explanation
         from dce.schemas import (
@@ -949,12 +953,35 @@ class DCESessionStore:
                 hesitation_pause_count=hesitation_pause_count,
             )
             turn_vision_feats = vision_feats
+            av_lag_ms: Optional[float] = None
+            av_corr: Optional[float] = None
             if seq_results:
                 f_start = max(0, int(round((s_idx / float(sr)) * 15.0)))
                 f_end = min(len(seq_results), max(f_start + 1, int(round((e_idx / float(sr)) * 15.0))))
                 turn_slice = seq_results[f_start:f_end]
                 if sum(1 for v in turn_slice if v.face_detected and v.quality_flag == "ok") >= 3:
                     turn_vision_feats = _aggregate_vision_slice(turn_slice)
+                else:
+                    turn_vision_feats = VisionFeatures(face_detected=False, quality_flag="insufficient_frames")
+
+                # Compute 50Hz A/V cross-correlation for this turn
+                vis_pairs = [
+                    (float(f_start + offset) / 15.0, float(v.mean_lip_aperture))
+                    for offset, v in enumerate(turn_slice)
+                    if v.face_detected and v.quality_flag == "ok" and v.mean_lip_aperture is not None
+                ]
+                hop_20ms = max(1, int(round(0.020 * sr)))
+                n_bins = len(turn_audio) // hop_20ms
+                if len(vis_pairs) >= 2 and n_bins >= 2:
+                    t_vis_sec = [p[0] for p in vis_pairs]
+                    lip_seq = [p[1] for p in vis_pairs]
+                    turn_t0 = s_idx / float(sr)
+                    t_aud_sec = [turn_t0 + (b + 0.5) * 0.020 for b in range(n_bins)]
+                    audio_rms_env = [
+                        float(np.sqrt(np.mean(turn_audio[b * hop_20ms : (b + 1) * hop_20ms] ** 2)))
+                        for b in range(n_bins)
+                    ]
+                    av_lag_ms, av_corr = normalized_av_xcorr(t_vis_sec, lip_seq, t_aud_sec, audio_rms_env)
 
             turn_features = TurnFeatures(
                 turn_id=tid,
@@ -964,6 +991,8 @@ class DCESessionStore:
                 timing=timing_feats,
                 prosody=prosody_feats,
                 vision=turn_vision_feats,
+                av_sync_lag_ms=av_lag_ms,
+                av_sync_corr=av_corr,
             )
 
             # Score & update BaselineStore (k_mu = shrinkage_k, default 0.0)
@@ -972,10 +1001,12 @@ class DCESessionStore:
                 turn_features=turn_features,
                 word_count=word_count if word_count > 0 else None,
             )
-            # One-sided cognitive load clamping:
-            # - f0_semitone_sd (stress_polarity == -1): emotional expressiveness (z > 0) does not inflate d_sq.
-            # - response_latency_open/closed (stress_polarity == +1): immediate answers (z < 0) do not inflate d_sq.
-            maha_scores = dict(feature_scores)
+            # Exclude non-discriminative neutral fillers from diluting Mahalanobis degrees_of_freedom
+            maha_scores = {
+                k: v
+                for k, v in feature_scores.items()
+                if k not in ("loudness_db", "au01_inner_brow_raise", "au25_lips_part")
+            }
             f0_prior = baseline_store.priors.get("f0_semitone_sd")
             f0_fs = maha_scores.get("f0_semitone_sd")
             if (
@@ -1066,6 +1097,13 @@ class DCESessionStore:
             )
 
         with self._lock:
+            if sid not in self._sessions:
+                while len(self._sessions) >= self.MAX_SESSIONS:
+                    evict_sid = next(
+                        (k for k, v in self._sessions.items() if v.state == "SIGNALS_UNLOCKED"),
+                        next(iter(self._sessions)),
+                    )
+                    del self._sessions[evict_sid]
             self._sessions[sid] = _DCESession(
                 session_id=sid,
                 state="INGESTED",
@@ -1182,6 +1220,8 @@ class DCESessionStore:
                 is_conflict = raw_verdict in {
                     VerdictStatus.DIRECT_CONTRADICTION.value,
                     VerdictStatus.TIMELINE_SHIFT.value,
+                    VerdictStatus.MODIFIER_EROSION.value,
+                    VerdictStatus.EVASION.value,
                 }
                 downgrade_reason: Optional[str] = None
                 if is_conflict:
@@ -1303,7 +1343,7 @@ class DCESessionStore:
                 media_p = Path(sess.media_path)
                 jsonl_path = media_p.parent / f"{media_p.stem}_{sess.session_id}_replay.jsonl"
 
-            recorder = FeatureRecorder(jsonl_path)
+            recorder = FeatureRecorder(jsonl_path, overwrite=True)
             unlocked_turns: List[Dict[str, Any]] = []
             try:
                 for tid in sess.turn_order:

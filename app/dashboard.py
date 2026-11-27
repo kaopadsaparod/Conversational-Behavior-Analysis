@@ -24,6 +24,8 @@ VERDICT_BADGES: Dict[str, str] = {
     VerdictStatus.CONSISTENT.value: "🟢 CONSISTENT",
     VerdictStatus.DIRECT_CONTRADICTION.value: "🔴 DIRECT_CONTRADICTION",
     VerdictStatus.TIMELINE_SHIFT.value: "🟠 TIMELINE_SHIFT",
+    VerdictStatus.MODIFIER_EROSION.value: "🟡 MODIFIER_EROSION",
+    VerdictStatus.EVASION.value: "🟡 EVASION",
     VerdictStatus.NEEDS_AUDIO_REVIEW.value: "⚪ NEEDS_AUDIO_REVIEW",
     VerdictStatus.UNVERIFIABLE.value: "⚪ UNVERIFIABLE",
     VerdictStatus.REJECTED_INVALID_REF.value: "⛔ REJECTED_INVALID_REF",
@@ -192,7 +194,12 @@ def compute_review_priority(record: RecorderTurnRecord) -> Dict[str, Any]:
     if rel["text"]["weight"] > 0.0:
         verifications = record.verifications or ([record.verification] if record.verification else [])
         if any(
-            v.verdict in (VerdictStatus.DIRECT_CONTRADICTION, VerdictStatus.TIMELINE_SHIFT)
+            v.verdict in (
+                VerdictStatus.DIRECT_CONTRADICTION,
+                VerdictStatus.TIMELINE_SHIFT,
+                VerdictStatus.MODIFIER_EROSION,
+                VerdictStatus.EVASION,
+            )
             for v in verifications
         ):
             text_score = 1.0

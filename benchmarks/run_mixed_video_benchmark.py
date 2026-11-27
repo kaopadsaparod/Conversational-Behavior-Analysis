@@ -234,6 +234,7 @@ def run_prepare_and_ingest(skip_prepare: bool = False) -> None:
 
     # Ingest all 24 clips through DCESessionStore
     store = DCESessionStore()
+    all_sessions: Dict[str, Any] = {}
     blind_transcripts: List[Dict[str, Any]] = []
     t0 = time.perf_counter()
     for item in manifest:
@@ -247,6 +248,7 @@ def run_prepare_and_ingest(skip_prepare: bool = False) -> None:
             asr_model="small.en",
             use_asr=True,
         )
+        all_sessions[res["session_id"]] = store._sessions[res["session_id"]]
         blind_transcripts.append(
             {
                 "anon_id": anon_id,
@@ -260,7 +262,7 @@ def run_prepare_and_ingest(skip_prepare: bool = False) -> None:
     elapsed = round(time.perf_counter() - t0, 2)
     TRANSCRIPTS_PATH.write_text(json.dumps(blind_transcripts, indent=2, ensure_ascii=False), encoding="utf-8")
     with SESSION_STATE_PATH.open("wb") as f:
-        pickle.dump(store._sessions, f)
+        pickle.dump(all_sessions, f)
     print(f"Prepared & ingested {len(manifest)} mixed clips in {elapsed}s")
 
 
@@ -333,7 +335,7 @@ def run_unlock_and_score() -> None:
                 if ratio >= 2.8:
                     high_turns += 1
         mean_d_sq_df = (w_sum / d_sum) if d_sum > 0.0 else 0.0
-        mode_a = (mean_d_sq_df >= 2.2) or (high_turns >= 2)
+        mode_a = (mean_d_sq_df >= 1.8) or (high_turns >= 2)
 
         # Mode B: Semantic reasoning verdicts
         mode_b = (raw_v in ("DIRECT_CONTRADICTION", "TIMELINE_SHIFT", "MODIFIER_EROSION", "EVASION", "DECEPTIVE_EVASION")) or any(
@@ -342,7 +344,7 @@ def run_unlock_and_score() -> None:
         )
 
         # Mode C: Neuro-Symbolic Fusion (Mode B always triggers; Mode A only when sustained across >= 2 valid turns with >= 4 features)
-        sustained_phys = (mean_d_sq_df >= 2.2) and (valid_4f_turns >= 2)
+        sustained_phys = (mean_d_sq_df >= 1.8) and (valid_4f_turns >= 2)
         mode_c = mode_b or sustained_phys
 
         rows.append(

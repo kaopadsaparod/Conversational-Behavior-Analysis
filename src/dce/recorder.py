@@ -23,16 +23,18 @@ class FeatureRecorder:
         self,
         output_path: Union[str, Path],
         audio_dir: Optional[Union[str, Path]] = None,
+        overwrite: bool = False,
     ) -> None:
         """Initialize FeatureRecorder.
 
         Args:
             output_path: Target filesystem path for the .jsonl recording file.
             audio_dir: Optional directory for saving per-turn WAV audio clips.
+            overwrite: If True, truncate any existing file instead of appending.
         """
         self._path: Path = Path(output_path)
         self._path.parent.mkdir(parents=True, exist_ok=True)
-        self._file: TextIO = self._path.open("a", encoding="utf-8")
+        self._file: TextIO = self._path.open("w" if overwrite else "a", encoding="utf-8")
         self._audio_dir: Optional[Path] = Path(audio_dir) if audio_dir is not None else None
         if self._audio_dir is not None:
             self._audio_dir.mkdir(parents=True, exist_ok=True)

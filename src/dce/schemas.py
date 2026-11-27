@@ -406,7 +406,15 @@ FEATURE_GROUPS: Dict[str, Literal["timing", "voice", "vision"]] = {
     "jitter_local_pct": "voice",
     "shimmer_local_pct": "voice",
     "hnr_db": "voice",
+    "spectral_slope_db": "voice",
+    "alpha_ratio_db": "voice",
+    "loudness_db": "voice",
     "blink_rate_per_min": "vision",
+    "au01_inner_brow_raise": "vision",
+    "au04_brow_lowerer": "vision",
+    "au12_lip_corner_puller": "vision",
+    "au25_lips_part": "vision",
+    "eye_gaze_horizontal": "vision",
 }
 
 
@@ -518,6 +526,8 @@ class VerdictStatus(str, Enum):
     CONSISTENT = "CONSISTENT"
     DIRECT_CONTRADICTION = "DIRECT_CONTRADICTION"
     TIMELINE_SHIFT = "TIMELINE_SHIFT"
+    MODIFIER_EROSION = "MODIFIER_EROSION"
+    EVASION = "EVASION"
     NEEDS_AUDIO_REVIEW = "NEEDS_AUDIO_REVIEW"
     UNVERIFIABLE = "UNVERIFIABLE"
     REJECTED_INVALID_REF = "REJECTED_INVALID_REF"

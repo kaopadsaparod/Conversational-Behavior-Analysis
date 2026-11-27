@@ -400,7 +400,7 @@ def test_pipeline_cancel_speculative_priors_context_and_verifications() -> None:
     pipeline = DiscourseConsistencyPipeline(config=cfg)
 
     # Default correlation matrix loaded from data/priors_en.json (non-identity)
-    assert not np.allclose(pipeline._correlation_matrix, np.eye(8))
+    assert not np.allclose(pipeline._correlation_matrix, np.eye(len(pipeline._feature_order)))
 
     # CancelSpeculativeEvent removes matching epoch from mailbox
     pcm_speech = [0.05] * 320
@@ -559,7 +559,7 @@ def test_step_b_allows_spoken_firewall_words_and_pipeline_priors_from_other_cwd(
     # Pipeline loads data/priors_en.json even when CWD is tmp_path
     monkeypatch.chdir(tmp_path)
     pipeline = DiscourseConsistencyPipeline(config=AppConfig(mode=ClockMode.OFFLINE))
-    assert not np.allclose(pipeline._correlation_matrix, np.eye(8))
+    assert not np.allclose(pipeline._correlation_matrix, np.eye(len(pipeline._feature_order)))
 
     # evaluate_loso checks all verifications in record.verifications
     rec_multi = RecorderTurnRecord(

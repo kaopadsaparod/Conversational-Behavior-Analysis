@@ -292,7 +292,7 @@ def decode_media_audio_and_frames(
     media_path: Union[str, Path],
     target_sr: int = 16000,
     video_fps: float = 15.0,
-    max_frames: int = 450,
+    max_frames: int = 9000,
 ) -> Tuple[np.ndarray, int, List[np.ndarray]]:
     """Centralized media decoder returning (mono_float32_audio, 16000, sampled_rgb_frames).
 

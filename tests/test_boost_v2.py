@@ -241,3 +241,42 @@ def test_mcp_immediate_response_latency_not_penalized_and_unlock_schema(
     assert ans_u["mahalanobis"]["direction_label"] == "normal"
     assert "degrees_of_freedom" in ans_u["mahalanobis"]
 
+
+def test_audit_fixes_verdict_enums_replay_overwrite_and_session_cap(tmp_path: Path) -> None:
+    from dce.schemas import VerdictStatus
+
+    assert VerdictStatus.MODIFIER_EROSION.value == "MODIFIER_EROSION"
+    assert VerdictStatus.EVASION.value == "EVASION"
+
+    sr = 16000
+    t = np.linspace(0.0, 1.5, int(sr * 1.5), endpoint=False)
+    sig = 0.2 * np.sin(2.0 * np.pi * 160.0 * t).astype(np.float32)
+    wav_path = tmp_path / "cap.wav"
+    _write_wav(wav_path, sig, sr=sr)
+
+    store = DCESessionStore()
+    replay_path = tmp_path / "replay_overwrite.jsonl"
+    res = store.ingest_media(
+        str(wav_path),
+        use_asr=False,
+        transcript_override=[{"turn_id": 1, "speaker_id": "speaker_0", "text": "Hello."}],
+    )
+    sid = res["session_id"]
+    store.submit_verdicts(
+        sid,
+        verdicts=[{"verdict": "EVASION", "source_turn_id": 1, "explanation": "Refused to answer."}],
+    )
+    store.unlock_signals(sid, output_jsonl_path=str(replay_path))
+    store.unlock_signals(sid, output_jsonl_path=str(replay_path))
+    lines = [ln for ln in replay_path.read_text(encoding="utf-8").splitlines() if ln.strip()]
+    assert len(lines) == 1
+
+    # Verify DCESessionStore caps active sessions at MAX_SESSIONS (16)
+    for _ in range(18):
+        store.ingest_media(
+            str(wav_path),
+            use_asr=False,
+            transcript_override=[{"turn_id": 1, "speaker_id": "speaker_0", "text": "Hello."}],
+        )
+    assert len(store._sessions) == store.MAX_SESSIONS
+

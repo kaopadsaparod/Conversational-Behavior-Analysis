@@ -48,7 +48,7 @@ python -m dce.mcp_server
 All benchmarks were run with real extractors (`faster-whisper 1.2.1`, `praat-parselmouth 0.4.7`, `mediapipe 1.2.3`, `av 19.0.2`, `cross-encoder/nli-deberta-v3-xsmall`) and blinded inputs (filenames and ground-truth labels stripped before reasoning). Detailed tables and failure analyses are in [BENCHMARK_REPORT.md](BENCHMARK_REPORT.md).
 
 ### Unit & Integration Tests
-- `python -m pytest -q`: **153 passed in 14.26s**
+- `python -m pytest -q`: **154 passed in 10.21s**
 
 ### DECODE Contradiction Pipeline (`dev.jsonl`, 100 balanced dialogues: 50 Pos / 50 Neg)
 Same-speaker raw utterance pairs with clause splitting, Turn-0 context, and `nli_threshold = 0.72`:
@@ -59,18 +59,18 @@ Same-speaker raw utterance pairs with clause splitting, Turn-0 context, and `nli
 | **Full 2-Stage (Stage 1 + Blind Stage 2)** | **47** | **0** | **50** | **3** | **1.0000** | **0.9400** | **0.9691** | **0.9700** | **1,787 / 3,135 (57.0%)** |
 
 ### 24 Mixed Wild Videos (`12 RLDD Test/` + `12 Werewolf-YouTube` 20s sub-clips)
-Calibrated on 54 `RLDD Train/` Truthful clips (`priors_wild_video_en.json`), frontal-gated AUs/gaze (`|yaw| <= 20°`), and sustained Mode C fusion (`mean(d_sq/df) >= 2.2` and `>= 2` turns with `df >= 4`):
+Recalibrated on 54 `RLDD Train/` Truthful clips (`priors_wild_video_en.json`, causal 10s rolling blink rate, block-diagonal voice correlations), frontal-gated AUs/gaze (`|yaw| <= 20°`), neutral fillers excluded from `df`, and 5-fold `Train/` CV threshold (`mean(d_sq/df) >= 1.8` across `>= 2` turns with `df >= 4`):
 
 | Split | Mode | TP | FP | TN | FN | Precision | Recall | F1 | Accuracy |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---:|
-| Overall (`n=24`) | Mode A (Physio) | 3 | 3 | 9 | 9 | 0.5000 | 0.2500 | 0.3333 | 0.5000 |
-| Overall (`n=24`) | Mode B (Semantic) | 3 | 1 | 11 | 9 | 0.7500 | 0.2500 | 0.3750 | 0.5833 |
-| Overall (`n=24`) | **Mode C (Fusion)** | **4** | **1** | **11** | **8** | **0.8000** | **0.3333** | **0.4706** | **0.6250** |
-| `RLDD Test/` (`n=12`) | Mode A (Physio) | 0 | 2 | 4 | 6 | 0.0000 | 0.0000 | 0.0000 | 0.3333 |
-| `RLDD Test/` (`n=12`) | **Mode B & Mode C** | **2** | **0** | **6** | **4** | **1.0000** | **0.3333** | **0.5000** | **0.6667** |
-| `Werewolf` 20s (`n=12`) | Mode A (Physio) | 3 | 1 | 5 | 3 | 0.7500 | 0.5000 | 0.6000 | 0.6667 |
-| `Werewolf` 20s (`n=12`) | Mode B (Semantic) | 1 | 1 | 5 | 5 | 0.5000 | 0.1667 | 0.2500 | 0.5000 |
-| `Werewolf` 20s (`n=12`) | Mode C (Fusion) | 2 | 1 | 5 | 4 | 0.6667 | 0.3333 | 0.4444 | 0.5833 |
+| Overall (`n=24`) | Mode A (Physio) | 1 | 1 | 11 | 11 | 0.5000 | 0.0833 | 0.1429 | 0.5000 |
+| Overall (`n=24`) | **Mode B (Semantic)** | **3** | **1** | **11** | **9** | **0.7500** | **0.2500** | **0.3750** | **0.5833** |
+| Overall (`n=24`) | Mode C (Fusion) | 3 | 2 | 10 | 9 | 0.6000 | 0.2500 | 0.3529 | 0.5417 |
+| `RLDD Test/` (`n=12`) | Mode A (Physio) | 1 | 1 | 5 | 5 | 0.5000 | 0.1667 | 0.2500 | 0.5000 |
+| `RLDD Test/` (`n=12`) | **Mode B (Semantic)** | **2** | **0** | **6** | **4** | **1.0000** | **0.3333** | **0.5000** | **0.6667** |
+| `RLDD Test/` (`n=12`) | Mode C (Fusion) | 2 | 1 | 5 | 4 | 0.6667 | 0.3333 | 0.4444 | 0.5833 |
+| `Werewolf` 20s (`n=12`) | Mode A (Physio) | 0 | 0 | 6 | 6 | 0.0000 | 0.0000 | 0.0000 | 0.5000 |
+| `Werewolf` 20s (`n=12`) | Mode B & Mode C | 1 | 1 | 5 | 5 | 0.5000 | 0.1667 | 0.2500 | 0.5000 |
 
 ### 6 Complete Multi-Turn `Werewolf-Among-Us` Games (`n=6 games, 26 players`)
 Evaluated chronologically from Turn 1 to end of game with per-player `BaselineStore` adaptation (`n_eff >= 3`) and blind Stage-2 role/claim reasoning (`Werewolf/Minion` vs Villager-team):

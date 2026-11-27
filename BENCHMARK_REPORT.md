@@ -9,10 +9,10 @@
 
 | ส่วนทดสอบ | เมตริกหลักที่ได้จริง | สรุปสถานะการใช้งานจริง |
 |---|---|---|
-| **1. Unit & Integration (`pytest`)** | **153 / 153 ผ่าน (100%)** (`python -m pytest -q`, `14.26s`) | **พร้อมใช้งาน** — State machine, math core, VAD, MCP firewall, priors v2 และ AST anti-stub ผ่านครบ |
+| **1. Unit & Integration (`pytest`)** | **154 / 154 ผ่าน (100%)** (`python -m pytest -q`, `10.21s`) | **พร้อมใช้งาน** — State machine, math core, VAD, MCP firewall, audit fixes และ AST anti-stub ผ่านครบ |
 | **2. เกราะกันเสียงพัง (Audio Stress Test)** | VoIP/Zoom spoofed SNR ถูกจับ **10/10 (100%)** และปิด jitter/shimmer **10/10**; Reverb 0.8s ถูก flag **4/10**; 50 Hz hum @20 dB SNR `art_rate` คงที่ `3.33` | **ใช้งานได้จริง** — แต่ที่ SNR 5 dB ยังเกิด pitch octave-jump (`f0_sd` พุ่งจาก `1.12` -> `5.19`) แม้ ceiling จะช่วยตัด jitter/shimmer ออก 8/10 คลิป |
 | **3. จับคำพูดขัดแย้ง (DECODE 100 คู่ — v2)** | Stage 1 (`thr=0.72` + clause splitting + Turn-0) Recall **96.0%** (`F1=0.7218`) -> Full 2-Stage **Acc = 97.0%, F1 = 0.9691** (`TP=47, FP=0, TN=50, FN=3`, Precision **100%**) | **แม่นระดับใช้งานจริง** — ลด False Negative จาก 10 เหลือ 3 เคส และยังคง Precision 100% (FP=0) |
-| **4. วิดีโอผสม 24 คลิป (`RLDD Test/` + `Werewolf` 20s)** | **Overall (`n=24`):** Mode A `50.0%` -> Mode B `58.3%` -> **Mode C `62.5% Acc / 0.471 F1 / 80.0% Prec`**<br>**RLDD Test (`n=12`):** Mode B & C **100% Prec (`FP=0`), 66.7% Acc** | **Mode C ไม่ถูก Mode A กลบอีกต่อไป** — การคืน `acoustic_location_shrinkage_k=3.0` + frontal AU/gaze gate (`\|yaw\| <= 20°`) + sustained Mode C ลด FP ในศาลเหลือ 0 |
+| **4. วิดีโอผสม 24 คลิป (`RLDD Test/` + `Werewolf` 20s)** | **Overall (`n=24`):** Mode A `50.0%` (`FP=1`), Mode B **`58.3% Acc / 0.375 F1 / 75.0% Prec`**, Mode C `54.2% Acc / 0.353 F1`<br>**RLDD Test (`n=12`):** Mode B **100% Prec (`FP=0`), 66.7% Acc**; Mode A `50.0%` (`FP=1`) | **ผลหลังแก้ audit 7 จุด + 5-fold CV (`thr=1.8`)** — `RLDD Test/` Mode A FP ลดเหลือ 1/6 และ Mode B คง Precision 100% |
 | **5. เกม Werewolf เต็มเกม 6 เกม (`n=26` ผู้เล่น)** | **Mode A (Physio):** Acc `50.0%`, F1 `0.381`<br>**Mode B (Blind Stage 2):** Acc `65.4%`, F1 `0.471`<br>**Mode C (Fusion):** **Recall `75.0%`, F1 `0.571`, Acc `65.4%`** | **Fusion ยกระดับ Recall จาก 50% -> 75%** เมื่อติดตามผู้เล่นตลอดทั้งเกมตั้งแต่ Turn 1 จนจบ |
 | **6. ความเร็วฮาร์ดแวร์ (Windows CPU)** | **RTF = 0.479** (`28.75 วินาที` ต่อวิดีโอ 1 นาที), Peak RAM **1,415.8 MB** | **เร็วกว่า Real-time ~2 เท่า** บน CPU ล้วน โดย Whisper `small.en` กินเวลา ~63% ของแต่ละคลิป |
 
@@ -182,21 +182,20 @@
 | **Stage 1: DeBERTa-v3-xsmall (`>= 0.72`)** | 48 | 35 | 15 | 2 | 0.5783 | **0.9600** | 0.7218 | 0.6300 | 1,787 / 3,135 (57.0%) |
 | **Full 2-Stage (DeBERTa + Blind Judge)** | **47** | **0** | **50** | **3** | **1.0000** | **0.9400** | **0.9691** | **0.9700** | **1,787 / 3,135 (57.0%)** |
 
-### 7.2 แก้ไข 3 Regressions ในวิดีโอผสม 24 คลิป (`12 RLDD Test/` + `12 Werewolf-YouTube` 20s)
-1. คืน `acoustic_location_shrinkage_k = 3.0` ใน `src/dce/mcp_server.py` (ใช้ `0.0` เฉพาะ timing features)
-2. Gate ฟีเจอร์ `AU*` และ `eye_gaze_*` ออกจากการคำนวณ `d_sq` หากมุมหน้าไม่ใช่หน้าตรง (`|yaw| > 20°`) และคาลิเบรต `data/priors_wild_video_en.json` จากคลิป Truthful ใน `Train/` ครบทั้ง **54 คลิป** (แก้ `f0_semitone_sd.stress_polarity = -1`)
-3. ใช้เกณฑ์ต่อเนื่อง (Sustained Mode A & Mode C: `mean(d_sq/df) >= 2.2` และต้องมี `>= 2` เทิร์นที่มี `df >= 4`) เพื่อไม่ให้เทิร์นสั้นๆ ที่เพี้ยนกลบความแม่นยำของ Mode B
+### 7.2 ผลหลังแก้ Audit 7 จุด + Recalibrate 54 คลิป + 5-Fold CV (`thr=1.8`) ในวิดีโอผสม 24 คลิป
+1. คืน `acoustic_location_shrinkage_k = 3.0`, ขยาย `max_frames = 9000` (10 นาที), ใช้ causal rolling 10s `blink_rate_per_min` (`pop_sigma` clamped `[5.0, 12.0]`), และคืน block-diagonal voice correlations
+2. Gate ฟีเจอร์ `AU*` และ `eye_gaze_*` (`|yaw| <= 20°`), ตัด `loudness_db` / `au01_inner_brow_raise` / `au25_lips_part` ออกจาก Mahalanobis `df`, และจูนเกณฑ์ `mean(d_sq/df) >= 1.8` ด้วย 5-fold CV บน `Train/` 109 คลิป (`best_sustained_threshold = 1.8`, CV Acc `47.7%` บน `Train/`) โดยไม่แตะ `Test/`
 
 | Dataset Split | Mode | TP | FP | TN | FN | Precision | Recall | F1-Score | Accuracy |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---:|
-| **Overall (`n=24`)** | Mode A (Physio) | 3 | 3 | 9 | 9 | 0.5000 | 0.2500 | 0.3333 | 0.5000 |
-| **Overall (`n=24`)** | Mode B (Semantic) | 3 | 1 | 11 | 9 | 0.7500 | 0.2500 | 0.3750 | 0.5833 |
-| **Overall (`n=24`)** | **Mode C (Fusion)** | **4** | **1** | **11** | **8** | **0.8000** | **0.3333** | **0.4706** | **0.6250** |
-| **`RLDD Test/` (`n=12`)** | Mode A (Physio) | 0 | 2 | 4 | 6 | 0.0000 | 0.0000 | 0.0000 | 0.3333 |
-| **`RLDD Test/` (`n=12`)** | **Mode B & Mode C** | **2** | **0** | **6** | **4** | **1.0000** | **0.3333** | **0.5000** | **0.6667** |
-| **`Werewolf` 20s (`n=12`)** | Mode A (Physio) | 3 | 1 | 5 | 3 | 0.7500 | 0.5000 | 0.6000 | 0.6667 |
-| **`Werewolf` 20s (`n=12`)** | Mode B (Semantic) | 1 | 1 | 5 | 5 | 0.5000 | 0.1667 | 0.2500 | 0.5000 |
-| **`Werewolf` 20s (`n=12`)** | Mode C (Fusion) | 2 | 1 | 5 | 4 | 0.6667 | 0.3333 | 0.4444 | 0.5833 |
+| **Overall (`n=24`)** | Mode A (Physio) | 1 | 1 | 11 | 11 | 0.5000 | 0.0833 | 0.1429 | 0.5000 |
+| **Overall (`n=24`)** | **Mode B (Semantic)** | **3** | **1** | **11** | **9** | **0.7500** | **0.2500** | **0.3750** | **0.5833** |
+| **Overall (`n=24`)** | Mode C (Fusion) | 3 | 2 | 10 | 9 | 0.6000 | 0.2500 | 0.3529 | 0.5417 |
+| **`RLDD Test/` (`n=12`)** | Mode A (Physio) | 1 | 1 | 5 | 5 | 0.5000 | 0.1667 | 0.2500 | 0.5000 |
+| **`RLDD Test/` (`n=12`)** | **Mode B (Semantic)** | **2** | **0** | **6** | **4** | **1.0000** | **0.3333** | **0.5000** | **0.6667** |
+| **`RLDD Test/` (`n=12`)** | Mode C (Fusion) | 2 | 1 | 5 | 4 | 0.6667 | 0.3333 | 0.4444 | 0.5833 |
+| **`Werewolf` 20s (`n=12`)** | Mode A (Physio) | 0 | 0 | 6 | 6 | 0.0000 | 0.0000 | 0.0000 | 0.5000 |
+| **`Werewolf` 20s (`n=12`)** | Mode B & Mode C | 1 | 1 | 5 | 5 | 0.5000 | 0.1667 | 0.2500 | 0.5000 |
 
 ### 7.3 ประเมิน `Werewolf-Among-Us` แบบเต็มเกมต่อเนื่อง (`6 เกม, 26 ผู้เล่น`)
 รันต่อเนื่องตั้งแต่ Turn 1 จนจบเกมแบบ **Blind 100%** (`benchmarks/run_werewolf_full_games.py`) โดยสะสม `BaselineStore` รายบุคคล (`n_eff >= 3`) + วิเคราะห์คำอ้าง Role และ Self-Contradiction ข้ามเทิร์นทั้งเกม:

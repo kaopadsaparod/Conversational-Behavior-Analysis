@@ -2,13 +2,13 @@
   "overall": {
     "mode_a": {
       "n": 24,
-      "tp": 3,
-      "fp": 3,
-      "tn": 9,
-      "fn": 9,
+      "tp": 1,
+      "fp": 1,
+      "tn": 11,
+      "fn": 11,
       "precision": 0.5,
-      "recall": 0.25,
-      "f1": 0.3333,
+      "recall": 0.0833,
+      "f1": 0.1429,
       "accuracy": 0.5
     },
     "mode_b": {
@@ -24,28 +24,28 @@
     },
     "mode_c": {
       "n": 24,
-      "tp": 4,
-      "fp": 1,
-      "tn": 11,
-      "fn": 8,
-      "precision": 0.8,
-      "recall": 0.3333,
-      "f1": 0.4706,
-      "accuracy": 0.625
+      "tp": 3,
+      "fp": 2,
+      "tn": 10,
+      "fn": 9,
+      "precision": 0.6,
+      "recall": 0.25,
+      "f1": 0.3529,
+      "accuracy": 0.5417
     }
   },
   "by_dataset": {
     "rldd_test": {
       "mode_a": {
         "n": 12,
-        "tp": 0,
-        "fp": 2,
-        "tn": 4,
-        "fn": 6,
-        "precision": 0.0,
-        "recall": 0.0,
-        "f1": 0.0,
-        "accuracy": 0.3333
+        "tp": 1,
+        "fp": 1,
+        "tn": 5,
+        "fn": 5,
+        "precision": 0.5,
+        "recall": 0.1667,
+        "f1": 0.25,
+        "accuracy": 0.5
       },
       "mode_b": {
         "n": 12,
@@ -61,26 +61,26 @@
       "mode_c": {
         "n": 12,
         "tp": 2,
-        "fp": 0,
-        "tn": 6,
+        "fp": 1,
+        "tn": 5,
         "fn": 4,
-        "precision": 1.0,
+        "precision": 0.6667,
         "recall": 0.3333,
-        "f1": 0.5,
-        "accuracy": 0.6667
+        "f1": 0.4444,
+        "accuracy": 0.5833
       }
     },
     "werewolf_youtube": {
       "mode_a": {
         "n": 12,
-        "tp": 3,
-        "fp": 1,
-        "tn": 5,
-        "fn": 3,
-        "precision": 0.75,
-        "recall": 0.5,
-        "f1": 0.6,
-        "accuracy": 0.6667
+        "tp": 0,
+        "fp": 0,
+        "tn": 6,
+        "fn": 6,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "accuracy": 0.5
       },
       "mode_b": {
         "n": 12,
@@ -95,14 +95,14 @@
       },
       "mode_c": {
         "n": 12,
-        "tp": 2,
+        "tp": 1,
         "fp": 1,
         "tn": 5,
-        "fn": 4,
-        "precision": 0.6667,
-        "recall": 0.3333,
-        "f1": 0.4444,
-        "accuracy": 0.5833
+        "fn": 5,
+        "precision": 0.5,
+        "recall": 0.1667,
+        "f1": 0.25,
+        "accuracy": 0.5
       }
     }
   },
@@ -121,7 +121,7 @@
       "dataset": "rldd_test",
       "ground_truth": "deceptive",
       "is_deceptive": true,
-      "mode_a": false,
+      "mode_a": true,
       "mode_b": true,
       "mode_c": true
     },
@@ -157,9 +157,9 @@
       "dataset": "rldd_test",
       "ground_truth": "truthful",
       "is_deceptive": false,
-      "mode_a": false,
+      "mode_a": true,
       "mode_b": false,
-      "mode_c": false
+      "mode_c": true
     },
     {
       "anon_id": "mixed_07",
@@ -175,7 +175,7 @@
       "dataset": "rldd_test",
       "ground_truth": "truthful",
       "is_deceptive": false,
-      "mode_a": true,
+      "mode_a": false,
       "mode_b": false,
       "mode_c": false
     },
@@ -184,16 +184,16 @@
       "dataset": "werewolf_youtube",
       "ground_truth": "deceptive",
       "is_deceptive": true,
-      "mode_a": true,
+      "mode_a": false,
       "mode_b": false,
-      "mode_c": true
+      "mode_c": false
     },
     {
       "anon_id": "mixed_10",
       "dataset": "werewolf_youtube",
       "ground_truth": "deceptive",
       "is_deceptive": true,
-      "mode_a": true,
+      "mode_a": false,
       "mode_b": true,
       "mode_c": true
     },
@@ -211,7 +211,7 @@
       "dataset": "werewolf_youtube",
       "ground_truth": "deceptive",
       "is_deceptive": true,
-      "mode_a": true,
+      "mode_a": false,
       "mode_b": false,
       "mode_c": false
     },
@@ -256,7 +256,7 @@
       "dataset": "werewolf_youtube",
       "ground_truth": "truthful",
       "is_deceptive": false,
-      "mode_a": true,
+      "mode_a": false,
       "mode_b": false,
       "mode_c": false
     },
@@ -283,7 +283,7 @@
       "dataset": "rldd_test",
       "ground_truth": "truthful",
       "is_deceptive": false,
-      "mode_a": true,
+      "mode_a": false,
       "mode_b": false,
       "mode_c": false
     },

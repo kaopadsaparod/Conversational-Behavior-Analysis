@@ -98,3 +98,9 @@ data/models/
 benchmarks/results/_mixed_blind_clips/
 benchmarks/results/audio_slices/
 benchmarks/results/replays/
+benchmarks/results/_hidden_*.json
+benchmarks/results/_blind_*.txt
+benchmarks/results/*_blind_inputs.json
+benchmarks/results/video_unlocked_signals.json
+benchmarks/results/*_blind_transcripts.json
+benchmarks/results/werewolf_blind_games.json
