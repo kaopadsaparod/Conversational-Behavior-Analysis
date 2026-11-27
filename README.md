@@ -103,9 +103,9 @@ Evaluated chronologically from Turn 1 to end of game with per-player `BaselineSt
 │   ├── extractors/                  # Audio (Parselmouth/Whisper) & Vision (MediaPipe)
 │   └── reasoning/                   # ClaimsLedger, NLIPreFilter, templates, LLM adapter
 ├── benchmarks/                      # Reproducible DECODE, audio stress, RLDD & Werewolf scripts
-└── tests/                           # 153 unit & integration tests
+└── tests/                           # 154 unit & integration tests
 ```
 
 ## License
 
-Apache License 2.0. See [LICENSE](LICENSE). External datasets (e.g., RAVDESS CC BY-NC-SA 4.0) remain subject to their respective licenses.
+GNU General Public License v3.0 (GPL-3.0-or-later). See [LICENSE](LICENSE) for the full license text (including copyleft obligations for derivative works, source distribution, and patent/liability terms). External datasets (e.g., RAVDESS CC BY-NC-SA 4.0) remain subject to their respective licenses.
