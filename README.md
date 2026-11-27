@@ -20,7 +20,15 @@
 ```bash
 git clone https://github.com/kaopadsaparod/Conversational-Behavior-Analysis.git
 cd Conversational-Behavior-Analysis
+
+# Core + test runner only
 pip install -e ".[dev]"
+
+# Full audio/video extraction (Whisper, Parselmouth, MediaPipe, OpenCV)
+pip install -e ".[dev,audio,vision]"
+
+# Optional LLM / UI extras
+pip install -e ".[llm,ui]"
 ```
 
 Run the test suite:
