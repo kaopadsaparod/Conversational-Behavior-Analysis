@@ -9,7 +9,7 @@
 
 | ส่วนทดสอบ | เมตริกหลักที่ได้จริง | สรุปสถานะการใช้งานจริง |
 |---|---|---|
-| **1. Unit & Integration (`pytest`)** | **154 / 154 ผ่าน (100%)** (`python -m pytest -q`, `10.21s`) | **พร้อมใช้งาน** — State machine, math core, VAD, MCP firewall, audit fixes และ AST anti-stub ผ่านครบ |
+| **1. Unit & Integration (`pytest`)** | **164 / 164 ผ่าน (100%)** (`python -m pytest -q`, `21.86s`) | **พร้อมใช้งาน** — State machine, math core, VAD, MCP firewall, production-hardening และ AST anti-stub ผ่านครบ |
 | **2. เกราะกันเสียงพัง (Audio Stress Test)** | VoIP/Zoom spoofed SNR ถูกจับ **10/10 (100%)** และปิด jitter/shimmer **10/10**; Reverb 0.8s ถูก flag **4/10**; 50 Hz hum @20 dB SNR `art_rate` คงที่ `3.33` | **ใช้งานได้จริง** — แต่ที่ SNR 5 dB ยังเกิด pitch octave-jump (`f0_sd` พุ่งจาก `1.12` -> `5.19`) แม้ ceiling จะช่วยตัด jitter/shimmer ออก 8/10 คลิป |
 | **3. จับคำพูดขัดแย้ง (DECODE 100 คู่ — v2)** | Stage 1 (`thr=0.72` + clause splitting + Turn-0) Recall **96.0%** (`F1=0.7218`) -> Full 2-Stage **Acc = 97.0%, F1 = 0.9691** (`TP=47, FP=0, TN=50, FN=3`, Precision **100%**) | **แม่นระดับใช้งานจริง** — ลด False Negative จาก 10 เหลือ 3 เคส และยังคง Precision 100% (FP=0) |
 | **4. วิดีโอผสม 24 คลิป (`RLDD Test/` + `Werewolf` 20s)** | **Overall (`n=24`):** Mode A `50.0%` (`FP=1`), Mode B **`58.3% Acc / 0.375 F1 / 75.0% Prec`**, Mode C `54.2% Acc / 0.353 F1`<br>**RLDD Test (`n=12`):** Mode B **100% Prec (`FP=0`), 66.7% Acc**; Mode A `50.0%` (`FP=1`) | **ผลหลังแก้ audit 7 จุด + 5-fold CV (`thr=1.8`)** — `RLDD Test/` Mode A FP ลดเหลือ 1/6 และ Mode B คง Precision 100% |
@@ -18,7 +18,7 @@
 
 ### สิ่งที่ทำได้จริง vs ข้อจำกัดที่พบจริง (รวมบั๊กที่ค้นพบระหว่างทดสอบ)
 1. **สิ่งที่ทำได้แม่นระดับใช้งานจริง:**
-   - **2-Stage Text Consistency (DeBERTa + Blind Reasoning):** แม่นยำสูง (90% Accuracy, 100% Precision บน DECODE) และใช้กับวิดีโอศาลจริงได้ Precision 100% (4/4 คลิปที่จับได้ว่าขัดแย้ง/เลี่ยงตอบ คือคลิปโกหกทั้งหมด ไม่มี False Positive แม้แต่คลิปเดียว)
+   - **2-Stage Text Consistency (DeBERTa + Blind Reasoning):** แม่นยำสูง (**97.0% Accuracy**, **100% Precision** บน DECODE v2) และใช้กับวิดีโอศาลจริงได้ Precision 100% (ไม่มี False Positive ใน `RLDD Test/`)
    - **ASR Uncertainty & Phonetic-Fragile Firewall:** บน `anon_ext_09` (`trial_lie_030.mp4`) ระบบตรวจพบคำที่ ASR ไม่มั่นใจ `[have...? p=0.56 | alt: haven't]` และลดระดับ verdict จาก `DIRECT_CONTRADICTION` เป็น `NEEDS_AUDIO_REVIEW` พร้อมตัดไฟล์เสียง 3 วินาที (`dce_slice_turn_audio`) ให้มนุษย์ฟังซ้ำอัตโนมัติ
    - **VoIP/Noise-Gate Spoof Detection:** จับสัญญาณ Zoom/VoIP ที่ตัด Noise จน SNR หลอกตาสูงถึง 60 dB ได้ 100% (10/10)
 2. **สิ่งที่ยังทำไม่ได้ / ข้อจำกัดสำคัญ:**
@@ -26,7 +26,7 @@
    - **Recall ของ Semantic Reasoning บนคลิปสั้น (Mode B):** อยู่ที่ 26.7% เพราะในหน้าต่างเวลาแค่ 30 วินาที ผู้พูดที่โกหกจำนวนมากเล่าเรื่องเท็จที่สอดคล้องกันภายในตัวคลิปเอง (ไม่มีจุดขัดแย้งให้จับจากข้อความช่วงสั้นนั้น)
    - **บั๊กจริงที่พบและแก้ไขระหว่าง Benchmark:**
      1. `src/dce/mcp_server.py` (บรรทัด 850): `dce_ingest_media` เคยรัน `assert_firewall_compliance` ครอบทั้ง JSON response รวมถึง `raw_text` และ `annotated_text` ทำให้คลิป `anon_ext_06` ที่พยานพูดคำว่า `"anomaly"` จริงๆ ในศาลพังด้วย `ValueError` (แก้ไขแล้วโดยยกเว้นฟิลด์คำพูดของพยานเหมือน Step B)
-     2. `VerdictStatus` Enum ใน `src/dce/schemas.py` ยังไม่มีค่า `EVASION` และ `MODIFIER_EROSION` ทำให้ `dce_submit_verdicts` ปฏิเสธค่าดังกล่าว (ต้อง map เป็น `UNVERIFIABLE` พร้อม tag ใน `explanation`)
+     2. `VerdictStatus` Enum ใน `src/dce/schemas.py` เคยขาดค่า `EVASION` และ `MODIFIER_EROSION` ในการทดสอบรอบแรก *(แก้ไขแล้วใน `src/dce/schemas.py`, `src/dce/mcp_server.py`, `app/dashboard.py` และ `benchmarks/run_ablation.py`)*
      3. Local Ollama (`localhost:11434`) ไม่ได้เปิดทำงานอยู่ในการทดสอบนี้ จึงประเมิน Stage-2 ด้วย Blind Reasoning Agent ผ่านไฟล์ `decode_stage2_blind_inputs.json` ที่ตัดเฉลยออกทั้งหมดแทน
 
 ---
@@ -35,7 +35,7 @@
 
 ### 2.1 ผลรัน Automated Test Suite
 - คำสั่ง: `python -m pytest -vv` / `python -m pytest -q`
-- ผลลัพธ์: **147 passed, 0 failed** (~7.2 วินาที) รวม regression test `test_mcp_ingest_media_allows_spoken_firewall_words` ที่เพิ่มเพื่อล็อกการแก้บั๊ก Firewall
+- ผลลัพธ์ล่าสุด: **164 passed, 0 failed** (`21.86s`, รวม regression tests ใน `tests/test_production_hardening.py` และ `test_mcp_ingest_media_allows_spoken_firewall_words`)
 
 ### 2.2 ผลทดสอบการเสื่อมสภาพของเสียง (10 คลิปเสียงพูดสะอาด RAVDESS Actors 01–10)
 รันผ่านสคริปต์ `benchmarks/run_audio_robustness.py` (ใช้เวลา 3.785 วินาที):
@@ -207,3 +207,37 @@
 | **Mode C (Neuro-Symbolic Fusion)** | **6** | 7 | 11 | **2** | **0.4615** | **0.7500** | **0.5714** | **0.6538** |
 
 **ข้อค้นพบสำคัญจากเกมเต็ม:** ในเกม *One Night Ultimate Werewolf* บทบาทฝั่งดีอย่าง `Tanner` มักจงใจโกหกเพื่อล่อให้คนอื่นโหวตตัวเองออก ทำให้เกิด False Positive ใน Mode B (5 คน) แต่เมื่อรวม Mode C เข้ากับ Baseline ต่อเนื่องในเกม กลับช่วยดึง Recall ของฝ่าย Werewolf/Minion จาก **50.0% -> 75.0%** (`TP=6/8`, `F1=0.5714`)
+
+---
+
+## 8. Production-Hardening: Step-A Ablation Modes, Statistical Power ($N=121$ RLDD, $N=110$ Werewolf) & 95% Bootstrap CIs
+
+### 8.1 ความแตกต่างของโหมดสกัดข้อเท็จจริงใน DECODE (`extraction_mode` ใน `benchmarks/run_ablation.py`)
+`evaluate_decode_benchmark` รองรับ 3 โหมดอย่างโปร่งใส:
+1. **`"utterance"`** (ค่าเริ่มต้น): สร้าง 1 `ClaimItem` ต่อ 1 เทิร์นคำพูดเพื่อทดสอบ Stage-1 NLI แบบเร็วบน raw utterance (`N=100` balanced `dev.jsonl`, `nli_threshold=0.72`: `Acc = 0.6200`, `F1 = 0.7246`, `Rec = 1.0000`, `llm_calls_saved = 897`).
+2. **`"clause_spo"`**: แยกอนุประโยคระดับ Subject-Predicate-Object (SPO) แบบ deterministic (`extract_clause_spo_claims`) โดยไม่ต้องใช้ LLM เพื่อลด noise จากประโยคหลายความหมาย (`N=100` balanced `dev.jsonl`, `nli_threshold=0.72`: `Acc = 0.5900`, `F1 = 0.7050`, `Rec = 0.9800`, `llm_calls_saved = 3,403`).
+3. **`"llm_step_a"`**: เรียก `ClaimsLedger.extract_claims()` เต็มรูปแบบ (Step A) พร้อมบริบท 2 เทิร์นก่อนหน้า (ต้องใช้ live LLM adapter).
+
+### 8.2 ช่วงความเชื่อมั่น 95% Stratified Bootstrap (10,000 รอบ) และค่า p-value (`benchmarks/statistical_significance.py`)
+
+#### (ก) Held-Out Splits เดิม (10,000-iteration Stratified Bootstrap 95% CI + Exact Binomial Test)
+| Benchmark / Split | Mode | N | Accuracy [95% CI] | F1 [95% CI] | Precision [95% CI] | Recall [95% CI] | $p$-value (vs 0.5) |
+|---|---|---:|---|---|---|---|---:|
+| **DECODE (`dev.jsonl`)** | Stage 1 (`DeBERTa >= 0.72`) | 100 | `0.6300` `[0.5600, 0.7000]` | `0.7218` `[0.6769, 0.7656]` | `0.5783` `[0.5349, 0.6282]` | `0.9600` `[0.9000, 1.0000]` | `0.0060` |
+| **DECODE (`dev.jsonl`)** | **Full 2-Stage (Stage 1 + Blind Judge)** | 100 | **`0.9700`** `[0.9300, 1.0000]` | **`0.9691`** `[0.9247, 1.0000]` | **`1.0000`** `[1.0000, 1.0000]` | **`0.9400`** `[0.8600, 1.0000]` | **`1.32e-25`** |
+| **Mixed Wild (`n=24`)** | Mode A (Physio) | 24 | `0.5000` `[0.3750, 0.6250]` | `0.1429` `[0.0000, 0.4000]` | `0.5000` `[0.0000, 1.0000]` | `0.0833` `[0.0000, 0.2500]` | `0.5806` |
+| **Mixed Wild (`n=24`)** | Mode B (Semantic) | 24 | `0.5833` `[0.4583, 0.7083]` | `0.3750` `[0.0000, 0.6667]` | `0.7500` `[0.0000, 1.0000]` | `0.2500` `[0.0000, 0.5000]` | `0.2706` |
+| **`RLDD Test/` (`n=12`)** | Mode B (Semantic) | 12 | `0.6667` `[0.5000, 0.8333]` | `0.5000` `[0.0000, 0.8000]` | `1.0000` `[0.0000, 1.0000]` | `0.3333` `[0.0000, 0.6667]` | `0.1938` |
+| **Werewolf 6 Games** | Mode C (Blind Stage-2 Fusion) | 26 | `0.6538` `[0.4615, 0.8462]` | `0.5714` `[0.3636, 0.7619]` | `0.4615` `[0.2941, 0.6667]` | `0.7500` `[0.3750, 1.0000]` | `0.0843` |
+
+#### (ข) การประเมินกำลังสถิติเต็มชุด (Full-Power Evaluations: All 121 RLDD Videos & 24 Complete Werewolf Games)
+| Evaluation | Mode | N | Confusion (`TP/FP/FN/TN`) | Accuracy [95% CI] | Balanced Acc [95% CI] | F1 [95% CI] | $p$-value (vs Majority) | Fisher Exact $p$ |
+|---|---|---:|---|---|---|---|---:|---:|
+| **All RLDD 5-Fold OOF CV** | Mode A (Physio, `thr=1.6` per fold) | **121** (`61 Pos / 60 Neg`, maj `50.4%`) | `7 / 7 / 54 / 53` | `0.4959` `[0.4380, 0.5537]` | `0.4990` `[0.4411, 0.5568]` | `0.1867` `[0.0779, 0.3038]` | `0.6075` | `1.0000` |
+| **Werewolf 24 Games** | Mode A (In-Game Physio Baseline) | **110** (`32 Evil / 78 Good`, maj `70.9%`) | `8 / 18 / 24 / 60` | `0.6182` `[0.5364, 0.6909]` | `0.5096` `[0.4243, 0.6006]` | `0.2759` `[0.1224, 0.4211]` | `0.9845` | `0.8099` |
+| **Werewolf 24 Games** | **Stage-1 Raw NLI Only (Unjudged Ablation — No Stage-2 Judge)** | **110** (`32 Evil / 78 Good`, maj `70.9%`) | `29 / 78 / 3 / 0` | `0.2636` `[0.2273, 0.2909]` | `0.4531` `[0.3906, 0.5000]` | `0.4173` `[0.3704, 0.4507]` | `1.0000` | `0.0230` |
+
+- **McNemar Exact Test (Werewolf 24 Games, $N=110$):** Mode A (In-Game Physio) vs Stage-1 Raw NLI Only (Unjudged Ablation): $\chi^2_{cc} = 17.8272$, exact $p = 1.69 \times 10^{-5}$ (การคัดกรอง False Positive ด้วย Stage-2 Judge จึงจำเป็นอย่างยิ่งสำหรับบทสนทนาเกมที่มีการบลัฟ/สวมบทบาท).
+- **ข้อสรุปเชิงสถิติ:**
+  - บนคลิปศาลสั้นเดี่ยวครบทั้ง 121 คลิป (`RLDD`, $N=121$), สัญญาณสรีรวิทยาอย่างเดียว (Out-of-Fold 5-Fold CV) ได้ `Acc = 49.59%`, `Balanced Acc = 49.90%` ($p_{\text{maj}} = 0.6075$, Fisher $p = 1.0000$) ไม่แตกต่างจากโอกาสสุ่มอย่างมีนัยสำคัญ ซึ่งยืนยันจุดยืนด้าน Non-Diagnostic Telemetry อย่างเป็นรูปธรรม
+  - บนเกม Werewolf 24 เกม (`N=110`, ฐานเสียงข้างมาก Good = `70.91%`), `Mode A` ได้ `Acc = 61.82%` ซึ่งต่ำกว่าฐานเสียงข้างมาก (`p_maj = 0.9845`) และได้ **`Balanced Acc = 50.96%` (`95% CI [42.43%, 60.06%]`, Fisher $p = 0.8099$)** แสดงว่าสัญญาณกายภาพเดี่ยวๆ ในเกมที่มีเสียงคุยทับซ้อนยังไม่มีนัยสำคัญทางสถิติในการแยก Werewolf ออกจาก Villager ขณะที่ Stage-1 Raw NLI โดยไม่มี Stage-2 Judge ได้ `Balanced Acc = 45.31%` (`TN = 0`) ยืนยันว่า **ต้องมี Stage-2 Semantic Judge** เท่านั้นจึงจะยกระดับความแม่นยำได้ (ดังที่แสดงในผล Blind Stage-2 6 เกม: `Mode C Balanced/Acc = 65.38%`, `Recall = 75.0%`)

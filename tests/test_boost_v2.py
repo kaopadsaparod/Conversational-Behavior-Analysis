@@ -130,8 +130,11 @@ def test_mcp_ingest_media_qa_split_latency_and_preword_pauses(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     sr = 16000
-    t = np.linspace(0.0, 3.0, sr * 3, endpoint=False)
-    sig = 0.25 * np.sin(2.0 * np.pi * 160.0 * t).astype(np.float32)
+    t_q = np.linspace(0.0, 1.0, sr, endpoint=False)
+    t_a = np.linspace(0.0, 2.0, sr * 2, endpoint=False)
+    sig_q = 0.25 * np.sin(2.0 * np.pi * 140.0 * t_q).astype(np.float32)
+    sig_a = 0.25 * np.sin(2.0 * np.pi * 220.0 * t_a).astype(np.float32)
+    sig = np.concatenate([sig_q, sig_a])
     wav_path = tmp_path / "qa_sample.wav"
     _write_wav(wav_path, sig, sr=sr)
 
@@ -155,7 +158,7 @@ def test_mcp_ingest_media_qa_split_latency_and_preword_pauses(
     res = store.ingest_media(str(wav_path), use_asr=True)
     assert res["turn_count"] == 2
     assert res["turns"][0]["speaker_id"] == "Q_ASKER"
-    assert res["turns"][1]["speaker_id"] == "speaker_0"
+    assert res["turns"][1]["speaker_id"] in ("SPEAKER_00", "PROV_01")
 
     sess = store._sessions[res["session_id"]]
     ans_turn = sess.turns[2]
@@ -232,7 +235,15 @@ def test_mcp_immediate_response_latency_not_penalized_and_unlock_schema(
 
     priors_path = Path(__file__).resolve().parents[1] / "data" / "priors_wild_video_en.json"
     store = DCESessionStore()
-    res = store.ingest_media(str(wav_path), use_asr=True, priors=str(priors_path))
+    res = store.ingest_media(
+        str(wav_path),
+        use_asr=False,
+        priors=str(priors_path),
+        transcript_override=[
+            {"turn_id": 1, "speaker_id": "Q_ASKER", "start_sec": 0.0, "end_sec": 0.8, "text": "Did you go?"},
+            {"turn_id": 2, "speaker_id": "SPEAKER_00", "start_sec": 0.8, "end_sec": 2.0, "text": "Yes."},
+        ],
+    )
     store.submit_verdicts(res["session_id"], verdicts=[])
     unlocked = store.unlock_signals(res["session_id"], output_jsonl_path=str(tmp_path / "replay.jsonl"))
     ans_u = unlocked["turns"][1]

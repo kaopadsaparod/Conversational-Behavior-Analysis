@@ -152,8 +152,30 @@ MCP_TOOLS: List[Dict[str, Any]] = [
                     "description": "Optional pre-transcribed turn list for testing or external ASR.",
                     "items": {"type": "object"},
                 },
+                "async_ingest": {
+                    "type": "boolean",
+                    "default": False,
+                    "description": "If true, start ingestion in a background thread and return job_id immediately for polling via dce_get_job_status.",
+                },
             },
             "required": ["media_path"],
+        },
+    },
+    {
+        "name": "dce_get_job_status",
+        "description": (
+            "Poll the progress and state of an asynchronous dce_ingest_media job and "
+            "retrieve the final INGESTED transcript payload once completed."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "job_id": {
+                    "type": "string",
+                    "description": "Job identifier returned by dce_ingest_media(async_ingest=True).",
+                },
+            },
+            "required": ["job_id"],
         },
     },
     {
@@ -308,6 +330,99 @@ class _DCESession:
     locked_verdicts: List[Dict[str, Any]] = dataclasses.field(default_factory=list)
     validated_verdict_objs: List[Any] = dataclasses.field(default_factory=list)
     replay_jsonl_path: Optional[str] = None
+
+
+@dataclasses.dataclass
+class _IngestJob:
+    """Background job state for async_ingest=True long-video ingestion."""
+
+    job_id: str
+    session_id: str
+    status: str = "RUNNING"  # "RUNNING" | "COMPLETED" | "FAILED"
+    progress: float = 0.0
+    stage: str = "queued"
+    result: Optional[Dict[str, Any]] = None
+    error: Optional[str] = None
+
+
+_RHETORICAL_TAG_QUESTIONS = frozenset({
+    "right",
+    "huh",
+    "you know",
+    "okay",
+    "ok",
+    "yeah",
+    "no",
+    "correct",
+    "true",
+})
+
+
+def _is_short_tag_question(question_text: str) -> bool:
+    """Return True for short conversational tag questions like 'right?', 'huh?', 'you know?', 'okay?'."""
+    cleaned = re.sub(r"[^a-zA-Z'\s]", " ", question_text.lower())
+    cleaned = re.sub(r"\s+", " ", cleaned).strip()
+    if not cleaned:
+        return True
+    if cleaned in _RHETORICAL_TAG_QUESTIONS:
+        return True
+    words = cleaned.split()
+    if len(words) <= 2 and (cleaned in _RHETORICAL_TAG_QUESTIONS or words[-1] in {"right", "huh", "okay", "ok"}):
+        return True
+    return False
+
+
+def _should_split_question_boundary(
+    question_text: str,
+    pause_after_q_sec: float,
+    pre_audio: Any,
+    post_audio: Any,
+    sample_rate: int,
+    prosody_cfg: Any = None,
+) -> bool:
+    """Decide whether a '?' inside an ASR segment marks a real speaker turn change.
+
+    Requires ALL three conditions:
+      (a) inter-word pause after '?' is >= 250 ms,
+      (b) the question is not a short tag ('right?', 'huh?', 'you know?', 'okay?'), AND
+      (c) either extract_voice_embedding cosine similarity between pre-'?' and post-'?'
+          audio is < 0.82 OR median F0 shifts by >= 2.5 semitones.
+    """
+    import numpy as np
+    from dce.extractors.audio_dsp import extract_prosody, extract_voice_embedding
+
+    if pause_after_q_sec < 0.250:
+        return False
+    if _is_short_tag_question(question_text):
+        return False
+
+    pre_arr = np.asarray(pre_audio, dtype=np.float32)
+    post_arr = np.asarray(post_audio, dtype=np.float32)
+    if pre_arr.size < int(0.15 * sample_rate) or post_arr.size < int(0.15 * sample_rate):
+        return False
+
+    emb_pre = extract_voice_embedding(pre_arr, sample_rate=sample_rate)
+    emb_post = extract_voice_embedding(post_arr, sample_rate=sample_rate)
+    norm_pre = float(np.linalg.norm(emb_pre))
+    norm_post = float(np.linalg.norm(emb_post))
+    if norm_pre > 1e-6 and norm_post > 1e-6:
+        cos_sim = float(np.dot(emb_pre, emb_post) / (norm_pre * norm_post))
+        if cos_sim < 0.82:
+            return True
+
+    p_pre = extract_prosody(pre_arr, sample_rate=sample_rate, config=prosody_cfg)
+    p_post = extract_prosody(post_arr, sample_rate=sample_rate, config=prosody_cfg)
+    if (
+        p_pre.f0_median_hz is not None
+        and p_post.f0_median_hz is not None
+        and p_pre.f0_median_hz > 0.0
+        and p_post.f0_median_hz > 0.0
+    ):
+        f0_shift_st = abs(12.0 * math.log2(p_post.f0_median_hz / p_pre.f0_median_hz))
+        if f0_shift_st >= 2.5:
+            return True
+
+    return False
 
 
 def _load_wav_mono_16k(wav_path: Path) -> Tuple[Any, int]:
@@ -515,11 +630,31 @@ class DCESessionStore:
     def __init__(self) -> None:
         self._lock = threading.Lock()
         self._sessions: Dict[str, _DCESession] = {}
+        self._jobs: Dict[str, _IngestJob] = {}
 
     def get_session_state(self, session_id: str) -> Optional[str]:
         with self._lock:
             sess = self._sessions.get(session_id)
             return sess.state if sess is not None else None
+
+    def get_job_status(self, job_id: str) -> Dict[str, Any]:
+        """Return progress/state or final INGESTED payload for an async_ingest job."""
+        with self._lock:
+            job = self._jobs.get(job_id)
+            if job is None:
+                raise KeyError(f"Unknown job_id: {job_id}")
+            payload: Dict[str, Any] = {
+                "job_id": job.job_id,
+                "session_id": job.session_id,
+                "status": job.status,
+                "progress": round(float(job.progress), 4),
+                "stage": job.stage,
+            }
+            if job.status == "COMPLETED" and job.result is not None:
+                payload["result"] = job.result
+            if job.status == "FAILED" and job.error is not None:
+                payload["error"] = job.error
+            return payload
 
     def ingest_media(
         self,
@@ -532,14 +667,105 @@ class DCESessionStore:
         use_asr: bool = True,
         transcript_override: Optional[List[Dict[str, Any]]] = None,
         priors: Optional[Dict[str, Any]] = None,
+        async_ingest: bool = False,
+        _progress_cb: Optional[Any] = None,
     ) -> Dict[str, Any]:
         """Step 1: Ingest media, lock acoustic/vision/Mahalanobis math, return text-only."""
+        sid = session_id or f"dce-{uuid.uuid4().hex[:12]}"
+        if not async_ingest:
+            return self._ingest_media_sync(
+                media_path=media_path,
+                session_id=sid,
+                shrinkage_k=shrinkage_k,
+                low_conf_threshold=low_conf_threshold,
+                asr_device=asr_device,
+                asr_model=asr_model,
+                use_asr=use_asr,
+                transcript_override=transcript_override,
+                priors=priors,
+                _progress_cb=_progress_cb,
+            )
+
+        job_id = f"job-{uuid.uuid4().hex[:12]}"
+        with self._lock:
+            self._jobs[job_id] = _IngestJob(
+                job_id=job_id,
+                session_id=sid,
+                status="RUNNING",
+                progress=0.0,
+                stage="queued",
+            )
+
+        def _bg_progress(prog: float, total: float, msg: str) -> None:
+            with self._lock:
+                j = self._jobs.get(job_id)
+                if j is not None:
+                    j.progress = prog / max(total, 1e-6)
+                    j.stage = msg
+            if _progress_cb is not None:
+                _progress_cb(prog, total, msg)
+
+        def _run_job() -> None:
+            try:
+                res = self._ingest_media_sync(
+                    media_path=media_path,
+                    session_id=sid,
+                    shrinkage_k=shrinkage_k,
+                    low_conf_threshold=low_conf_threshold,
+                    asr_device=asr_device,
+                    asr_model=asr_model,
+                    use_asr=use_asr,
+                    transcript_override=transcript_override,
+                    priors=priors,
+                    _progress_cb=_bg_progress,
+                )
+                with self._lock:
+                    j = self._jobs.get(job_id)
+                    if j is not None:
+                        j.status = "COMPLETED"
+                        j.progress = 1.0
+                        j.stage = "ingested"
+                        j.result = res
+            except Exception as exc:
+                logger.exception("Async ingest job %s failed: %s", job_id, exc)
+                with self._lock:
+                    j = self._jobs.get(job_id)
+                    if j is not None:
+                        j.status = "FAILED"
+                        j.stage = "failed"
+                        j.error = str(exc)
+
+        t = threading.Thread(target=_run_job, name=f"dce-ingest-{job_id}", daemon=True)
+        t.start()
+        return {
+            "job_id": job_id,
+            "session_id": sid,
+            "status": "INGESTING_ASYNC",
+            "progress": 0.0,
+            "next_step": "Poll dce_get_job_status(job_id=...) until status is COMPLETED.",
+        }
+
+    def _ingest_media_sync(
+        self,
+        media_path: str,
+        session_id: Optional[str] = None,
+        shrinkage_k: float = 0.0,
+        low_conf_threshold: float = 0.70,
+        asr_device: str = "cpu",
+        asr_model: str = "small.en",
+        use_asr: bool = True,
+        transcript_override: Optional[List[Dict[str, Any]]] = None,
+        priors: Optional[Dict[str, Any]] = None,
+        _progress_cb: Optional[Any] = None,
+    ) -> Dict[str, Any]:
+        """Synchronous implementation of Step 1 media ingestion."""
         import numpy as np
 
         from dce.baseline_store import BaselineStore
         from dce.extractors.audio_dsp import (
             extract_egemaps_spectral_features,
             extract_prosody,
+            extract_voice_embedding,
             transcribe_audio,
         )
         from dce.extractors.vision_face import extract_vision_sequence
@@ -553,15 +779,25 @@ class DCESessionStore:
             PriorsData,
             ProsodyConfig,
             SpeakerAssignment,
+            SpeakerRegistryConfig,
             TimingFeatures,
             TurnFeatures,
             TurnTranscript,
             VisionFeatures,
             WordTimestamp,
         )
+        from dce.speaker_registry import SpeakerRegistry
+
+        def _emit_progress(prog: float, total: float, stage: str) -> None:
+            if _progress_cb is not None:
+                try:
+                    _progress_cb(prog, total, stage)
+                except Exception:
+                    pass
 
         path = Path(media_path)
         audio, sr, video_frames = _load_media_audio_and_vision(path)
+        _emit_progress(0.15, 1.0, "media_decoded")
         sid = session_id or f"dce-{uuid.uuid4().hex[:12]}"
 
         # Load priors correlation matrix (same logic as DiscourseConsistencyPipeline)
@@ -669,11 +905,21 @@ class DCESessionStore:
                 return VisionFeatures(face_detected=True, quality_flag="extreme_head_pose")
             return VisionFeatures(face_detected=False, quality_flag="no_face")
 
-        seq_results: List[VisionFeatures] = []
+        face_tracks: Dict[str, List[VisionFeatures]] = {}
         vision_feats = VisionFeatures(face_detected=False, quality_flag="no_video")
         if video_frames:
-            seq_results = extract_vision_sequence(video_frames, fps=15.0)
-            vision_feats = _aggregate_vision_slice(seq_results)
+            raw_seq = extract_vision_sequence(video_frames, fps=15.0, max_faces=3)
+            if isinstance(raw_seq, dict):
+                face_tracks = raw_seq
+            else:
+                face_tracks = {"face_0": list(raw_seq)}
+            first_track = next(iter(face_tracks.values()), [])
+            vision_feats = _aggregate_vision_slice(first_track) if first_track else VisionFeatures(face_detected=False, quality_flag="no_face")
+        _emit_progress(0.35, 1.0, "vision_completed")
+
+        speaker_registry = SpeakerRegistry(
+            config=SpeakerRegistryConfig(sim_high=0.82, sim_low=0.72)
+        )
 
         # Build turn boundaries
         turn_specs: List[Dict[str, Any]] = []
@@ -717,7 +963,7 @@ class DCESessionStore:
                     seg_text = ""
                     seg_words = []
 
-                # Split Q&A boundaries at '?' when followed by additional words
+                # Split Q&A boundaries at '?' only when acoustic + pause + tag checks indicate a real speaker switch
                 split_done = False
                 if seg_words and "?" in seg_text:
                     q_word_indices = [
@@ -725,12 +971,25 @@ class DCESessionStore:
                         if "?" in str(wobj.word) and wi < len(seg_words) - 1
                     ]
                     if q_word_indices:
-                        split_done = True
                         prev_wi = 0
                         prev_sample = s_idx
                         for qi in q_word_indices:
                             q_end_rel = float(seg_words[qi].end)
                             next_start_rel = float(seg_words[qi + 1].start)
+                            pause_after_q_sec = max(0.0, next_start_rel - q_end_rel)
+                            q_end_sample = min(e_idx, max(prev_sample, s_idx + int(round(q_end_rel * sr))))
+                            next_start_sample = min(e_idx, max(q_end_sample, s_idx + int(round(next_start_rel * sr))))
+                            cand_q_text = " ".join(w.word.strip() for w in seg_words[prev_wi : qi + 1]).strip()
+                            if not _should_split_question_boundary(
+                                question_text=cand_q_text,
+                                pause_after_q_sec=pause_after_q_sec,
+                                pre_audio=audio[prev_sample:q_end_sample],
+                                post_audio=audio[next_start_sample:e_idx],
+                                sample_rate=sr,
+                                prosody_cfg=prosody_cfg,
+                            ):
+                                continue
+                            split_done = True
                             sub_words = [
                                 WordTimestamp(
                                     word=w.word,
@@ -740,40 +999,40 @@ class DCESessionStore:
                                 )
                                 for w in seg_words[prev_wi : qi + 1]
                             ]
-                            q_end_sample = min(e_idx, max(prev_sample, s_idx + int(round(q_end_rel * sr))))
                             pre_specs.append(
                                 {
                                     "start_sample": prev_sample,
                                     "end_sample": q_end_sample,
                                     "forced_split": False,
                                     "overlap_flag": False,
-                                    "pre_text": " ".join(w.word.strip() for w in sub_words).strip(),
+                                    "pre_text": cand_q_text,
                                     "pre_words": sub_words,
                                 }
                             )
                             prev_wi = qi + 1
-                            prev_sample = min(e_idx, max(q_end_sample, s_idx + int(round(next_start_rel * sr))))
-                        # Remainder after last '?'
-                        rem_words = [
-                            WordTimestamp(
-                                word=w.word,
-                                start=max(0.0, float(w.start) - (prev_sample - s_idx) / float(sr)),
-                                end=max(0.0, float(w.end) - (prev_sample - s_idx) / float(sr)),
-                                probability=w.probability,
-                            )
-                            for w in seg_words[prev_wi:]
-                        ]
-                        if rem_words and e_idx > prev_sample:
-                            pre_specs.append(
-                                {
-                                    "start_sample": prev_sample,
-                                    "end_sample": e_idx,
-                                    "forced_split": f_split,
-                                    "overlap_flag": False,
-                                    "pre_text": " ".join(w.word.strip() for w in rem_words).strip(),
-                                    "pre_words": rem_words,
-                                }
-                            )
+                            prev_sample = next_start_sample
+                        # Remainder after last split '?'
+                        if split_done:
+                            rem_words = [
+                                WordTimestamp(
+                                    word=w.word,
+                                    start=max(0.0, float(w.start) - (prev_sample - s_idx) / float(sr)),
+                                    end=max(0.0, float(w.end) - (prev_sample - s_idx) / float(sr)),
+                                    probability=w.probability,
+                                )
+                                for w in seg_words[prev_wi:]
+                            ]
+                            if rem_words and e_idx > prev_sample:
+                                pre_specs.append(
+                                    {
+                                        "start_sample": prev_sample,
+                                        "end_sample": e_idx,
+                                        "forced_split": f_split,
+                                        "overlap_flag": False,
+                                        "pre_text": " ".join(w.word.strip() for w in rem_words).strip(),
+                                        "pre_words": rem_words,
+                                    }
+                                )
 
                 if not split_done:
                     pre_specs.append(
@@ -814,16 +1073,34 @@ class DCESessionStore:
                     if (f0_val is not None and ref_f0 is not None and ref_f0 > 0.0 and f0_val > 0.0)
                     else 0.0
                 )
+                sub_a = audio[ps["start_sample"] : ps["end_sample"]]
+                spk_assign_override: Optional[SpeakerAssignment] = None
                 if (is_q and has_next_ans) or (is_q and pitch_diff_st >= 3.5):
                     spk_id = "Q_ASKER"
-                elif not is_q and pitch_diff_st >= 4.5 and len(pre_specs) >= 3:
-                    spk_id = "speaker_1"
+                    spk_assign_override = SpeakerAssignment(speaker_id="Q_ASKER", similarity=1.0)
                 else:
-                    spk_id = "speaker_0"
+                    emb = extract_voice_embedding(sub_a, sample_rate=sr)
+                    dur_sec = max(0.0, (ps["end_sample"] - ps["start_sample"]) / float(sr))
+                    ts_sec = ps["start_sample"] / float(sr)
+                    spk_assign_override = speaker_registry.assign(
+                        embedding=emb,
+                        duration_sec=dur_sec,
+                        timestamp_sec=ts_sec,
+                        overlap_flag=ps["overlap_flag"],
+                    )
+                    spk_id = spk_assign_override.speaker_id
+                    if spk_id == "UNKNOWN_INVALID":
+                        spk_id = "speaker_0"
+                        spk_assign_override = SpeakerAssignment(
+                            speaker_id="speaker_0",
+                            similarity=0.0,
+                            low_confidence=True,
+                        )
                 turn_specs.append(
                     {
                         "turn_id": idx + 1,
                         "speaker_id": spk_id,
+                        "speaker_assignment": spk_assign_override,
                         "start_sample": ps["start_sample"],
                         "end_sample": ps["end_sample"],
                         "forced_split": ps["forced_split"],
@@ -844,7 +1121,8 @@ class DCESessionStore:
         prev_q_end_sec: Optional[float] = None
         prev_q_is_closed: bool = False
 
-        for spec in turn_specs:
+        total_turns_count = max(len(turn_specs), 1)
+        for turn_idx, spec in enumerate(turn_specs, start=1):
             tid = spec["turn_id"]
             speaker_id = spec["speaker_id"]
             s_idx = spec["start_sample"]
@@ -955,33 +1233,77 @@ class DCESessionStore:
             turn_vision_feats = vision_feats
             av_lag_ms: Optional[float] = None
             av_corr: Optional[float] = None
-            if seq_results:
-                f_start = max(0, int(round((s_idx / float(sr)) * 15.0)))
-                f_end = min(len(seq_results), max(f_start + 1, int(round((e_idx / float(sr)) * 15.0))))
-                turn_slice = seq_results[f_start:f_end]
-                if sum(1 for v in turn_slice if v.face_detected and v.quality_flag == "ok") >= 3:
-                    turn_vision_feats = _aggregate_vision_slice(turn_slice)
-                else:
-                    turn_vision_feats = VisionFeatures(face_detected=False, quality_flag="insufficient_frames")
-
-                # Compute 50Hz A/V cross-correlation for this turn
-                vis_pairs = [
-                    (float(f_start + offset) / 15.0, float(v.mean_lip_aperture))
-                    for offset, v in enumerate(turn_slice)
-                    if v.face_detected and v.quality_flag == "ok" and v.mean_lip_aperture is not None
-                ]
-                hop_20ms = max(1, int(round(0.020 * sr)))
-                n_bins = len(turn_audio) // hop_20ms
-                if len(vis_pairs) >= 2 and n_bins >= 2:
-                    t_vis_sec = [p[0] for p in vis_pairs]
-                    lip_seq = [p[1] for p in vis_pairs]
+            if face_tracks:
+                first_len = max((len(seq) for seq in face_tracks.values()), default=0)
+                if first_len > 0:
+                    f_start = max(0, int(round((s_idx / float(sr)) * 15.0)))
+                    f_end = min(first_len, max(f_start + 1, int(round((e_idx / float(sr)) * 15.0))))
+                    hop_20ms = max(1, int(round(0.020 * sr)))
+                    n_bins = len(turn_audio) // hop_20ms
                     turn_t0 = s_idx / float(sr)
                     t_aud_sec = [turn_t0 + (b + 0.5) * 0.020 for b in range(n_bins)]
                     audio_rms_env = [
                         float(np.sqrt(np.mean(turn_audio[b * hop_20ms : (b + 1) * hop_20ms] ** 2)))
                         for b in range(n_bins)
                     ]
-                    av_lag_ms, av_corr = normalized_av_xcorr(t_vis_sec, lip_seq, t_aud_sec, audio_rms_env)
+                    is_active_speech = len(turn_audio) > 0 and float(np.sqrt(np.mean(turn_audio ** 2))) > 1e-4
+
+                    detected_faces = 0
+                    track_evals: List[Tuple[str, List[VisionFeatures], Optional[float], Optional[float], float, int]] = []
+                    for fid, track_seq in face_tracks.items():
+                        t_slice = track_seq[f_start:f_end]
+                        valid_cnt = sum(1 for v in t_slice if v.face_detected and v.quality_flag == "ok")
+                        any_detected = any(v.face_detected for v in t_slice)
+                        if any_detected:
+                            detected_faces += 1
+                        vis_pairs = [
+                            (float(f_start + offset) / 15.0, float(v.mean_lip_aperture))
+                            for offset, v in enumerate(t_slice)
+                            if v.face_detected and v.quality_flag == "ok" and v.mean_lip_aperture is not None
+                        ]
+                        lip_std = float(np.std([p[1] for p in vis_pairs])) if len(vis_pairs) >= 2 else 0.0
+                        t_lag: Optional[float] = None
+                        t_corr: Optional[float] = None
+                        if len(vis_pairs) >= 2 and n_bins >= 2:
+                            t_vis_sec = [p[0] for p in vis_pairs]
+                            lip_seq = [p[1] for p in vis_pairs]
+                            t_corr, t_lag = normalized_av_xcorr(t_vis_sec, lip_seq, t_aud_sec, audio_rms_env)
+                        track_evals.append((fid, t_slice, t_lag, t_corr, lip_std, valid_cnt))
+
+                    # Select track with highest positive lip-audio correlation (or most valid frames as fallback)
+                    pos_tracks = [te for te in track_evals if te[3] is not None and te[3] > 0.0]
+                    if pos_tracks:
+                        best_fid, best_slice, av_lag_ms, av_corr, best_lip_std, best_valid_cnt = max(
+                            pos_tracks, key=lambda te: float(te[3])
+                        )
+                    elif track_evals:
+                        best_fid, best_slice, av_lag_ms, av_corr, best_lip_std, best_valid_cnt = max(
+                            track_evals, key=lambda te: (te[5], float(te[3]) if te[3] is not None else -2.0)
+                        )
+                    else:
+                        best_fid, best_slice, best_lip_std, best_valid_cnt = "face_0", [], 0.0, 0
+
+                    # Active-Speaker Gate: reject listener/offscreen faces when >= 2 faces are present
+                    if (
+                        detected_faces >= 2
+                        and is_active_speech
+                        and (av_corr is None or av_corr < 0.12 or best_lip_std < 1e-4)
+                    ):
+                        turn_vision_feats = VisionFeatures(
+                            face_detected=True,
+                            face_id_hint=best_fid,
+                            quality_flag="listener_or_offscreen_face",
+                        )
+                    elif best_valid_cnt >= 3:
+                        turn_vision_feats = _aggregate_vision_slice(best_slice).model_copy(
+                            update={"face_id_hint": best_fid}
+                        )
+                    else:
+                        turn_vision_feats = VisionFeatures(
+                            face_detected=False,
+                            face_id_hint=best_fid,
+                            quality_flag="insufficient_frames",
+                        )
 
             turn_features = TurnFeatures(
                 turn_id=tid,
@@ -994,6 +1316,15 @@ class DCESessionStore:
                 av_sync_lag_ms=av_lag_ms,
                 av_sync_corr=av_corr,
             )
+
+            speaker_assign = spec.get("speaker_assignment") or SpeakerAssignment(
+                speaker_id=speaker_id, similarity=1.0
+            )
+            if speaker_assign.promoted_from is not None:
+                baseline_store.merge_speaker_id(
+                    old_id=speaker_assign.promoted_from,
+                    new_id=speaker_id,
+                )
 
             # Score & update BaselineStore (k_mu = shrinkage_k, default 0.0)
             feature_scores = baseline_store.score_and_update_turn(
@@ -1059,7 +1390,6 @@ class DCESessionStore:
                 is_question=raw_text.endswith("?"),
                 words=word_objs,
             )
-            speaker_assign = SpeakerAssignment(speaker_id=speaker_id, similarity=1.0)
 
             stored_turns[tid] = _StoredTurn(
                 turn_id=tid,
@@ -1095,6 +1425,12 @@ class DCESessionStore:
                     "low_confidence_words": low_conf_words,
                 }
             )
+            if turn_idx % 5 == 0 or turn_idx == total_turns_count:
+                _emit_progress(
+                    0.35 + 0.60 * (turn_idx / float(total_turns_count)),
+                    1.0,
+                    f"processed_turn_{turn_idx}",
+                )
 
         with self._lock:
             if sid not in self._sessions:
@@ -1449,6 +1785,7 @@ _DEFAULT_STORE = DCESessionStore()
 def handle_jsonrpc_request(
     msg: Dict[str, Any],
     store: Optional[DCESessionStore] = None,
+    progress_callback: Optional[Any] = None,
 ) -> Optional[Dict[str, Any]]:
     """Process a single JSON-RPC 2.0 MCP request dict and return a response dict (or None for notifications)."""
     active_store = store or _DEFAULT_STORE
@@ -1489,11 +1826,33 @@ def handle_jsonrpc_request(
 
     if method == "tools/call":
         tool_name = params.get("name")
-        args = params.get("arguments") or {}
+        args = dict(params.get("arguments") or {})
+        meta = params.get("_meta") or {}
+        progress_token = meta.get("progressToken")
+
+        def _rpc_progress(prog: float, total: float, stage: str) -> None:
+            if progress_token is not None and progress_callback is not None:
+                progress_callback(
+                    {
+                        "jsonrpc": "2.0",
+                        "method": "notifications/progress",
+                        "params": {
+                            "progressToken": progress_token,
+                            "progress": round(float(prog), 4),
+                            "total": round(float(total), 4),
+                            "message": stage,
+                        },
+                    }
+                )
+
         try:
             with contextlib.redirect_stdout(sys.stderr):
                 if tool_name == "dce_ingest_media":
+                    if progress_token is not None and progress_callback is not None:
+                        args.setdefault("_progress_cb", _rpc_progress)
                     payload = active_store.ingest_media(**args)
+                elif tool_name == "dce_get_job_status":
+                    payload = active_store.get_job_status(**args)
                 elif tool_name == "dce_submit_verdicts":
                     payload = active_store.submit_verdicts(**args)
                 elif tool_name == "dce_unlock_signals":
@@ -1573,6 +1932,8 @@ def run_stdio_server(store: Optional[DCESessionStore] = None) -> None:
 
     sys.stdout = sys.stderr
 
+    write_lock = threading.Lock()
+
     def _write_frame(payload: Dict[str, Any], use_content_length: bool) -> None:
         raw_json = json.dumps(payload, ensure_ascii=False)
         if use_content_length:
@@ -1582,12 +1943,13 @@ def run_stdio_server(store: Optional[DCESessionStore] = None) -> None:
         else:
             frame_bytes = (raw_json + "\n").encode("utf-8")
 
-        if mcp_binary_out is not None:
-            mcp_binary_out.write(frame_bytes)
-            mcp_binary_out.flush()
-        elif mcp_text_out is not None:
-            mcp_text_out.write(frame_bytes.decode("utf-8"))
-            mcp_text_out.flush()
+        with write_lock:
+            if mcp_binary_out is not None:
+                mcp_binary_out.write(frame_bytes)
+                mcp_binary_out.flush()
+            elif mcp_text_out is not None:
+                mcp_text_out.write(frame_bytes.decode("utf-8"))
+                mcp_text_out.flush()
 
     stdin_stream = getattr(sys.stdin, "buffer", None)
     try:
@@ -1644,7 +2006,11 @@ def run_stdio_server(store: Optional[DCESessionStore] = None) -> None:
                 continue
 
             if isinstance(msg, dict):
-                resp = handle_jsonrpc_request(msg, store=store)
+                resp = handle_jsonrpc_request(
+                    msg,
+                    store=store,
+                    progress_callback=lambda notif: _write_frame(notif, use_content_length=use_cl),
+                )
                 if resp is not None:
                     _write_frame(resp, use_content_length=use_cl)
     finally:

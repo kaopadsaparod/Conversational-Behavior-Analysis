@@ -48,15 +48,19 @@ python -m dce.mcp_server
 All benchmarks were run with real extractors (`faster-whisper 1.2.1`, `praat-parselmouth 0.4.7`, `mediapipe 1.2.3`, `av 19.0.2`, `cross-encoder/nli-deberta-v3-xsmall`) and blinded inputs (filenames and ground-truth labels stripped before reasoning). Detailed tables and failure analyses are in [BENCHMARK_REPORT.md](BENCHMARK_REPORT.md).
 
 ### Unit & Integration Tests
-- `python -m pytest -q`: **154 passed in 10.21s**
+- `python -m pytest -q`: **164 passed in 21.86s** (including `tests/test_production_hardening.py`)
+- MCP stdio cold-start (`initialize` + `tools/list`): **0.1330s** (`< 0.2s`)
 
 ### DECODE Contradiction Pipeline (`dev.jsonl`, 100 balanced dialogues: 50 Pos / 50 Neg)
-Same-speaker raw utterance pairs with clause splitting, Turn-0 context, and `nli_threshold = 0.72`:
+Same-speaker raw utterance pairs with clause splitting, Turn-0 context, and `nli_threshold = 0.72` (95% CIs via 10,000-iteration stratified bootstrap):
 
-| Stage | TP | FP | TN | FN | Precision | Recall | F1 | Accuracy | LLM Calls Saved |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Stage 1 (`DeBERTa-v3-xsmall >= 0.72`) | 48 | 35 | 15 | 2 | 0.5783 | 0.9600 | 0.7218 | 0.6300 | 1,787 / 3,135 (57.0%) |
-| **Full 2-Stage (Stage 1 + Blind Stage 2)** | **47** | **0** | **50** | **3** | **1.0000** | **0.9400** | **0.9691** | **0.9700** | **1,787 / 3,135 (57.0%)** |
+| Stage | TP | FP | TN | FN | Precision | Recall | F1 [95% CI] | Accuracy [95% CI] | LLM Calls Saved |
+|---|---:|---:|---:|---:|---:|---:|---|---|---:|
+| Stage 1 (`DeBERTa-v3-xsmall >= 0.72`) | 48 | 35 | 15 | 2 | 0.5783 | 0.9600 | 0.7218 `[0.6769, 0.7656]` | 0.6300 `[0.5600, 0.7000]` | 1,787 / 3,135 (57.0%) |
+| **Full 2-Stage (Stage 1 + Blind Stage 2)** | **47** | **0** | **50** | **3** | **1.0000** | **0.9400** | **0.9691** `[0.9247, 1.0000]` | **0.9700** `[0.9300, 1.0000]` | **1,787 / 3,135 (57.0%)** |
+
+### RLDD Full-Dataset 5-Fold Out-of-Fold CV (`N=121` videos) & 24 Mixed Wild Videos
+Across **all 121 RLDD videos** (`61 Deceptive / 60 Truthful`) under strict 5-fold out-of-fold physiological CV (`Mode A`), accuracy is `0.4959` (95% CI `[0.4380, 0.5537]`, `F1 = 0.1867 [0.0779, 0.3038]`, `p = 0.5721` vs chance), empirically confirming that isolated short-clip physiology cannot reliably separate truthful stress from deception. On the 24-clip held-out mixed split:
 
 ### 24 Mixed Wild Videos (`12 RLDD Test/` + `12 Werewolf-YouTube` 20s sub-clips)
 Recalibrated on 54 `RLDD Train/` Truthful clips (`priors_wild_video_en.json`, causal 10s rolling blink rate, block-diagonal voice correlations), frontal-gated AUs/gaze (`|yaw| <= 20°`), neutral fillers excluded from `df`, and 5-fold `Train/` CV threshold (`mean(d_sq/df) >= 1.8` across `>= 2` turns with `df >= 4`):
@@ -72,14 +76,16 @@ Recalibrated on 54 `RLDD Train/` Truthful clips (`priors_wild_video_en.json`, ca
 | `Werewolf` 20s (`n=12`) | Mode A (Physio) | 0 | 0 | 6 | 6 | 0.0000 | 0.0000 | 0.0000 | 0.5000 |
 | `Werewolf` 20s (`n=12`) | Mode B & Mode C | 1 | 1 | 5 | 5 | 0.5000 | 0.1667 | 0.2500 | 0.5000 |
 
-### 6 Complete Multi-Turn `Werewolf-Among-Us` Games (`n=6 games, 26 players`)
-Evaluated chronologically from Turn 1 to end of game with per-player `BaselineStore` adaptation (`n_eff >= 3`) and blind Stage-2 role/claim reasoning (`Werewolf/Minion` vs Villager-team):
+### Longitudinal `Werewolf-Among-Us` Games (`6-Game Blind Judge n=26` & `24-Game Expanded N=110`)
+Evaluated chronologically from Turn 1 to end of game with per-player `BaselineStore` adaptation (`n_eff >= 3`) (`Werewolf/Minion` vs Villager-team):
 
-| Mode | TP | FP | TN | FN | Precision | Recall | F1 | Accuracy |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|
-| Mode A (In-Game Baseline) | 4 | 9 | 9 | 4 | 0.3077 | 0.5000 | 0.3810 | 0.5000 |
-| Mode B (Blind Stage-2 Reasoning) | 4 | 5 | 13 | 4 | 0.4444 | 0.5000 | 0.4706 | 0.6538 |
-| **Mode C (Neuro-Symbolic Fusion)** | **6** | 7 | 11 | **2** | **0.4615** | **0.7500** | **0.5714** | **0.6538** |
+| Split | Mode | N | Precision | Recall | F1 [95% CI] | Accuracy [95% CI] |
+|---|---|---:|---:|---:|---|---|
+| 6 Games (Blind Stage-2) | Mode A (In-Game Baseline) | 26 | 0.3077 | 0.5000 | 0.3810 `[0.1176, 0.6087]` | 0.5000 `[0.3077, 0.6923]` |
+| 6 Games (Blind Stage-2) | Mode B (Blind Stage-2 Reasoning) | 26 | 0.4444 | 0.5000 | 0.4706 `[0.1538, 0.7368]` | 0.6538 `[0.4615, 0.8462]` |
+| 6 Games (Blind Stage-2) | **Mode C (Neuro-Symbolic Fusion)** | 26 | **0.4615** | **0.7500** | **0.5714** `[0.3636, 0.7619]` | **0.6538** `[0.4615, 0.8462]` |
+| **24 Games (Expanded)** | **Mode A (In-Game Physio Baseline)** | **110** | 0.3077 | 0.2500 | 0.2759 `[0.1224, 0.4211]` | `0.6182` `[0.5364, 0.6909]` (BalAcc `0.5096`, vs maj `70.91%`: `p=0.9845`, Fisher `p=0.8099`) |
+| **24 Games (Expanded)** | **Stage-1 Raw NLI Only (Unjudged Ablation — No Stage-2 Judge)** | **110** | 0.2710 | 0.9062 | 0.4173 `[0.3704, 0.4507]` | `0.2636` `[0.2273, 0.2909]` (BalAcc `0.4531`, McNemar vs A: `p=1.69e-5`) |
 
 ## Repository Layout
 
@@ -103,7 +109,7 @@ Evaluated chronologically from Turn 1 to end of game with per-player `BaselineSt
 │   ├── extractors/                  # Audio (Parselmouth/Whisper) & Vision (MediaPipe)
 │   └── reasoning/                   # ClaimsLedger, NLIPreFilter, templates, LLM adapter
 ├── benchmarks/                      # Reproducible DECODE, audio stress, RLDD & Werewolf scripts
-└── tests/                           # 154 unit & integration tests
+└── tests/                           # 164 unit & integration tests
 ```
 
 ## License

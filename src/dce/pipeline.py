@@ -21,7 +21,7 @@ import numpy as np
 
 from dce.baseline_store import BaselineStore
 from dce.clock import ClockMode, MasterClock, PolicyQueue
-from dce.extractors.audio_dsp import extract_prosody, transcribe_audio
+from dce.extractors.audio_dsp import extract_prosody, extract_voice_embedding, transcribe_audio
 from dce.extractors.vision_face import extract_vision_frame
 from dce.math_core import compute_mahalanobis, normalized_av_xcorr
 from dce.reasoning.claims_ledger import ClaimsLedger, should_skip_extraction
@@ -38,6 +38,7 @@ from dce.schemas import (
     HardTurnCommitEvent,
     MahalanobisResult,
     PriorsData,
+    ProsodyConfig,
     ProsodyFeatures,
     ReasoningConfig,
     RecorderTurnRecord,
@@ -94,12 +95,25 @@ def audio_worker_process(
             arr = np.asarray(pcm_data, dtype=np.float32)
             rms = float(np.sqrt(np.mean(arr**2))) if len(arr) > 0 else 0.0
 
-            result = {
+            result: Dict[str, Any] = {
                 "pts_ns": pts_ns,
                 "rms": rms,
                 "samples_count": len(arr),
                 "status": "OK",
             }
+            if isinstance(config_dict, dict):
+                sr = int(config_dict.get("sample_rate", 16000))
+                if config_dict.get("extract_prosody") or config_dict.get("compute_prosody"):
+                    p_cfg = (
+                        ProsodyConfig.model_validate(config_dict["prosody"])
+                        if isinstance(config_dict.get("prosody"), dict)
+                        else ProsodyConfig()
+                    )
+                    pros = extract_prosody(arr, sample_rate=sr, config=p_cfg)
+                    result["prosody"] = pros.model_dump(mode="json")
+                if config_dict.get("extract_embedding") or config_dict.get("compute_embedding"):
+                    emb = extract_voice_embedding(arr, sample_rate=sr)
+                    result["voice_embedding"] = emb.tolist()
             out_queue.put(result)
         except Exception as exc:
             logger.error("Audio worker error: %s", exc)
@@ -496,9 +510,13 @@ class DiscourseConsistencyPipeline:
         speech_duration_sec = float(event.end_ns - event.start_ns) / 1_000_000_000.0
         timestamp_sec = float(event.start_ns) / 1_000_000_000.0
 
+        pcm = event.audio_pcm16k if event.audio_pcm16k is not None else []
+
         # 1. Speaker Identification
         if voice_embedding is None:
-            voice_embedding = np.ones(192, dtype=np.float64) / np.sqrt(192.0)
+            voice_embedding = extract_voice_embedding(
+                pcm, sample_rate=self._config.vad.sample_rate
+            )
 
         assignment = self._speaker_registry.assign(
             embedding=voice_embedding,
@@ -512,7 +530,6 @@ class DiscourseConsistencyPipeline:
         apply_promotion(assignment, self._claims_ledger, self._baseline_store)
 
         # 2. Extract Acoustic Prosody
-        pcm = event.audio_pcm16k if event.audio_pcm16k is not None else []
         prosody = extract_prosody(
             audio_pcm=pcm,
             sample_rate=self._config.vad.sample_rate,

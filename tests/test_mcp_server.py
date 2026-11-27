@@ -77,6 +77,7 @@ def test_subprocess_stdio_handshake_and_stdout_cleanliness() -> None:
     tool_names = [t["name"] for t in resp_tools["result"]["tools"]]
     assert tool_names == [
         "dce_ingest_media",
+        "dce_get_job_status",
         "dce_submit_verdicts",
         "dce_unlock_signals",
         "dce_slice_turn_audio",
@@ -155,7 +156,7 @@ def test_stdio_content_length_framing_and_stdout_isolation(monkeypatch: pytest.M
     _, json_part = out_text.split("\r\n\r\n", 1)
     parsed = json.loads(json_part)
     assert parsed["id"] == 10
-    assert len(parsed["result"]["tools"]) == 4
+    assert len(parsed["result"]["tools"]) == 5
 
 
 def test_firewall_state_machine_and_phonetic_downgrade(tmp_path: Path) -> None:
@@ -373,7 +374,7 @@ def test_missing_media_and_unknown_tool_errors(tmp_path: Path) -> None:
     )
     assert unknown_resp is not None
     assert unknown_resp["error"]["code"] == -32601
-    assert len(MCP_TOOLS) == 4
+    assert len(MCP_TOOLS) == 5
 
 
 def test_single_turn_low_conf_downgrade_and_human_review_alias(tmp_path: Path) -> None:

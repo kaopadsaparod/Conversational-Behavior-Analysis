@@ -509,27 +509,35 @@ def extract_vision_sequence(
     max_head_pose_deg: float = 30.0,
     max_pitch_deg: float = 25.0,
     min_luma: float = 20.0,
-) -> List[VisionFeatures]:
+    max_faces: int = 1,
+) -> Union[List[VisionFeatures], Dict[str, List[VisionFeatures]]]:
     """Process a contiguous video frame sequence using a fresh RunningMode.VIDEO FaceLandmarker.
 
     Creates a dedicated VIDEO-mode instance per sequence so timestamp_ms is strictly
     monotonic and isolated from other files, and computes blink_rate_per_min across
     valid frames.
+
+    When ``max_faces == 1`` (default), returns ``List[VisionFeatures]``.
+    When ``max_faces > 1``, tracks up to ``max_faces`` faces grouped by horizontal
+    spatial center and returns ``Dict[str, List[VisionFeatures]]`` keyed by face track ID
+    (e.g., ``"face_0"``, ``"face_1"``).
     """
+    eff_max_faces = max(1, int(max_faces))
     if not frames_rgb:
-        return []
+        return [] if eff_max_faces == 1 else {}
 
     try:
         import cv2  # noqa: F401
         import mediapipe as mp
     except ImportError:
-        return [
+        no_backend = [
             VisionFeatures(face_detected=False, quality_flag="no_vision_backend")
             for _ in frames_rgb
         ]
+        return no_backend if eff_max_faces == 1 else {"face_0": no_backend}
 
     if not hasattr(mp, "tasks"):
-        return [
+        seq_1 = [
             extract_vision_frame(
                 f,
                 ear_blink_threshold=ear_blink_threshold,
@@ -539,6 +547,11 @@ def extract_vision_sequence(
             )
             for f in frames_rgb
         ]
+        if eff_max_faces == 1:
+            return seq_1
+        return {
+            "face_0": [v.model_copy(update={"face_id_hint": "face_0"}) for v in seq_1]
+        }
 
     model_path = ensure_face_landmarker_model()
     vision = mp.tasks.vision
@@ -546,34 +559,136 @@ def extract_vision_sequence(
     options = vision.FaceLandmarkerOptions(
         base_options=base_options,
         running_mode=vision.RunningMode.VIDEO,
-        num_faces=1,
+        num_faces=eff_max_faces,
         min_face_detection_confidence=0.5,
         min_face_presence_confidence=0.5,
         output_face_blendshapes=True,
         output_facial_transformation_matrixes=True,
     )
 
-    out_features: List[VisionFeatures] = []
-    valid_flags: List[bool] = []
-    blink_onsets: List[int] = []
-    prev_blinking = False
     eff_fps = max(fps, 1.0)
     step_ms = max(1, int(round(1000.0 / eff_fps)))
     win_frames = max(1, int(round(10.0 * eff_fps)))
 
+    if eff_max_faces == 1:
+        out_features: List[VisionFeatures] = []
+        valid_flags: List[bool] = []
+        blink_onsets: List[int] = []
+        prev_blinking = False
+
+        with vision.FaceLandmarker.create_from_options(options) as landmarker:
+            for idx, raw_frame in enumerate(frames_rgb):
+                if raw_frame is None or raw_frame.size == 0:
+                    out_features.append(VisionFeatures(face_detected=False, quality_flag="empty_frame"))
+                    valid_flags.append(False)
+                    blink_onsets.append(0)
+                    continue
+                if float(np.mean(raw_frame)) < min_luma:
+                    out_features.append(
+                        VisionFeatures(face_detected=False, low_light_flag=True, quality_flag="low_light")
+                    )
+                    valid_flags.append(False)
+                    blink_onsets.append(0)
+                    continue
+
+                frame = np.stack([raw_frame, raw_frame, raw_frame], axis=-1) if raw_frame.ndim == 2 else raw_frame
+                if frame.dtype != np.uint8:
+                    frame = np.clip(frame, 0, 255).astype(np.uint8)
+                h, w = frame.shape[:2]
+                mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=np.ascontiguousarray(frame))
+                results = landmarker.detect_for_video(mp_image, idx * step_ms)
+                if not getattr(results, "face_landmarks", None):
+                    out_features.append(VisionFeatures(face_detected=False, quality_flag="no_face"))
+                    valid_flags.append(False)
+                    blink_onsets.append(0)
+                    continue
+
+                coords = np.array([[lm.x * w, lm.y * h] for lm in results.face_landmarks[0]], dtype=np.float64)
+                blendshapes_map = (
+                    {
+                        str(b.category_name): float(b.score)
+                        for b in results.face_blendshapes[0]
+                        if getattr(b, "category_name", None)
+                    }
+                    if getattr(results, "face_blendshapes", None)
+                    else {}
+                )
+                transform_matrix = (
+                    results.facial_transformation_matrixes[0]
+                    if getattr(results, "facial_transformation_matrixes", None)
+                    else None
+                )
+                vf = _build_vision_features_from_landmarks(
+                    coords=coords,
+                    image_width=w,
+                    image_height=h,
+                    ear_blink_threshold=ear_blink_threshold,
+                    max_head_pose_deg=max_head_pose_deg,
+                    max_pitch_deg=max_pitch_deg,
+                    blendshapes_map=blendshapes_map,
+                    transform_matrix=transform_matrix,
+                )
+                is_valid = vf.quality_flag == "ok"
+                onset = 0
+                if is_valid:
+                    is_blinking = vf.action_units.get("AU45_blink", 0.0) >= 0.5
+                    if is_blinking and not prev_blinking:
+                        onset = 1
+                    prev_blinking = is_blinking
+                valid_flags.append(is_valid)
+                blink_onsets.append(onset)
+                if is_valid:
+                    lo = max(0, len(valid_flags) - win_frames)
+                    win_valid = sum(valid_flags[lo:])
+                    win_valid_sec = float(win_valid) / eff_fps
+                    if win_valid_sec >= 6.0:
+                        win_blinks = sum(blink_onsets[lo:])
+                        vf = vf.model_copy(update={"blink_rate_per_min": float(win_blinks) / (win_valid_sec / 60.0)})
+                out_features.append(vf)
+
+        return out_features
+
+    # Multi-face tracking grouped by horizontal spatial center (up to eff_max_faces)
+    n_frames = len(frames_rgb)
+    track_centers: Dict[str, float] = {}
+    track_features: Dict[str, List[VisionFeatures]] = {}
+    track_valid_flags: Dict[str, List[bool]] = {}
+    track_blink_onsets: Dict[str, List[int]] = {}
+    track_prev_blinking: Dict[str, bool] = {}
+
+    def _ensure_track(fid: str, cx: float, frame_idx: int) -> None:
+        if fid not in track_features:
+            track_centers[fid] = cx
+            track_features[fid] = [
+                VisionFeatures(face_detected=False, face_id_hint=fid, quality_flag="no_face")
+                for _ in range(frame_idx)
+            ]
+            track_valid_flags[fid] = [False] * frame_idx
+            track_blink_onsets[fid] = [0] * frame_idx
+            track_prev_blinking[fid] = False
+
     with vision.FaceLandmarker.create_from_options(options) as landmarker:
         for idx, raw_frame in enumerate(frames_rgb):
             if raw_frame is None or raw_frame.size == 0:
-                out_features.append(VisionFeatures(face_detected=False, quality_flag="empty_frame"))
-                valid_flags.append(False)
-                blink_onsets.append(0)
+                for fid in track_features:
+                    track_features[fid].append(
+                        VisionFeatures(face_detected=False, face_id_hint=fid, quality_flag="empty_frame")
+                    )
+                    track_valid_flags[fid].append(False)
+                    track_blink_onsets[fid].append(0)
                 continue
             if float(np.mean(raw_frame)) < min_luma:
-                out_features.append(
-                    VisionFeatures(face_detected=False, low_light_flag=True, quality_flag="low_light")
-                )
-                valid_flags.append(False)
-                blink_onsets.append(0)
+                for fid in track_features:
+                    track_features[fid].append(
+                        VisionFeatures(
+                            face_detected=False,
+                            face_id_hint=fid,
+                            low_light_flag=True,
+                            quality_flag="low_light",
+                        )
+                    )
+                    track_valid_flags[fid].append(False)
+                    track_blink_onsets[fid].append(0)
                 continue
 
             frame = np.stack([raw_frame, raw_frame, raw_frame], axis=-1) if raw_frame.ndim == 2 else raw_frame
@@ -582,53 +697,104 @@ def extract_vision_sequence(
             h, w = frame.shape[:2]
             mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=np.ascontiguousarray(frame))
             results = landmarker.detect_for_video(mp_image, idx * step_ms)
-            if not getattr(results, "face_landmarks", None):
-                out_features.append(VisionFeatures(face_detected=False, quality_flag="no_face"))
-                valid_flags.append(False)
-                blink_onsets.append(0)
-                continue
+            faces_lms = getattr(results, "face_landmarks", None) or []
+            faces_bs = getattr(results, "face_blendshapes", None) or []
+            faces_tm = getattr(results, "facial_transformation_matrixes", None) or []
 
-            coords = np.array([[lm.x * w, lm.y * h] for lm in results.face_landmarks[0]], dtype=np.float64)
-            blendshapes_map = (
-                {
-                    str(b.category_name): float(b.score)
-                    for b in results.face_blendshapes[0]
-                    if getattr(b, "category_name", None)
-                }
-                if getattr(results, "face_blendshapes", None)
-                else {}
-            )
-            transform_matrix = (
-                results.facial_transformation_matrixes[0]
-                if getattr(results, "facial_transformation_matrixes", None)
-                else None
-            )
-            vf = _build_vision_features_from_landmarks(
-                coords=coords,
-                image_width=w,
-                image_height=h,
-                ear_blink_threshold=ear_blink_threshold,
-                max_head_pose_deg=max_head_pose_deg,
-                max_pitch_deg=max_pitch_deg,
-                blendshapes_map=blendshapes_map,
-                transform_matrix=transform_matrix,
-            )
-            is_valid = vf.quality_flag == "ok"
-            onset = 0
-            if is_valid:
-                is_blinking = vf.action_units.get("AU45_blink", 0.0) >= 0.5
-                if is_blinking and not prev_blinking:
-                    onset = 1
-                prev_blinking = is_blinking
-            valid_flags.append(is_valid)
-            blink_onsets.append(onset)
-            if is_valid:
-                lo = max(0, len(valid_flags) - win_frames)
-                win_valid = sum(valid_flags[lo:])
-                win_valid_sec = float(win_valid) / eff_fps
-                if win_valid_sec >= 6.0:
-                    win_blinks = sum(blink_onsets[lo:])
-                    vf = vf.model_copy(update={"blink_rate_per_min": float(win_blinks) / (win_valid_sec / 60.0)})
-            out_features.append(vf)
+            # Compute horizontal spatial center for each detected face
+            detections: List[Tuple[float, int]] = []
+            for f_i, lms in enumerate(faces_lms[:eff_max_faces]):
+                cx = float(np.mean([lm.x for lm in lms])) if lms else 0.5
+                detections.append((cx, f_i))
 
-    return out_features
+            assigned_tracks: Dict[str, int] = {}
+            used_f_indices: set[int] = set()
+
+            # Greedy nearest horizontal center assignment to existing tracks
+            if track_centers and detections:
+                pairs: List[Tuple[float, str, int]] = []
+                for fid, t_cx in track_centers.items():
+                    for cx, f_i in detections:
+                        pairs.append((abs(cx - t_cx), fid, f_i))
+                pairs.sort(key=lambda x: x[0])
+                for dist, fid, f_i in pairs:
+                    if fid in assigned_tracks or f_i in used_f_indices:
+                        continue
+                    if dist <= 0.22:
+                        assigned_tracks[fid] = f_i
+                        used_f_indices.add(f_i)
+
+            # Create new tracks for unassigned detections if capacity remains
+            for cx, f_i in detections:
+                if f_i in used_f_indices:
+                    continue
+                if len(track_features) < eff_max_faces:
+                    new_fid = f"face_{len(track_features)}"
+                    _ensure_track(new_fid, cx, idx)
+                    assigned_tracks[new_fid] = f_i
+                    used_f_indices.add(f_i)
+
+            for fid in list(track_features.keys()):
+                if fid not in assigned_tracks:
+                    track_features[fid].append(
+                        VisionFeatures(face_detected=False, face_id_hint=fid, quality_flag="no_face")
+                    )
+                    track_valid_flags[fid].append(False)
+                    track_blink_onsets[fid].append(0)
+                    continue
+
+                f_i = assigned_tracks[fid]
+                lms = faces_lms[f_i]
+                cx = float(np.mean([lm.x for lm in lms])) if lms else track_centers[fid]
+                track_centers[fid] = 0.8 * track_centers[fid] + 0.2 * cx
+
+                coords = np.array([[lm.x * w, lm.y * h] for lm in lms], dtype=np.float64)
+                blendshapes_map = (
+                    {
+                        str(b.category_name): float(b.score)
+                        for b in faces_bs[f_i]
+                        if getattr(b, "category_name", None)
+                    }
+                    if f_i < len(faces_bs)
+                    else {}
+                )
+                transform_matrix = faces_tm[f_i] if f_i < len(faces_tm) else None
+                vf = _build_vision_features_from_landmarks(
+                    coords=coords,
+                    image_width=w,
+                    image_height=h,
+                    ear_blink_threshold=ear_blink_threshold,
+                    max_head_pose_deg=max_head_pose_deg,
+                    max_pitch_deg=max_pitch_deg,
+                    blendshapes_map=blendshapes_map,
+                    transform_matrix=transform_matrix,
+                ).model_copy(update={"face_id_hint": fid})
+
+                is_valid = vf.quality_flag == "ok"
+                onset = 0
+                if is_valid:
+                    is_blinking = vf.action_units.get("AU45_blink", 0.0) >= 0.5
+                    if is_blinking and not track_prev_blinking[fid]:
+                        onset = 1
+                    track_prev_blinking[fid] = is_blinking
+                track_valid_flags[fid].append(is_valid)
+                track_blink_onsets[fid].append(onset)
+                if is_valid:
+                    lo = max(0, len(track_valid_flags[fid]) - win_frames)
+                    win_valid = sum(track_valid_flags[fid][lo:])
+                    win_valid_sec = float(win_valid) / eff_fps
+                    if win_valid_sec >= 6.0:
+                        win_blinks = sum(track_blink_onsets[fid][lo:])
+                        vf = vf.model_copy(
+                            update={"blink_rate_per_min": float(win_blinks) / (win_valid_sec / 60.0)}
+                        )
+                track_features[fid].append(vf)
+
+    if not track_features:
+        return {
+            "face_0": [
+                VisionFeatures(face_detected=False, face_id_hint="face_0", quality_flag="no_face")
+                for _ in range(n_frames)
+            ]
+        }
+    return track_features

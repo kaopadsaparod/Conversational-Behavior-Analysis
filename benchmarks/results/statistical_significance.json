@@ -1,0 +1,197 @@
+{
+  "n_boot": 10000,
+  "rldd_121_5fold_oof_phys": {
+    "n": 121,
+    "n_pos": 61,
+    "n_neg": 60,
+    "majority_baseline": 0.5041,
+    "n_boot": 10000,
+    "accuracy": 0.4959,
+    "accuracy_ci95": [
+      0.438,
+      0.5537
+    ],
+    "balanced_accuracy": 0.499,
+    "balanced_accuracy_ci95": [
+      0.4411,
+      0.5568
+    ],
+    "f1": 0.1867,
+    "f1_ci95": [
+      0.0779,
+      0.3038
+    ],
+    "precision": 0.5,
+    "precision_ci95": [
+      0.25,
+      0.75
+    ],
+    "recall": 0.1148,
+    "recall_ci95": [
+      0.0492,
+      0.1967
+    ],
+    "confusion": {
+      "tp": 7,
+      "fp": 7,
+      "fn": 54,
+      "tn": 53
+    },
+    "p_value_vs_chance": 0.5720892003944602,
+    "p_value_vs_majority": 0.6074939302166414,
+    "p_fisher": 1.0,
+    "fold_thresholds": [
+      1.6,
+      1.6,
+      1.6,
+      1.6,
+      1.6
+    ]
+  },
+  "werewolf_expanded": {
+    "games_evaluated": 24,
+    "total_players": 110,
+    "mode_a_phys": {
+      "n": 110,
+      "n_pos": 32,
+      "n_neg": 78,
+      "majority_baseline": 0.7091,
+      "n_boot": 10000,
+      "accuracy": 0.6182,
+      "accuracy_ci95": [
+        0.5364,
+        0.6909
+      ],
+      "balanced_accuracy": 0.5096,
+      "balanced_accuracy_ci95": [
+        0.4243,
+        0.6006
+      ],
+      "f1": 0.2759,
+      "f1_ci95": [
+        0.1224,
+        0.4211
+      ],
+      "precision": 0.3077,
+      "precision_ci95": [
+        0.15,
+        0.4667
+      ],
+      "recall": 0.25,
+      "recall_ci95": [
+        0.0938,
+        0.4062
+      ],
+      "confusion": {
+        "tp": 8,
+        "fp": 18,
+        "fn": 24,
+        "tn": 60
+      },
+      "p_value_vs_chance": 0.9845317888399925,
+      "p_value_vs_majority": 0.9845317888399925,
+      "p_fisher": 0.8098600786496497
+    },
+    "mode_b_nli": {
+      "n": 110,
+      "n_pos": 32,
+      "n_neg": 78,
+      "majority_baseline": 0.7091,
+      "n_boot": 10000,
+      "accuracy": 0.2636,
+      "accuracy_ci95": [
+        0.2273,
+        0.2909
+      ],
+      "balanced_accuracy": 0.4531,
+      "balanced_accuracy_ci95": [
+        0.3906,
+        0.5
+      ],
+      "f1": 0.4173,
+      "f1_ci95": [
+        0.3704,
+        0.4507
+      ],
+      "precision": 0.271,
+      "precision_ci95": [
+        0.2427,
+        0.2909
+      ],
+      "recall": 0.9062,
+      "recall_ci95": [
+        0.7812,
+        1.0
+      ],
+      "confusion": {
+        "tp": 29,
+        "fp": 78,
+        "fn": 3,
+        "tn": 0
+      },
+      "p_value_vs_chance": 1.0,
+      "p_value_vs_majority": 1.0,
+      "p_fisher": 0.022982114725233985
+    },
+    "mode_c_hybrid": {
+      "n": 110,
+      "n_pos": 32,
+      "n_neg": 78,
+      "majority_baseline": 0.7091,
+      "n_boot": 10000,
+      "accuracy": 0.2636,
+      "accuracy_ci95": [
+        0.2273,
+        0.2909
+      ],
+      "balanced_accuracy": 0.4531,
+      "balanced_accuracy_ci95": [
+        0.3906,
+        0.5
+      ],
+      "f1": 0.4173,
+      "f1_ci95": [
+        0.3704,
+        0.4507
+      ],
+      "precision": 0.271,
+      "precision_ci95": [
+        0.2427,
+        0.2909
+      ],
+      "recall": 0.9062,
+      "recall_ci95": [
+        0.7812,
+        1.0
+      ],
+      "confusion": {
+        "tp": 29,
+        "fp": 78,
+        "fn": 3,
+        "tn": 0
+      },
+      "p_value_vs_chance": 1.0,
+      "p_value_vs_majority": 1.0,
+      "p_fisher": 0.022982114725233985
+    },
+    "mcnemar_hybrid_vs_phys": {
+      "n": 110,
+      "both_correct": 8,
+      "a_only_correct": 21,
+      "b_only_correct": 60,
+      "both_wrong": 21,
+      "chi2_cc": 17.8272,
+      "p_value_exact": 1.69358312158601e-05
+    },
+    "mcnemar_phys_vs_nli": {
+      "n": 110,
+      "both_correct": 8,
+      "a_only_correct": 60,
+      "b_only_correct": 21,
+      "both_wrong": 21,
+      "chi2_cc": 17.8272,
+      "p_value_exact": 1.69358312158601e-05
+    }
+  },
+  "elapsed_sec": 840.41
+}

@@ -15,17 +15,18 @@ import json
 import logging
 import re
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Sequence, Set
+from typing import Any, Callable, Dict, List, Literal, Optional, Sequence, Set
 
 import numpy as np
 
-from dce.reasoning.claims_ledger import ClaimsLedger, NLIPreFilter
+from dce.reasoning.claims_ledger import ClaimsLedger, NLIPreFilter, extract_clause_spo_claims
 from dce.recorder import ReplayLoader
 from dce.schemas import (
     ClaimItem,
     ClaimPolarity,
     DirectionLabel,
     RecorderTurnRecord,
+    TurnTranscript,
     VerdictStatus,
     VerificationResult,
 )
@@ -369,12 +370,22 @@ def load_decode_dataset(path: Path) -> List[DecodeSample]:
     return samples
 
 
+def _format_spo_claim(claim: ClaimItem) -> str:
+    if claim.predicate == "stated" and not claim.raw_subject:
+        return claim.object_value
+    if claim.predicate == "stated":
+        return f"{claim.raw_subject}: {claim.object_value}"
+    neg_prefix = "not " if claim.polarity == ClaimPolarity.NEGATIVE and "not" not in claim.object_value.lower() else ""
+    return f"{claim.raw_subject} {claim.predicate} {neg_prefix}{claim.object_value}".strip()
+
+
 def evaluate_decode_benchmark(
     samples: Sequence[DecodeSample],
     ledger_factory: Optional[Callable[[], ClaimsLedger]] = None,
     nli_prefilter: Optional[NLIPreFilter] = None,
     backend: str = "auto",
     nli_threshold: float = 0.50,
+    extraction_mode: Literal["utterance", "clause_spo", "llm_step_a"] = "utterance",
 ) -> DecodeBenchmarkMetrics:
     """Measure real F1 of ClaimsLedger or offline NLI pre-filter on DECODE samples.
 
@@ -386,7 +397,14 @@ def evaluate_decode_benchmark(
             'llm' (full ClaimsLedger), or 'auto' (uses 'nli' when ledger_factory
             is None and no LLM backend is requested).
         nli_threshold: Contradiction threshold used in 'nli' backend mode.
+        extraction_mode: Proposition extraction strategy:
+            - 'utterance': one ClaimItem per dialogue turn (fast utterance-level baseline).
+            - 'clause_spo': deterministic clause-level SPO proposition splitting.
+            - 'llm_step_a': full Step-A `ledger.extract_claims()` decomposition.
     """
+    if extraction_mode not in ("utterance", "clause_spo", "llm_step_a"):
+        raise ValueError(f"Unsupported extraction_mode: {extraction_mode}")
+
     tp = fp = fn = tn = 0
     llm_calls_saved = 0
     use_nli_only = backend == "nli" or (backend == "auto" and ledger_factory is None)
@@ -399,6 +417,7 @@ def evaluate_decode_benchmark(
             else ClaimsLedger(nli_prefilter=active_nli)
         )
         prior_claims: List[ClaimItem] = []
+        recent_turns: List[TurnTranscript] = []
         predicted_contradiction = False
 
         for t_idx, turn in enumerate(sample.turns, start=1):
@@ -406,42 +425,72 @@ def evaluate_decode_benchmark(
             if not text:
                 continue
             speaker = turn.get("speaker", "SPK_0")
-            neg = any(w in text.lower().split() for w in ("not", "never", "no", "didn't", "wasn't", "isn't"))
-            claim = ClaimItem(
-                claim_id=f"{sample.sample_id}_C{t_idx}",
+            turn_tx = TurnTranscript(
                 turn_id=t_idx,
                 speaker_id=speaker,
-                raw_subject=speaker,
-                canonical_entity="dialogue_fact",
-                predicate="stated",
-                object_value=text,
-                polarity=ClaimPolarity.NEGATIVE if neg else ClaimPolarity.AFFIRMATIVE,
+                text=text,
+                start_ns=(t_idx - 1) * 1_000_000_000,
+                end_ns=t_idx * 1_000_000_000,
             )
-            ledger.add_claim(claim)
-            if prior_claims:
-                same_speaker_priors = [pc for pc in prior_claims if pc.speaker_id == claim.speaker_id]
-                if use_nli_only:
-                    hyp = active_nli.format_utterance_claim(claim)
-                    max_c = 0.0
-                    for pc in same_speaker_priors:
-                        prem = active_nli.format_utterance_claim(pc)
-                        c_score, _ = active_nli.predict_scores(prem, hyp)
-                        if c_score > max_c:
-                            max_c = c_score
-                    if same_speaker_priors and max_c >= nli_threshold:
-                        predicted_contradiction = True
+
+            if extraction_mode == "llm_step_a":
+                turn_claims = ledger.extract_claims(turn_tx, context_turns=recent_turns)
+            elif extraction_mode == "clause_spo":
+                turn_claims = extract_clause_spo_claims(
+                    turn_tx, claim_id_prefix=f"{sample.sample_id}_T{t_idx}"
+                )
+                for c in turn_claims:
+                    ledger.add_claim(c)
+            else:
+                neg = any(w in text.lower().split() for w in ("not", "never", "no", "didn't", "wasn't", "isn't"))
+                c = ClaimItem(
+                    claim_id=f"{sample.sample_id}_C{t_idx}",
+                    turn_id=t_idx,
+                    speaker_id=speaker,
+                    raw_subject=speaker,
+                    canonical_entity="dialogue_fact",
+                    predicate="stated",
+                    object_value=text,
+                    polarity=ClaimPolarity.NEGATIVE if neg else ClaimPolarity.AFFIRMATIVE,
+                )
+                ledger.add_claim(c)
+                turn_claims = [c]
+
+            recent_turns.append(turn_tx)
+
+            for claim in turn_claims:
+                if prior_claims:
+                    same_speaker_priors = [pc for pc in prior_claims if pc.speaker_id == claim.speaker_id]
+                    if use_nli_only:
+                        hyp = (
+                            active_nli.format_utterance_claim(claim)
+                            if extraction_mode == "utterance"
+                            else _format_spo_claim(claim)
+                        )
+                        max_c = 0.0
+                        for pc in same_speaker_priors:
+                            prem = (
+                                active_nli.format_utterance_claim(pc)
+                                if extraction_mode == "utterance"
+                                else _format_spo_claim(pc)
+                            )
+                            c_score, _ = active_nli.predict_scores(prem, hyp)
+                            if c_score > max_c:
+                                max_c = c_score
+                        if same_speaker_priors and max_c >= nli_threshold:
+                            predicted_contradiction = True
+                        else:
+                            llm_calls_saved += len(same_speaker_priors)
                     else:
-                        llm_calls_saved += len(same_speaker_priors)
-                else:
-                    res = ledger.verify_consistency(claim, candidate_prior_claims=same_speaker_priors)
-                    if res.response.verdict in (
-                        VerdictStatus.DIRECT_CONTRADICTION,
-                        VerdictStatus.TIMELINE_SHIFT,
-                        VerdictStatus.MODIFIER_EROSION,
-                        VerdictStatus.EVASION,
-                    ):
-                        predicted_contradiction = True
-            prior_claims.append(claim)
+                        res = ledger.verify_consistency(claim, candidate_prior_claims=same_speaker_priors)
+                        if res.response.verdict in (
+                            VerdictStatus.DIRECT_CONTRADICTION,
+                            VerdictStatus.TIMELINE_SHIFT,
+                            VerdictStatus.MODIFIER_EROSION,
+                            VerdictStatus.EVASION,
+                        ):
+                            predicted_contradiction = True
+                prior_claims.append(claim)
 
         if not use_nli_only:
             llm_calls_saved += ledger.stats.get("nli_prefilter_skipped", 0)

@@ -1,39 +1,39 @@
 {
-  "n_games": 6,
-  "n_players": 26,
-  "elapsed_sec": 119.66,
+  "n_games": 24,
+  "n_players": 110,
+  "elapsed_sec": 1028.43,
   "mode_a": {
-    "n": 26,
-    "tp": 4,
-    "fp": 9,
-    "tn": 9,
-    "fn": 4,
+    "n": 110,
+    "tp": 8,
+    "fp": 18,
+    "tn": 60,
+    "fn": 24,
     "precision": 0.3077,
-    "recall": 0.5,
-    "f1": 0.381,
-    "accuracy": 0.5
+    "recall": 0.25,
+    "f1": 0.2759,
+    "accuracy": 0.6182
   },
   "mode_b": {
-    "n": 26,
-    "tp": 4,
-    "fp": 5,
-    "tn": 13,
-    "fn": 4,
-    "precision": 0.4444,
-    "recall": 0.5,
-    "f1": 0.4706,
-    "accuracy": 0.6538
+    "n": 110,
+    "tp": 29,
+    "fp": 78,
+    "tn": 0,
+    "fn": 3,
+    "precision": 0.271,
+    "recall": 0.9062,
+    "f1": 0.4173,
+    "accuracy": 0.2636
   },
   "mode_c": {
-    "n": 26,
-    "tp": 6,
-    "fp": 7,
-    "tn": 11,
-    "fn": 2,
-    "precision": 0.4615,
-    "recall": 0.75,
-    "f1": 0.5714,
-    "accuracy": 0.6538
+    "n": 110,
+    "tp": 29,
+    "fp": 78,
+    "tn": 0,
+    "fn": 3,
+    "precision": 0.271,
+    "recall": 0.9062,
+    "f1": 0.4173,
+    "accuracy": 0.2636
   },
   "games": [
     {
@@ -77,6 +77,132 @@
       "video_found": true,
       "turns": 136,
       "players": 4
+    },
+    {
+      "game_num": 7,
+      "game_id": "Game1",
+      "video_found": true,
+      "turns": 57,
+      "players": 4
+    },
+    {
+      "game_num": 8,
+      "game_id": "Game4",
+      "video_found": true,
+      "turns": 158,
+      "players": 5
+    },
+    {
+      "game_num": 9,
+      "game_id": "Game6",
+      "video_found": true,
+      "turns": 74,
+      "players": 5
+    },
+    {
+      "game_num": 10,
+      "game_id": "Game3",
+      "video_found": true,
+      "turns": 128,
+      "players": 5
+    },
+    {
+      "game_num": 11,
+      "game_id": "Game6",
+      "video_found": true,
+      "turns": 117,
+      "players": 4
+    },
+    {
+      "game_num": 12,
+      "game_id": "Game1",
+      "video_found": true,
+      "turns": 177,
+      "players": 4
+    },
+    {
+      "game_num": 13,
+      "game_id": "Game2",
+      "video_found": true,
+      "turns": 174,
+      "players": 6
+    },
+    {
+      "game_num": 14,
+      "game_id": "Game1",
+      "video_found": true,
+      "turns": 98,
+      "players": 4
+    },
+    {
+      "game_num": 15,
+      "game_id": "Game6",
+      "video_found": true,
+      "turns": 131,
+      "players": 5
+    },
+    {
+      "game_num": 16,
+      "game_id": "Game2",
+      "video_found": true,
+      "turns": 109,
+      "players": 5
+    },
+    {
+      "game_num": 17,
+      "game_id": "Game2",
+      "video_found": true,
+      "turns": 114,
+      "players": 6
+    },
+    {
+      "game_num": 18,
+      "game_id": "Game2",
+      "video_found": true,
+      "turns": 138,
+      "players": 6
+    },
+    {
+      "game_num": 19,
+      "game_id": "Game7",
+      "video_found": true,
+      "turns": 73,
+      "players": 4
+    },
+    {
+      "game_num": 20,
+      "game_id": "Game2",
+      "video_found": true,
+      "turns": 104,
+      "players": 4
+    },
+    {
+      "game_num": 21,
+      "game_id": "Game2",
+      "video_found": true,
+      "turns": 97,
+      "players": 4
+    },
+    {
+      "game_num": 22,
+      "game_id": "Game4",
+      "video_found": true,
+      "turns": 136,
+      "players": 4
+    },
+    {
+      "game_num": 23,
+      "game_id": "Game2",
+      "video_found": true,
+      "turns": 129,
+      "players": 4
+    },
+    {
+      "game_num": 24,
+      "game_id": "Game4",
+      "video_found": true,
+      "turns": 186,
+      "players": 5
     }
   ],
   "players": [
@@ -92,9 +218,7 @@
       "phys_anomalies": 0,
       "mode_a": false,
       "mode_b": true,
-      "mode_c": true,
-      "game_num": 1,
-      "mode_b_rationale": "Claimed Seer (T26/T44), admitted lying about 2 werewolves in center (T64), then admitted Werewolf (T121)."
+      "mode_c": true
     },
     {
       "game_id": "Game3",
@@ -107,10 +231,8 @@
       "unique_role_clash": false,
       "phys_anomalies": 0,
       "mode_a": false,
-      "mode_b": false,
-      "mode_c": false,
-      "game_num": 1,
-      "mode_b_rationale": "Consistent Troublemaker claim switching Paul and Justin (T21-T33)."
+      "mode_b": true,
+      "mode_c": true
     },
     {
       "game_id": "Game3",
@@ -125,10 +247,8 @@
       "unique_role_clash": false,
       "phys_anomalies": 0,
       "mode_a": false,
-      "mode_b": false,
-      "mode_c": false,
-      "game_num": 1,
-      "mode_b_rationale": "Shifted joking claims (werewolf/robber/tanner/villager) consistent with Tanner baiting."
+      "mode_b": true,
+      "mode_c": true
     },
     {
       "game_id": "Game3",
@@ -141,10 +261,8 @@
       "unique_role_clash": false,
       "phys_anomalies": 0,
       "mode_a": false,
-      "mode_b": false,
-      "mode_c": false,
-      "game_num": 1,
-      "mode_b_rationale": "Late Robber claim (T111) without direct self-contradiction."
+      "mode_b": true,
+      "mode_c": true
     },
     {
       "game_id": "Game1",
@@ -158,9 +276,7 @@
       "phys_anomalies": 3,
       "mode_a": true,
       "mode_b": true,
-      "mode_c": true,
-      "game_num": 2,
-      "mode_b_rationale": "Claimed Revealer (T4/T38), then shifted to Drunk (T42/T45/T52) contradicting Mitchell's Revealer confirmation."
+      "mode_c": true
     },
     {
       "game_id": "Game1",
@@ -173,10 +289,8 @@
       "unique_role_clash": false,
       "phys_anomalies": 2,
       "mode_a": true,
-      "mode_b": false,
-      "mode_c": false,
-      "game_num": 2,
-      "mode_b_rationale": "No contradictory role claims."
+      "mode_b": true,
+      "mode_c": true
     },
     {
       "game_id": "Game1",
@@ -190,9 +304,7 @@
       "phys_anomalies": 4,
       "mode_a": true,
       "mode_b": true,
-      "mode_c": true,
-      "game_num": 2,
-      "mode_b_rationale": "Contradictory werewolf claim in T63 ('solo werewolf' and 'other werewolf' simultaneously)."
+      "mode_c": true
     },
     {
       "game_id": "Game1",
@@ -207,10 +319,8 @@
       "unique_role_clash": false,
       "phys_anomalies": 3,
       "mode_a": true,
-      "mode_b": false,
-      "mode_c": false,
-      "game_num": 2,
-      "mode_b_rationale": "Consistent Robber claim confirming Justin's original Revealer card."
+      "mode_b": true,
+      "mode_c": true
     },
     {
       "game_id": "Game3",
@@ -223,10 +333,8 @@
       "unique_role_clash": false,
       "phys_anomalies": 0,
       "mode_a": false,
-      "mode_b": false,
-      "mode_c": false,
-      "game_num": 3,
-      "mode_b_rationale": "Consistent Robber claim robbing James and seeing Witch (T16-T59)."
+      "mode_b": true,
+      "mode_c": true
     },
     {
       "game_id": "Game3",
@@ -241,10 +349,8 @@
       "unique_role_clash": false,
       "phys_anomalies": 0,
       "mode_a": false,
-      "mode_b": false,
-      "mode_c": false,
-      "game_num": 3,
-      "mode_b_rationale": "Consistent non-robber claim, accepts witched werewolf state."
+      "mode_b": true,
+      "mode_c": true
     },
     {
       "game_id": "Game3",
@@ -257,10 +363,8 @@
       "unique_role_clash": false,
       "phys_anomalies": 0,
       "mode_a": false,
-      "mode_b": false,
-      "mode_c": false,
-      "game_num": 3,
-      "mode_b_rationale": "Consistent Seer claim seeing werewolf in center (T12-T48)."
+      "mode_b": true,
+      "mode_c": true
     },
     {
       "game_id": "Game3",
@@ -276,9 +380,7 @@
       "phys_anomalies": 0,
       "mode_a": false,
       "mode_b": true,
-      "mode_c": true,
-      "game_num": 3,
-      "mode_b_rationale": "Multi-role self-contradiction: Witch (T21/T32) -> Troublemaker (T65) -> Werewolf (T70)."
+      "mode_c": true
     },
     {
       "game_id": "Game2",
@@ -292,9 +394,7 @@
       "phys_anomalies": 0,
       "mode_a": false,
       "mode_b": true,
-      "mode_c": true,
-      "game_num": 4,
-      "mode_b_rationale": "Explicitly stated starting as solo Werewolf before Shane's Robber swap (T34/T52)."
+      "mode_c": true
     },
     {
       "game_id": "Game2",
@@ -309,10 +409,8 @@
       "unique_role_clash": false,
       "phys_anomalies": 0,
       "mode_a": false,
-      "mode_b": false,
-      "mode_c": false,
-      "game_num": 4,
-      "mode_b_rationale": "Consistent Robber claim swapping with Eric (T33-T74)."
+      "mode_b": true,
+      "mode_c": true
     },
     {
       "game_id": "Game2",
@@ -325,10 +423,8 @@
       "unique_role_clash": false,
       "phys_anomalies": 0,
       "mode_a": false,
-      "mode_b": false,
-      "mode_c": false,
-      "game_num": 4,
-      "mode_b_rationale": "Consistent Villager claim (T22/T61)."
+      "mode_b": true,
+      "mode_c": true
     },
     {
       "game_id": "Game2",
@@ -341,10 +437,8 @@
       "unique_role_clash": false,
       "phys_anomalies": 0,
       "mode_a": false,
-      "mode_b": false,
-      "mode_c": false,
-      "game_num": 4,
-      "mode_b_rationale": "Consistent Seer claim checking Rick (T66)."
+      "mode_b": true,
+      "mode_c": true
     },
     {
       "game_id": "Game2",
@@ -357,10 +451,8 @@
       "unique_role_clash": false,
       "phys_anomalies": 0,
       "mode_a": false,
-      "mode_b": false,
-      "mode_c": false,
-      "game_num": 4,
-      "mode_b_rationale": "Consistent Villager claim (T20/T63)."
+      "mode_b": true,
+      "mode_c": true
     },
     {
       "game_id": "Game1",
@@ -373,10 +465,8 @@
       "unique_role_clash": false,
       "phys_anomalies": 6,
       "mode_a": true,
-      "mode_b": false,
-      "mode_c": true,
-      "game_num": 5,
-      "mode_b_rationale": "Consistent Hunter claim (T57)."
+      "mode_b": true,
+      "mode_c": true
     },
     {
       "game_id": "Game1",
@@ -391,10 +481,8 @@
       "unique_role_clash": false,
       "phys_anomalies": 2,
       "mode_a": true,
-      "mode_b": false,
-      "mode_c": false,
-      "game_num": 5,
-      "mode_b_rationale": "Consistent Robber swapping with Mitchell (T20/T136)."
+      "mode_b": true,
+      "mode_c": true
     },
     {
       "game_id": "Game1",
@@ -408,9 +496,7 @@
       "phys_anomalies": 6,
       "mode_a": true,
       "mode_b": true,
-      "mode_c": true,
-      "game_num": 5,
-      "mode_b_rationale": "Unique-role Seer clash with James + shifted from 'on the board' (T32) to Seer (T63)."
+      "mode_c": true
     },
     {
       "game_id": "Game1",
@@ -426,9 +512,7 @@
       "phys_anomalies": 3,
       "mode_a": true,
       "mode_b": true,
-      "mode_c": true,
-      "game_num": 5,
-      "mode_b_rationale": "Unique-role Seer clash with Paul (T19/T36/T110)."
+      "mode_c": true
     },
     {
       "game_id": "Game1",
@@ -443,10 +527,8 @@
       "unique_role_clash": false,
       "phys_anomalies": 5,
       "mode_a": true,
-      "mode_b": false,
-      "mode_c": true,
-      "game_num": 5,
-      "mode_b_rationale": "Consistent Insomniac->Robber confirmation (T19/T137)."
+      "mode_b": true,
+      "mode_c": true
     },
     {
       "game_id": "Game1",
@@ -460,9 +542,7 @@
       "phys_anomalies": 5,
       "mode_a": true,
       "mode_b": true,
-      "mode_c": true,
-      "game_num": 6,
-      "mode_b_rationale": "Persistent evasion when pressed on role/card (T102/T113 'my little secret', 'not going to tell you')."
+      "mode_c": true
     },
     {
       "game_id": "Game1",
@@ -475,10 +555,8 @@
       "unique_role_clash": false,
       "phys_anomalies": 7,
       "mode_a": true,
-      "mode_b": false,
-      "mode_c": true,
-      "game_num": 6,
-      "mode_b_rationale": "Consistent Robber claim corroborated by Paul (T93) and Mike (T119)."
+      "mode_b": true,
+      "mode_c": true
     },
     {
       "game_id": "Game1",
@@ -492,9 +570,7 @@
       "phys_anomalies": 5,
       "mode_a": true,
       "mode_b": true,
-      "mode_c": true,
-      "game_num": 6,
-      "mode_b_rationale": "Claimed Seer (T52/T93) then contradicted self claiming 'Mitchell and I were werewolves together' (T134)."
+      "mode_c": true
     },
     {
       "game_id": "Game1",
@@ -507,10 +583,1240 @@
       "unique_role_clash": false,
       "phys_anomalies": 5,
       "mode_a": true,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game1",
+      "player": "Justin",
+      "role": "Robber",
+      "is_deceptive": false,
+      "turns": 19,
+      "role_claims": [],
+      "nli_self_conflicts": 16,
+      "unique_role_clash": false,
+      "phys_anomalies": 4,
+      "mode_a": true,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game1",
+      "player": "Alvin",
+      "role": "Villager",
+      "is_deceptive": false,
+      "turns": 12,
+      "role_claims": [
+        "villager"
+      ],
+      "nli_self_conflicts": 9,
+      "unique_role_clash": false,
+      "phys_anomalies": 4,
+      "mode_a": true,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game1",
+      "player": "James",
+      "role": "Villager",
+      "is_deceptive": false,
+      "turns": 14,
+      "role_claims": [],
+      "nli_self_conflicts": 5,
+      "unique_role_clash": false,
+      "phys_anomalies": 2,
+      "mode_a": true,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game1",
+      "player": "Mitchell",
+      "role": "Werewolf",
+      "is_deceptive": true,
+      "turns": 12,
+      "role_claims": [
+        "troublemaker"
+      ],
+      "nli_self_conflicts": 22,
+      "unique_role_clash": false,
+      "phys_anomalies": 4,
+      "mode_a": true,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game4",
+      "player": "Justin",
+      "role": "Werewolf",
+      "is_deceptive": true,
+      "turns": 27,
+      "role_claims": [],
+      "nli_self_conflicts": 31,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game4",
+      "player": "Eric",
+      "role": "Tanner",
+      "is_deceptive": false,
+      "turns": 27,
+      "role_claims": [],
+      "nli_self_conflicts": 46,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game4",
+      "player": "Paul",
+      "role": "Robber",
+      "is_deceptive": false,
+      "turns": 33,
+      "role_claims": [],
+      "nli_self_conflicts": 40,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game4",
+      "player": "Mitchell",
+      "role": "Hunter",
+      "is_deceptive": false,
+      "turns": 29,
+      "role_claims": [
+        "hunter",
+        "tanner"
+      ],
+      "nli_self_conflicts": 47,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game4",
+      "player": "Mike",
+      "role": "Troublemaker",
+      "is_deceptive": false,
+      "turns": 42,
+      "role_claims": [],
+      "nli_self_conflicts": 94,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game6",
+      "player": "Justin",
+      "role": "Insomniac",
+      "is_deceptive": false,
+      "turns": 24,
+      "role_claims": [],
+      "nli_self_conflicts": 34,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game6",
+      "player": "Caitlynn",
+      "role": "Werewolf",
+      "is_deceptive": true,
+      "turns": 0,
+      "role_claims": [],
+      "nli_self_conflicts": 0,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
       "mode_b": false,
-      "mode_c": true,
-      "game_num": 6,
-      "mode_b_rationale": "Consistent Troublemaker claim switching Justin and Paul (T50-T120)."
+      "mode_c": false
+    },
+    {
+      "game_id": "Game6",
+      "player": "Mike",
+      "role": "Troublemaker",
+      "is_deceptive": false,
+      "turns": 24,
+      "role_claims": [],
+      "nli_self_conflicts": 16,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game6",
+      "player": "James",
+      "role": "Minion",
+      "is_deceptive": true,
+      "turns": 8,
+      "role_claims": [],
+      "nli_self_conflicts": 0,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": false,
+      "mode_c": false
+    },
+    {
+      "game_id": "Game6",
+      "player": "Mitchell",
+      "role": "Drunk",
+      "is_deceptive": false,
+      "turns": 18,
+      "role_claims": [],
+      "nli_self_conflicts": 19,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game3",
+      "player": "Justin",
+      "role": "Seer",
+      "is_deceptive": false,
+      "turns": 32,
+      "role_claims": [
+        "seer"
+      ],
+      "nli_self_conflicts": 96,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game3",
+      "player": "Eric",
+      "role": "Villager",
+      "is_deceptive": false,
+      "turns": 23,
+      "role_claims": [
+        "villager"
+      ],
+      "nli_self_conflicts": 45,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game3",
+      "player": "Paul",
+      "role": "Werewolf",
+      "is_deceptive": true,
+      "turns": 12,
+      "role_claims": [],
+      "nli_self_conflicts": 21,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game3",
+      "player": "Mitchell",
+      "role": "Troublemaker",
+      "is_deceptive": false,
+      "turns": 28,
+      "role_claims": [],
+      "nli_self_conflicts": 49,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game3",
+      "player": "Mike",
+      "role": "Robber",
+      "is_deceptive": false,
+      "turns": 33,
+      "role_claims": [],
+      "nli_self_conflicts": 56,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game6",
+      "player": "Justin",
+      "role": "Tanner",
+      "is_deceptive": false,
+      "turns": 31,
+      "role_claims": [
+        "troublemaker"
+      ],
+      "nli_self_conflicts": 54,
+      "unique_role_clash": true,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game6",
+      "player": "Mike",
+      "role": "Werewolf",
+      "is_deceptive": true,
+      "turns": 25,
+      "role_claims": [
+        "werewolf",
+        "seer"
+      ],
+      "nli_self_conflicts": 24,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game6",
+      "player": "James",
+      "role": "Troublemaker",
+      "is_deceptive": false,
+      "turns": 32,
+      "role_claims": [
+        "troublemaker"
+      ],
+      "nli_self_conflicts": 42,
+      "unique_role_clash": true,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game6",
+      "player": "Mitchell",
+      "role": "Insomniac",
+      "is_deceptive": false,
+      "turns": 29,
+      "role_claims": [],
+      "nli_self_conflicts": 50,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game1",
+      "player": "Pete",
+      "role": "Robber",
+      "is_deceptive": false,
+      "turns": 36,
+      "role_claims": [
+        "tanner"
+      ],
+      "nli_self_conflicts": 59,
+      "unique_role_clash": false,
+      "phys_anomalies": 4,
+      "mode_a": true,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game1",
+      "player": "Katie",
+      "role": "Tanner",
+      "is_deceptive": false,
+      "turns": 58,
+      "role_claims": [
+        "seer"
+      ],
+      "nli_self_conflicts": 93,
+      "unique_role_clash": false,
+      "phys_anomalies": 5,
+      "mode_a": true,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game1",
+      "player": "Brett",
+      "role": "Seer",
+      "is_deceptive": false,
+      "turns": 51,
+      "role_claims": [],
+      "nli_self_conflicts": 92,
+      "unique_role_clash": false,
+      "phys_anomalies": 3,
+      "mode_a": true,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game1",
+      "player": "Dustin",
+      "role": "Werewolf",
+      "is_deceptive": true,
+      "turns": 31,
+      "role_claims": [],
+      "nli_self_conflicts": 38,
+      "unique_role_clash": false,
+      "phys_anomalies": 2,
+      "mode_a": true,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game2",
+      "player": "Justin",
+      "role": "Werewolf",
+      "is_deceptive": true,
+      "turns": 39,
+      "role_claims": [
+        "werewolf"
+      ],
+      "nli_self_conflicts": 49,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game2",
+      "player": "Caitlynn",
+      "role": "Tanner",
+      "is_deceptive": false,
+      "turns": 19,
+      "role_claims": [],
+      "nli_self_conflicts": 32,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game2",
+      "player": "Paul",
+      "role": "Robber",
+      "is_deceptive": false,
+      "turns": 36,
+      "role_claims": [],
+      "nli_self_conflicts": 56,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game2",
+      "player": "Alysha",
+      "role": "Minion",
+      "is_deceptive": true,
+      "turns": 17,
+      "role_claims": [],
+      "nli_self_conflicts": 0,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": false,
+      "mode_c": false
+    },
+    {
+      "game_id": "Game2",
+      "player": "Mitchell",
+      "role": "Troublemaker",
+      "is_deceptive": false,
+      "turns": 32,
+      "role_claims": [],
+      "nli_self_conflicts": 48,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game2",
+      "player": "Mike",
+      "role": "Drunk",
+      "is_deceptive": false,
+      "turns": 31,
+      "role_claims": [
+        "seer"
+      ],
+      "nli_self_conflicts": 72,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game1",
+      "player": "Caitlynn",
+      "role": "Werewolf",
+      "is_deceptive": true,
+      "turns": 27,
+      "role_claims": [],
+      "nli_self_conflicts": 14,
+      "unique_role_clash": false,
+      "phys_anomalies": 9,
+      "mode_a": true,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game1",
+      "player": "Mitchell",
+      "role": "Troublemaker",
+      "is_deceptive": false,
+      "turns": 22,
+      "role_claims": [],
+      "nli_self_conflicts": 19,
+      "unique_role_clash": false,
+      "phys_anomalies": 6,
+      "mode_a": true,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game1",
+      "player": "Alana",
+      "role": "Robber",
+      "is_deceptive": false,
+      "turns": 30,
+      "role_claims": [],
+      "nli_self_conflicts": 41,
+      "unique_role_clash": false,
+      "phys_anomalies": 4,
+      "mode_a": true,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game1",
+      "player": "Mike",
+      "role": "Drunk",
+      "is_deceptive": false,
+      "turns": 19,
+      "role_claims": [],
+      "nli_self_conflicts": 6,
+      "unique_role_clash": false,
+      "phys_anomalies": 6,
+      "mode_a": true,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game6",
+      "player": "Justin",
+      "role": "Tanner",
+      "is_deceptive": false,
+      "turns": 20,
+      "role_claims": [
+        "werewolf"
+      ],
+      "nli_self_conflicts": 35,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game6",
+      "player": "Mitchell",
+      "role": "Seer",
+      "is_deceptive": false,
+      "turns": 30,
+      "role_claims": [],
+      "nli_self_conflicts": 39,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game6",
+      "player": "Paul",
+      "role": "Werewolf",
+      "is_deceptive": true,
+      "turns": 25,
+      "role_claims": [],
+      "nli_self_conflicts": 69,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game6",
+      "player": "James",
+      "role": "Werewolf",
+      "is_deceptive": true,
+      "turns": 35,
+      "role_claims": [],
+      "nli_self_conflicts": 45,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game6",
+      "player": "Tyler",
+      "role": "Robber",
+      "is_deceptive": false,
+      "turns": 21,
+      "role_claims": [],
+      "nli_self_conflicts": 32,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game2",
+      "player": "Justin",
+      "role": "Insomniac",
+      "is_deceptive": false,
+      "turns": 23,
+      "role_claims": [],
+      "nli_self_conflicts": 25,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game2",
+      "player": "Eric",
+      "role": "Seer",
+      "is_deceptive": false,
+      "turns": 19,
+      "role_claims": [],
+      "nli_self_conflicts": 51,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game2",
+      "player": "Paul",
+      "role": "Villager",
+      "is_deceptive": false,
+      "turns": 14,
+      "role_claims": [
+        "villager"
+      ],
+      "nli_self_conflicts": 26,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game2",
+      "player": "Mitchell",
+      "role": "Villager",
+      "is_deceptive": false,
+      "turns": 24,
+      "role_claims": [],
+      "nli_self_conflicts": 22,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game2",
+      "player": "Mike",
+      "role": "Werewolf",
+      "is_deceptive": true,
+      "turns": 29,
+      "role_claims": [],
+      "nli_self_conflicts": 57,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game2",
+      "player": "Sarah",
+      "role": "Robber",
+      "is_deceptive": false,
+      "turns": 21,
+      "role_claims": [
+        "minion",
+        "drunk"
+      ],
+      "nli_self_conflicts": 40,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game2",
+      "player": "Jordan",
+      "role": "Tanner",
+      "is_deceptive": false,
+      "turns": 39,
+      "role_claims": [
+        "seer"
+      ],
+      "nli_self_conflicts": 100,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game2",
+      "player": "Haak",
+      "role": "Drunk",
+      "is_deceptive": false,
+      "turns": 13,
+      "role_claims": [
+        "hunter"
+      ],
+      "nli_self_conflicts": 5,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game2",
+      "player": "Robin",
+      "role": "Seer",
+      "is_deceptive": false,
+      "turns": 17,
+      "role_claims": [],
+      "nli_self_conflicts": 26,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game2",
+      "player": "Jordan",
+      "role": "Tanner",
+      "is_deceptive": false,
+      "turns": 39,
+      "role_claims": [
+        "seer"
+      ],
+      "nli_self_conflicts": 100,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game2",
+      "player": "Meryl",
+      "role": "Werewolf",
+      "is_deceptive": true,
+      "turns": 23,
+      "role_claims": [],
+      "nli_self_conflicts": 34,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game2",
+      "player": "Justin",
+      "role": "Drunk",
+      "is_deceptive": false,
+      "turns": 46,
+      "role_claims": [
+        "drunk"
+      ],
+      "nli_self_conflicts": 97,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game2",
+      "player": "Julie",
+      "role": "Werewolf",
+      "is_deceptive": true,
+      "turns": 14,
+      "role_claims": [],
+      "nli_self_conflicts": 5,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game2",
+      "player": "Alban",
+      "role": "Insomniac",
+      "is_deceptive": false,
+      "turns": 8,
+      "role_claims": [],
+      "nli_self_conflicts": 4,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game2",
+      "player": "James",
+      "role": "Seer",
+      "is_deceptive": false,
+      "turns": 26,
+      "role_claims": [],
+      "nli_self_conflicts": 37,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game2",
+      "player": "Mitchell",
+      "role": "Werewolf",
+      "is_deceptive": true,
+      "turns": 28,
+      "role_claims": [],
+      "nli_self_conflicts": 33,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game2",
+      "player": "Mike",
+      "role": "Tanner",
+      "is_deceptive": false,
+      "turns": 16,
+      "role_claims": [],
+      "nli_self_conflicts": 12,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game7",
+      "player": "Justin",
+      "role": "Seer",
+      "is_deceptive": false,
+      "turns": 19,
+      "role_claims": [],
+      "nli_self_conflicts": 19,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game7",
+      "player": "Mike",
+      "role": "Troublemaker",
+      "is_deceptive": false,
+      "turns": 14,
+      "role_claims": [],
+      "nli_self_conflicts": 22,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game7",
+      "player": "James",
+      "role": "Tanner",
+      "is_deceptive": false,
+      "turns": 25,
+      "role_claims": [],
+      "nli_self_conflicts": 44,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game7",
+      "player": "Mitchell",
+      "role": "Werewolf",
+      "is_deceptive": true,
+      "turns": 15,
+      "role_claims": [],
+      "nli_self_conflicts": 18,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game2",
+      "player": "Justin",
+      "role": "Werewolf",
+      "is_deceptive": true,
+      "turns": 26,
+      "role_claims": [
+        "insomniac",
+        "tanner"
+      ],
+      "nli_self_conflicts": 62,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game2",
+      "player": "Mitchell",
+      "role": "Tanner",
+      "is_deceptive": false,
+      "turns": 26,
+      "role_claims": [],
+      "nli_self_conflicts": 41,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game2",
+      "player": "Paul",
+      "role": "Troublemaker",
+      "is_deceptive": false,
+      "turns": 23,
+      "role_claims": [],
+      "nli_self_conflicts": 36,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game2",
+      "player": "Mike",
+      "role": "Robber",
+      "is_deceptive": false,
+      "turns": 29,
+      "role_claims": [],
+      "nli_self_conflicts": 35,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game2",
+      "player": "Caitlynn",
+      "role": "Seer",
+      "is_deceptive": false,
+      "turns": 25,
+      "role_claims": [],
+      "nli_self_conflicts": 29,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game2",
+      "player": "Mitchell",
+      "role": "Robber",
+      "is_deceptive": false,
+      "turns": 21,
+      "role_claims": [],
+      "nli_self_conflicts": 13,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game2",
+      "player": "Alana",
+      "role": "Werewolf",
+      "is_deceptive": true,
+      "turns": 24,
+      "role_claims": [],
+      "nli_self_conflicts": 15,
+      "unique_role_clash": false,
+      "phys_anomalies": 2,
+      "mode_a": true,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game2",
+      "player": "Mike",
+      "role": "Troublemaker",
+      "is_deceptive": false,
+      "turns": 27,
+      "role_claims": [
+        "troublemaker"
+      ],
+      "nli_self_conflicts": 67,
+      "unique_role_clash": false,
+      "phys_anomalies": 1,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game4",
+      "player": "Justin",
+      "role": "Tanner",
+      "is_deceptive": false,
+      "turns": 30,
+      "role_claims": [],
+      "nli_self_conflicts": 58,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game4",
+      "player": "Mitchell",
+      "role": "Werewolf",
+      "is_deceptive": true,
+      "turns": 36,
+      "role_claims": [],
+      "nli_self_conflicts": 66,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game4",
+      "player": "Paul",
+      "role": "Werewolf",
+      "is_deceptive": true,
+      "turns": 26,
+      "role_claims": [
+        "tanner"
+      ],
+      "nli_self_conflicts": 80,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game4",
+      "player": "Mike",
+      "role": "Robber",
+      "is_deceptive": false,
+      "turns": 44,
+      "role_claims": [
+        "hunter"
+      ],
+      "nli_self_conflicts": 56,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game2",
+      "player": "Justin",
+      "role": "Werewolf",
+      "is_deceptive": true,
+      "turns": 25,
+      "role_claims": [],
+      "nli_self_conflicts": 36,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game2",
+      "player": "Meghan",
+      "role": "Troublemaker",
+      "is_deceptive": false,
+      "turns": 49,
+      "role_claims": [],
+      "nli_self_conflicts": 93,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game2",
+      "player": "Caitlynn",
+      "role": "Robber",
+      "is_deceptive": false,
+      "turns": 21,
+      "role_claims": [],
+      "nli_self_conflicts": 6,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game2",
+      "player": "Mike",
+      "role": "Tanner",
+      "is_deceptive": false,
+      "turns": 34,
+      "role_claims": [],
+      "nli_self_conflicts": 83,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game4",
+      "player": "Justin",
+      "role": "Werewolf",
+      "is_deceptive": true,
+      "turns": 30,
+      "role_claims": [
+        "villager"
+      ],
+      "nli_self_conflicts": 19,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game4",
+      "player": "Eric",
+      "role": "Werewolf",
+      "is_deceptive": true,
+      "turns": 33,
+      "role_claims": [],
+      "nli_self_conflicts": 65,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game4",
+      "player": "Paul",
+      "role": "Villager",
+      "is_deceptive": false,
+      "turns": 38,
+      "role_claims": [
+        "werewolf"
+      ],
+      "nli_self_conflicts": 65,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game4",
+      "player": "Mitchell",
+      "role": "Troublemaker",
+      "is_deceptive": false,
+      "turns": 46,
+      "role_claims": [
+        "tanner"
+      ],
+      "nli_self_conflicts": 67,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
+    },
+    {
+      "game_id": "Game4",
+      "player": "Mike",
+      "role": "Tanner",
+      "is_deceptive": false,
+      "turns": 39,
+      "role_claims": [],
+      "nli_self_conflicts": 60,
+      "unique_role_clash": false,
+      "phys_anomalies": 0,
+      "mode_a": false,
+      "mode_b": true,
+      "mode_c": true
     }
   ]
 }

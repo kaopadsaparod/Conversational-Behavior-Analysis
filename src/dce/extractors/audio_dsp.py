@@ -10,6 +10,7 @@ from __future__ import annotations
 import contextlib
 import logging
 import math
+import os
 import subprocess
 import tempfile
 import threading
@@ -769,3 +770,266 @@ def transcribe_audio(
     except Exception as exc:
         logger.warning("ASR transcription error: %s", exc)
         return ASRResult(text="", words=[])
+
+
+_ONNX_SPEAKER_LOCK = threading.Lock()
+_ONNX_SPEAKER_CACHE: Dict[str, Any] = {}
+
+
+def _hz_to_mel(hz: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
+    return 2595.0 * np.log10(1.0 + np.asarray(hz, dtype=np.float64) / 700.0)
+
+
+def _mel_to_hz(mel: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
+    return 700.0 * (10.0 ** (np.asarray(mel, dtype=np.float64) / 2595.0) - 1.0)
+
+
+def _build_mel_filterbank(
+    sample_rate: int,
+    n_fft: int,
+    n_mels: int = 24,
+    fmin: float = 60.0,
+    fmax: Optional[float] = None,
+) -> np.ndarray:
+    """Construct a triangular Mel filterbank matrix of shape (n_mels, n_fft // 2 + 1)."""
+    hi_hz = min(float(fmax) if fmax is not None else 7600.0, 0.49 * float(sample_rate))
+    lo_hz = min(fmin, hi_hz * 0.5)
+    mel_pts = np.linspace(_hz_to_mel(lo_hz), _hz_to_mel(hi_hz), n_mels + 2)
+    hz_pts = _mel_to_hz(mel_pts)
+    fft_freqs = np.fft.rfftfreq(n_fft, d=1.0 / float(sample_rate))
+
+    fb = np.zeros((n_mels, len(fft_freqs)), dtype=np.float64)
+    for m in range(1, n_mels + 1):
+        f_left, f_center, f_right = hz_pts[m - 1], hz_pts[m], hz_pts[m + 1]
+        if f_center > f_left:
+            up = (fft_freqs - f_left) / (f_center - f_left)
+            fb[m - 1] += np.clip(up, 0.0, 1.0) * (fft_freqs <= f_center)
+        if f_right > f_center:
+            down = (f_right - fft_freqs) / (f_right - f_center)
+            fb[m - 1] += np.clip(down, 0.0, 1.0) * (fft_freqs > f_center)
+    return fb
+
+
+def _estimate_frame_f0_autocorr(
+    frame: np.ndarray,
+    sample_rate: int,
+    f0_min: float = 60.0,
+    f0_max: float = 450.0,
+) -> Optional[float]:
+    """Estimate frame F0 in Hz via normalized autocorrelation; returns None if unvoiced."""
+    energy = float(np.mean(frame ** 2))
+    if energy < 1e-8:
+        return None
+    centered = frame - float(np.mean(frame))
+    norm = float(np.dot(centered, centered))
+    if norm <= 1e-12:
+        return None
+
+    min_lag = max(1, int(math.floor(sample_rate / f0_max)))
+    max_lag = min(len(frame) - 2, int(math.ceil(sample_rate / f0_min)))
+    if max_lag <= min_lag:
+        return None
+
+    ac = np.correlate(centered, centered, mode="full")[len(centered) - 1 :]
+    ac_slice = ac[min_lag : max_lag + 1] / norm
+    if ac_slice.size == 0:
+        return None
+    best_idx = int(np.argmax(ac_slice))
+    peak_r = float(ac_slice[best_idx])
+    if peak_r < 0.30:
+        return None
+    lag = min_lag + best_idx
+    return float(sample_rate) / float(lag)
+
+
+def extract_voice_embedding(
+    audio_pcm: Union[Sequence[float], np.ndarray],
+    sample_rate: int = 16000,
+) -> np.ndarray:
+    """Extract a deterministic 64-D L2-normalized acoustic timbre embedding over voiced frames.
+
+    Features (64-D):
+      - 24-band log-Mel DCT cepstral means (24) + stds (24) = 48
+      - Voiced F0 semitone quantiles (p10, p25, p50, p75, p90, IQR) + F0 std + voiced ratio = 8
+      - Spectral centroid (mean, std in kHz) = 2
+      - Alpha ratio (mean, std in dB / 10) = 2
+      - Spectral slope (mean, std in dB/kHz / 10) = 2
+      - Spectral 85%-rolloff (mean, std in kHz) = 2
+
+    If ``DCE_SPEAKER_ONNX_PATH`` points to a valid ONNX speaker embedding model and
+    ``onnxruntime`` is installed, lazily runs ONNX inference and L2-normalizes the output.
+    Returns a 64-D zero vector on empty, silent, or non-finite audio.
+    """
+    arr = np.asarray(audio_pcm, dtype=np.float64)
+    if arr.ndim > 1:
+        arr = np.mean(arr, axis=1)
+    if arr.size < max(32, int(0.02 * max(sample_rate, 1))) or sample_rate <= 0 or not np.all(np.isfinite(arr)):
+        return np.zeros(64, dtype=np.float64)
+
+    rms = float(np.sqrt(np.mean(arr ** 2)))
+    if rms < 1e-6:
+        return np.zeros(64, dtype=np.float64)
+
+    # Optional lazy ONNX speaker embedding backend
+    onnx_path = os.environ.get("DCE_SPEAKER_ONNX_PATH", "").strip()
+    if onnx_path and Path(onnx_path).is_file():
+        try:
+            import onnxruntime as ort  # type: ignore
+
+            with _ONNX_SPEAKER_LOCK:
+                sess = _ONNX_SPEAKER_CACHE.get(onnx_path)
+                if sess is None:
+                    sess = ort.InferenceSession(onnx_path, providers=["CPUExecutionProvider"])
+                    _ONNX_SPEAKER_CACHE[onnx_path] = sess
+            inp = sess.get_inputs()[0]
+            inp_name = inp.name
+            inp_shape = inp.shape
+            if len(inp_shape) == 2:
+                feed = arr.astype(np.float32)[None, :]
+            else:
+                # Log-mel spectrogram input (1, T, n_mels)
+                n_fft = 512
+                hop = max(1, int(0.010 * sample_rate))
+                win = np.hanning(n_fft)
+                fb = _build_mel_filterbank(sample_rate, n_fft, n_mels=80)
+                frames = []
+                for s in range(0, max(1, len(arr) - n_fft + 1), hop):
+                    seg = arr[s : s + n_fft]
+                    if len(seg) < n_fft:
+                        seg = np.pad(seg, (0, n_fft - len(seg)))
+                    pwr = np.abs(np.fft.rfft(seg * win)) ** 2 + 1e-12
+                    frames.append(np.log(np.dot(fb, pwr) + 1e-12))
+                feed = np.asarray(frames, dtype=np.float32)[None, :, :]
+            out = sess.run(None, {inp_name: feed})[0]
+            emb = np.asarray(out, dtype=np.float64).flatten()
+            norm = float(np.linalg.norm(emb))
+            if emb.size > 0 and np.all(np.isfinite(emb)) and norm > 1e-8:
+                return emb / norm
+        except Exception as exc:
+            logger.debug("ONNX speaker embedding failed (%s); falling back to DSP embedding.", exc)
+
+    # Normalize amplitude for loudness-invariant timbre extraction
+    arr_norm = arr / max(rms, 1e-8)
+
+    frame_len = max(64, int(round(0.025 * sample_rate)))
+    hop_len = max(16, int(round(0.010 * sample_rate)))
+    n_fft = 1 << max(9, (frame_len - 1).bit_length())
+    window = np.hanning(frame_len)
+    mel_fb = _build_mel_filterbank(sample_rate, n_fft, n_mels=24)
+    freqs = np.fft.rfftfreq(n_fft, d=1.0 / float(sample_rate))
+
+    low_mask = (freqs >= 50.0) & (freqs <= 1000.0)
+    high_mask = (freqs > 1000.0) & (freqs <= 5000.0)
+    slope_mask = (freqs >= 50.0) & (freqs <= 4000.0)
+    f_khz = freqs[slope_mask] / 1000.0 if np.any(slope_mask) else np.zeros(0, dtype=np.float64)
+
+    # Precompute DCT-II matrix (24 x 24)
+    k_idx = np.arange(24, dtype=np.float64)[:, None]
+    n_idx = np.arange(24, dtype=np.float64)[None, :]
+    dct_mat = np.cos(math.pi / 24.0 * k_idx * (n_idx + 0.5)) * math.sqrt(2.0 / 24.0)
+    dct_mat[0, :] *= 1.0 / math.sqrt(2.0)
+
+    cepstra_list: List[np.ndarray] = []
+    f0_st_list: List[float] = []
+    centroid_list: List[float] = []
+    alpha_list: List[float] = []
+    slope_list: List[float] = []
+    rolloff_list: List[float] = []
+
+    all_cepstra: List[np.ndarray] = []
+    all_centroid: List[float] = []
+    all_alpha: List[float] = []
+    all_slope: List[float] = []
+    all_rolloff: List[float] = []
+
+    total_frames = 0
+    for start in range(0, max(1, len(arr_norm) - frame_len + 1), hop_len):
+        seg = arr_norm[start : start + frame_len]
+        if len(seg) < frame_len:
+            seg = np.pad(seg, (0, frame_len - len(seg)))
+        total_frames += 1
+
+        spec = np.fft.rfft(seg * window, n=n_fft)
+        mag = np.abs(spec)
+        power = mag ** 2 + 1e-18
+
+        mel_e = np.log(np.dot(mel_fb, power) + 1e-12)
+        mel_e = mel_e - float(np.mean(mel_e))
+        cep = np.dot(dct_mat, mel_e)
+
+        p_sum = float(np.sum(power))
+        cent_khz = float(np.sum(freqs * power) / max(p_sum, 1e-18)) / 1000.0
+
+        e_low = float(np.sum(power[low_mask])) if np.any(low_mask) else 1e-18
+        e_high = float(np.sum(power[high_mask])) if np.any(high_mask) else 1e-18
+        alpha_scaled = (10.0 * math.log10(max(e_low, 1e-18) / max(e_high, 1e-18))) / 10.0
+
+        if f_khz.size >= 2:
+            p_db = 10.0 * np.log10(power[slope_mask])
+            slope_val = float(np.polyfit(f_khz, p_db, 1)[0]) / 10.0
+            if not math.isfinite(slope_val):
+                slope_val = 0.0
+        else:
+            slope_val = 0.0
+
+        cum_p = np.cumsum(power)
+        ro_idx = int(np.searchsorted(cum_p, 0.85 * cum_p[-1]))
+        ro_khz = float(freqs[min(ro_idx, len(freqs) - 1)]) / 1000.0
+
+        all_cepstra.append(cep)
+        all_centroid.append(cent_khz)
+        all_alpha.append(alpha_scaled)
+        all_slope.append(slope_val)
+        all_rolloff.append(ro_khz)
+
+        f0_hz = _estimate_frame_f0_autocorr(seg, sample_rate)
+        if f0_hz is not None and f0_hz > 0.0:
+            f0_st_list.append(12.0 * math.log2(f0_hz / 100.0))
+            cepstra_list.append(cep)
+            centroid_list.append(cent_khz)
+            alpha_list.append(alpha_scaled)
+            slope_list.append(slope_val)
+            rolloff_list.append(ro_khz)
+
+    if not all_cepstra:
+        return np.zeros(64, dtype=np.float64)
+
+    use_cep = np.asarray(cepstra_list if cepstra_list else all_cepstra, dtype=np.float64)
+    use_cent = np.asarray(centroid_list if centroid_list else all_centroid, dtype=np.float64)
+    use_alpha = np.asarray(alpha_list if alpha_list else all_alpha, dtype=np.float64)
+    use_slope = np.asarray(slope_list if slope_list else all_slope, dtype=np.float64)
+    use_rolloff = np.asarray(rolloff_list if rolloff_list else all_rolloff, dtype=np.float64)
+
+    cep_mean = np.mean(use_cep, axis=0)
+    cep_std = np.std(use_cep, axis=0)
+
+    if f0_st_list:
+        f0_arr = np.asarray(f0_st_list, dtype=np.float64)
+        q10, q25, q50, q75, q90 = np.percentile(f0_arr, [10, 25, 50, 75, 90])
+        f0_iqr = float(q75 - q25)
+        f0_std = float(np.std(f0_arr))
+        voiced_ratio = float(len(f0_st_list)) / float(max(total_frames, 1))
+    else:
+        q10 = q25 = q50 = q75 = q90 = f0_iqr = f0_std = voiced_ratio = 0.0
+
+    vec = np.concatenate(
+        [
+            cep_mean,
+            cep_std,
+            np.array(
+                [
+                    q10, q25, q50, q75, q90, f0_iqr, f0_std, voiced_ratio,
+                    float(np.mean(use_cent)), float(np.std(use_cent)),
+                    float(np.mean(use_alpha)), float(np.std(use_alpha)),
+                    float(np.mean(use_slope)), float(np.std(use_slope)),
+                    float(np.mean(use_rolloff)), float(np.std(use_rolloff)),
+                ],
+                dtype=np.float64,
+            ),
+        ]
+    )
+    vec = np.nan_to_num(vec, nan=0.0, posinf=0.0, neginf=0.0)
+    norm = float(np.linalg.norm(vec))
+    if norm < 1e-8:
+        return np.zeros(64, dtype=np.float64)
+    return vec / norm

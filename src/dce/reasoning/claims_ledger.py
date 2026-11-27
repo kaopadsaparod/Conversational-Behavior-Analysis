@@ -16,6 +16,7 @@ from dce.schemas import (
     FEATURE_GROUPS,
     ClaimExtractionResponse,
     ClaimItem,
+    ClaimPolarity,
     ConsistencyVerificationResponse,
     ReasoningConfig,
     TurnTranscript,
@@ -934,3 +935,84 @@ class ClaimsLedger:
             old_id,
             new_id,
         )
+
+
+_SPO_CLAUSE_SPLIT_RE = re.compile(
+    r"(?:[.!?;]+|\s*,\s*(?:and|but|because|while|although|though|so)\s+|\s+(?:and|but|because|while|although|though)\s+(?=(?:i|we|you|he|she|they|it|there|my|our|the)\b))",
+    re.IGNORECASE,
+)
+_SPO_NEG_TOKENS = frozenset({
+    "not", "never", "no", "didn't", "wasn't", "isn't", "haven't", "hasn't",
+    "hadn't", "won't", "can't", "cannot", "couldn't", "wouldn't", "shouldn't",
+    "don't", "doesn't", "aren't", "weren't", "neither", "nor",
+})
+_SPO_VERB_RE = re.compile(
+    r"\b(am|is|are|was|were|have|has|had|do|does|did|can|could|will|would|should|"
+    r"went|go|saw|see|bought|buy|stole|steal|arrived|arrive|left|leave|live|lived|"
+    r"work|worked|like|liked|love|loved|hate|hated|own|owned|have|got|ate|eat|"
+    r"wasn't|isn't|didn't|don't|doesn't|can't|won't|haven't|hasn't|hadn't)\b",
+    re.IGNORECASE,
+)
+_SPO_TIME_RE = re.compile(
+    r"\b(?:yesterday|today|tonight|last\s+\w+|on\s+(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday)|"
+    r"at\s+\d{1,2}(?::\d{2})?\s*(?:am|pm)?|\d{4})\b",
+    re.IGNORECASE,
+)
+
+
+def extract_clause_spo_claims(
+    transcript: TurnTranscript,
+    claim_id_prefix: Optional[str] = None,
+) -> List[ClaimItem]:
+    """Deterministic clause-level Subject-Predicate-Object (SPO) proposition splitter.
+
+    Splits multi-clause utterances on sentence/conjunction boundaries and extracts
+    lightweight structured SPO ClaimItems without requiring an LLM backend.
+    """
+    text = (transcript.text or "").strip()
+    if not text:
+        return []
+
+    raw_clauses = [c.strip(" ,;:-") for c in _SPO_CLAUSE_SPLIT_RE.split(text)]
+    clauses = [c for c in raw_clauses if len(re.findall(r"[a-zA-Z0-9']+", c)) >= 2]
+    if not clauses:
+        clauses = [text]
+
+    prefix = claim_id_prefix or f"SPO_{transcript.turn_id:04d}"
+    out: List[ClaimItem] = []
+    for idx, clause in enumerate(clauses, start=1):
+        tokens = re.findall(r"[a-zA-Z0-9']+", clause.lower())
+        is_neg = any(tok in _SPO_NEG_TOKENS for tok in tokens)
+
+        m_verb = _SPO_VERB_RE.search(clause)
+        if m_verb and m_verb.start() > 0:
+            raw_subj = clause[: m_verb.start()].strip(" ,") or transcript.speaker_id
+            predicate = m_verb.group(1).lower()
+            obj_val = clause[m_verb.end() :].strip(" ,.") or clause
+        else:
+            raw_subj = transcript.speaker_id
+            predicate = "stated"
+            obj_val = clause
+
+        canonical = (
+            re.sub(r"\s+", " ", raw_subj.strip().lower())
+            if raw_subj != transcript.speaker_id
+            else transcript.speaker_id.lower()
+        )
+        m_time = _SPO_TIME_RE.search(clause)
+        time_raw = m_time.group(0) if m_time else None
+
+        out.append(
+            ClaimItem(
+                claim_id=f"{prefix}_{idx:02d}",
+                turn_id=transcript.turn_id,
+                speaker_id=transcript.speaker_id,
+                raw_subject=raw_subj,
+                canonical_entity=canonical,
+                predicate=predicate,
+                object_value=obj_val,
+                time_ref_raw=time_raw,
+                polarity=ClaimPolarity.NEGATIVE if is_neg else ClaimPolarity.AFFIRMATIVE,
+            )
+        )
+    return out
